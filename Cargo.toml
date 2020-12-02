@@ -1,0 +1,27 @@
+[package]
+name = "fuzzr-c1"
+version = "0.1.0"
+authors = [
+  "Hunter Trujillo <cryptoquick@pm.me>",
+  "David Croisant <kn0wmad@protonmail.com>"
+]
+edition = "2018"
+
+[dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+# System
+directories-next = "2.0"
+async-std = { version = "1.7", features = ["unstable"] }
+env_logger = "0.8"
+# UI
+iced = { version = "0.2", features = [
+  "wgpu",
+  "default_system_font",
+  "async-std",
+  "qr_code",
+  "image"
+] }
+# Data
+ipfs-embed = "0.9"
