@@ -1,5 +1,5 @@
 [package]
-name = "fuzzr-c1"
+name = "fuzzr"
 version = "0.1.0"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
@@ -8,6 +8,8 @@ authors = [
 edition = "2018"
 
 [dependencies]
+# Debugging
+pretty_env_logger = "0.4"
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

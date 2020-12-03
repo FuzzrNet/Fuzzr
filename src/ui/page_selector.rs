@@ -17,7 +17,7 @@ pub struct PageSelector {
 
 impl PageSelector {
   pub fn new() -> PageSelector {
-    let buttons = vec![
+    let mut buttons = vec![
       PageButton {
         label_text: "Feed".to_string(),
         button_state: button::State::new(),
@@ -34,6 +34,14 @@ impl PageSelector {
         page_type: PageType::Content,
       },
     ];
+
+    if std::env::var("RUST_LOG").unwrap_or_default() == "fuzzr" {
+      buttons.push(PageButton {
+        label_text: "Testing".to_string(),
+        button_state: button::State::new(),
+        page_type: PageType::Testing,
+      });
+    }
 
     PageSelector { buttons }
   }

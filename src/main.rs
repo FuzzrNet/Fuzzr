@@ -10,12 +10,13 @@ use page::PageType;
 use page::content::ContentPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
+use page::testing::TestingPage;
 
 use message::Message;
 use ui::page_selector::PageSelector;
 
 pub fn main() -> iced::Result {
-    env_logger::init();
+    pretty_env_logger::init();
 
     Fuzzr::run(Settings::default())
 }
@@ -25,6 +26,7 @@ struct Pages {
     feed: FeedPage,
     publish: PublishPage,
     content: ContentPage,
+    testing: TestingPage,
 }
 
 #[derive(Debug, Clone)]
@@ -44,6 +46,7 @@ impl Application for Fuzzr {
             feed: FeedPage::new(),
             publish: PublishPage::new(),
             content: ContentPage::new(),
+            testing: TestingPage::new(),
         };
 
         (
@@ -77,6 +80,7 @@ impl Application for Fuzzr {
             PageType::Feed => self.pages.feed.view(),
             PageType::Publish => self.pages.publish.view(),
             PageType::Content => self.pages.content.view(),
+            PageType::Testing => self.pages.testing.view(),
         };
 
         let content: Element<_> = Column::new()
