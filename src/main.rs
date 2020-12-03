@@ -11,6 +11,7 @@ use page::content::ContentPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
 use page::testing::TestingPage;
+use page::dashboard::DashPage;
 
 use message::Message;
 use ui::page_selector::PageSelector;
@@ -23,6 +24,7 @@ pub fn main() -> iced::Result {
 
 #[derive(Debug, Clone)]
 struct Pages {
+    dash: DashPage,
     feed: FeedPage,
     publish: PublishPage,
     content: ContentPage,
@@ -43,6 +45,7 @@ impl Application for Fuzzr {
 
     fn new(_flags: ()) -> (Fuzzr, Command<Message>) {
         let pages = Pages {
+            dash: DashPage::new(),
             feed: FeedPage::new(),
             publish: PublishPage::new(),
             content: ContentPage::new(),
@@ -77,6 +80,7 @@ impl Application for Fuzzr {
 
     fn view(&mut self) -> Element<Message> {
         let page: Element<_> = match self.current_page {
+            PageType::Dashboard => self.pages.dash.view(),
             PageType::Feed => self.pages.feed.view(),
             PageType::Publish => self.pages.publish.view(),
             PageType::Content => self.pages.content.view(),
