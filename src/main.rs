@@ -55,7 +55,7 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Feed,
+                current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
             },
             Command::none(),
@@ -71,7 +71,7 @@ impl Application for Fuzzr {
             Message::PageChanged(page_type) => page_type,
             _ => {
                 // Page not found
-                PageType::Feed
+                PageType::Dashboard
             }
         };
 

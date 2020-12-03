@@ -28,17 +28,17 @@ impl DashPage {
   // }
 
   pub fn view(&self) -> Element<Message> {
-    let dash_row = Column::new();
+    let dash_info = Column::new();
 
-    let dash_row: Element<_> = dash_row
+    let dash_info: Element<_> = dash_info
       .push(Text::new("Welcome to Fuzzr!!").size(18))
       .spacing(20)
       .padding(20)
-      .push(Text::new("TODO: Relevant info for user here").size(14))
+      .push(Text::new("TODO: Relevant user info here").size(14))
       .spacing(20)
       .padding(20)
       .into();
 
-    dash_row
+    dash_info
     }
 }
