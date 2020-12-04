@@ -8,10 +8,10 @@ mod ui;
 use page::PageType;
 
 use page::content::ContentPage;
+use page::dashboard::DashPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
 use page::testing::TestingPage;
-use page::dashboard::DashPage;
 
 use message::Message;
 use ui::page_selector::PageSelector;

@@ -3,6 +3,6 @@ use crate::page;
 
 #[derive(Debug, Clone)]
 pub enum Message {
-  PageChanged(page::PageType),
-  ContentPublished(content::ContentItem),
+    PageChanged(page::PageType),
+    ContentPublished(content::ContentItem),
 }
