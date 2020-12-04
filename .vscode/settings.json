@@ -2,5 +2,6 @@
   "editor.tabSize": 4,
   "files.autoSave": "onFocusChange",
   "editor.formatOnSave": true,
-  "files.insertFinalNewline": true
+  "files.insertFinalNewline": true,
+  "editor.insertSpaces": true
 }
