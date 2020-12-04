@@ -1,0 +1,6 @@
+{
+  "editor.tabSize": 4,
+  "files.autoSave": "onFocusChange",
+  "editor.formatOnSave": true,
+  "files.insertFinalNewline": true
+}
