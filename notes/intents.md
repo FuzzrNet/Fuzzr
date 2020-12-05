@@ -1,3 +1,5 @@
+# intents / goals
+
 ## general
 
 - no launcher, actually, the app will open instantly always
