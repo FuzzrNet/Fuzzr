@@ -17,15 +17,11 @@ impl DashPage {
         }
     }
 
-    // fn update(&mut self, msg: Message) {
-    //   match msg {
-    //     Message::ContentPublished(content_item) => {
-    //       let DashPage { items, .. } = self;
-    //       items.push(content_item);
-    //     }
-    //     _ => {}
-    //   }
-    // }
+    pub fn update(&mut self, msg: Message) {
+        match msg {
+            _ => {}
+        };
+    }
 
     pub fn view(&self) -> Element<Message> {
         let dash_info = Column::new();

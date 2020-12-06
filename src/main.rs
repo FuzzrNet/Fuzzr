@@ -1,4 +1,5 @@
-use iced::{Application, Column, Command, Container, Element, Length, Settings};
+use iced::{Application, Column, Command, Container, Element, Length, Settings, Subscription};
+use iced_native::{window::Event::FileDropped, Event};
 
 mod data;
 mod message;
@@ -67,15 +68,33 @@ impl Application for Fuzzr {
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
-        self.current_page = match event {
-            Message::PageChanged(page_type) => page_type,
-            _ => {
-                // Page not found
-                PageType::Dashboard
+        let mut update_page = |event: Message| match self.current_page {
+            PageType::Dashboard => self.pages.dash.update(event),
+            PageType::Feed => self.pages.feed.update(event),
+            PageType::Publish => self.pages.publish.update(event),
+            PageType::Content => self.pages.content.update(event),
+            PageType::Testing => self.pages.testing.update(event),
+        };
+
+        match event {
+            Message::PageChanged(page_type) => self.current_page = page_type,
+            Message::FileDroppedOnWindow(_) => {
+                update_page(event);
             }
+            _ => {}
         };
 
         Command::none()
+    }
+
+    fn subscription(&self) -> Subscription<Message> {
+        iced_native::subscription::events_with(|event, _status| match event {
+            Event::Window(window_event) => match window_event {
+                FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+                _ => None,
+            },
+            _ => None,
+        })
     }
 
     fn view(&mut self) -> Element<Message> {

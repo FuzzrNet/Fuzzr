@@ -1488,6 +1488,7 @@ dependencies = [
  "directories-next",
  "env_logger 0.8.2",
  "iced",
+ "iced_native",
  "ipfs-embed",
  "pretty_env_logger",
  "serde",
