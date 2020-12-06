@@ -1,13 +1,14 @@
-use iced::{text_input, Column, Element, Row, Text};
+use iced::{image, text_input, Column, Element, Image, Row, Text};
 
 use crate::data::content::ContentItem;
 use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
-    pub input_state: text_input::State,
-    pub input_value: String,
-    pub item: Option<ContentItem>,
+    input_state: text_input::State,
+    input_value: String,
+    item: Option<ContentItem>,
+    image: Option<image::Handle>,
 }
 
 impl PublishPage {
@@ -16,12 +17,14 @@ impl PublishPage {
             input_state: text_input::State::new(),
             input_value: String::new(),
             item: None,
+            image: None,
         }
     }
 
     pub fn update(&mut self, msg: Message) {
         match msg {
             Message::FileDroppedOnWindow(path) => {
+                self.image = Some(image::Handle::from_path(path.clone()));
                 self.item = Some(ContentItem {
                     id: 0,
                     path,
@@ -38,7 +41,10 @@ impl PublishPage {
             None => "Start adding content by dropping the file or folder here".to_string(),
         };
 
-        let drop_zone = Column::new().push(Text::new(item_path));
+        let drop_zone = match &self.image {
+            Some(image) => Column::new().push(Image::new(image.clone())),
+            None => Column::new().push(Text::new(item_path)),
+        };
 
         Row::new()
             .push(Text::new("TODO: Publish page").size(16))

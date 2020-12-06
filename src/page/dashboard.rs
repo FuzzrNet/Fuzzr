@@ -1,12 +1,12 @@
-use iced::{scrollable, Column, Element, Row, Text};
+use iced::{scrollable, Column, Element, Text};
 
 use crate::data::content::ContentItem;
 use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
-    pub items: Vec<ContentItem>,
-    pub scroll: scrollable::State,
+    items: Vec<ContentItem>,
+    scroll: scrollable::State,
 }
 
 impl DashPage {
