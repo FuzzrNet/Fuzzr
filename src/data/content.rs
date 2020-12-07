@@ -1,3 +1,5 @@
+// Application data formats
+
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
