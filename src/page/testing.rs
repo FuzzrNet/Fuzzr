@@ -5,8 +5,8 @@ use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct TestingPage {
-    pub input_state: text_input::State,
-    pub input_value: String,
+    input_state: text_input::State,
+    input_value: String,
 }
 
 impl TestingPage {

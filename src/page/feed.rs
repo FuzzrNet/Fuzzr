@@ -5,8 +5,8 @@ use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct FeedPage {
-    pub items: Vec<ContentItem>,
-    pub scroll: scrollable::State,
+    items: Vec<ContentItem>,
+    scroll: scrollable::State,
 }
 
 impl FeedPage {
