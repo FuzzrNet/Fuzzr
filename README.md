@@ -6,4 +6,4 @@ This repo contains an implementation of Fuzzr that is architected to serve only 
 
 This is an architecture for an actual locally-run p2p app, not just a web dapp.
 
-Built with rust, for native desktop platforms, using iced and embedded ipfs.
+Built with rust, for native desktop platforms, using iced and ipfs.
