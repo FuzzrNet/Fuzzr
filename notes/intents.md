@@ -8,8 +8,7 @@
 
 - automatic format detection from drag and drop.
 - integrated media players and encoders
-  - ffmpeg - contributing
-  - rav1e - viewing
+  - [gstreamer](https://crates.io/keywords/gstreamer) looks like our best bet, remarkably enough.
 - markdown for text contributions for now (no wysiwyg)
 
 ## viewing
@@ -35,7 +34,7 @@
 
 ## intro
 
-- welcome to fuzzr, presently you are a part of the networ, but are currently anonymous and unknown to other participants
+- welcome to fuzzr, presently you are a part of the network, but are currently anonymous and unknown to other participants
 - you can use the majority of fuzzr's features in this way, such as viewing, purchasing, subscribing, and contributing content,
 - but you can also create as many identities as you like.
 - by adding tags to your identity you are essentially creating a social bubble.
