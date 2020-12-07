@@ -5,8 +5,8 @@ use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct FeedPage {
-    pub items: Vec<ContentItem>,
-    pub scroll: scrollable::State,
+    items: Vec<ContentItem>,
+    scroll: scrollable::State,
 }
 
 impl FeedPage {
@@ -17,15 +17,11 @@ impl FeedPage {
         }
     }
 
-    // fn update(&mut self, msg: Message) {
-    //   match msg {
-    //     Message::ContentPublished(content_item) => {
-    //       let FeedPage { items, .. } = self;
-    //       items.push(content_item);
-    //     }
-    //     _ => {}
-    //   }
-    // }
+    pub fn update(&mut self, msg: Message) {
+        match msg {
+            _ => {}
+        };
+    }
 
     pub fn view(&self) -> Element<Message> {
         Row::new()

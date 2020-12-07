@@ -1,5 +1,8 @@
+use std::path::PathBuf;
+
 #[derive(Debug, Clone)]
 pub struct ContentItem {
-    item_id: usize,
-    item_content: String,
+    pub path: PathBuf,
+    pub id: usize,
+    pub content: String,
 }

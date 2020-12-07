@@ -5,8 +5,8 @@ use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct ContentPage {
-    pub input_state: text_input::State,
-    pub input_value: String,
+    input_state: text_input::State,
+    input_value: String,
 }
 
 impl ContentPage {
@@ -17,7 +17,11 @@ impl ContentPage {
         }
     }
 
-    // fn update(&mut self, msg: Message, debug: &mut bool) {}
+    pub fn update(&mut self, msg: Message) {
+        match msg {
+            _ => {}
+        };
+    }
 
     pub fn view(&self) -> Element<Message> {
         Row::new()

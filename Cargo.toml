@@ -3,7 +3,7 @@ name = "fuzzr"
 version = "0.1.0"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
-  "David Croisant <kn0wmad@protonmail.com>"
+  "David Croisant <kn0wmad@protonmail.com>",
 ]
 edition = "2018"
 
@@ -23,7 +23,8 @@ iced = { version = "0.2", features = [
   "default_system_font",
   "async-std",
   "qr_code",
-  "image"
+  "image",
 ] }
+iced_native = "0.3"
 # Data
 ipfs-embed = "0.9"
