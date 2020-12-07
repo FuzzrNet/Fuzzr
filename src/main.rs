@@ -1,4 +1,4 @@
-use iced::{Application, Column, Command, Container, Element, Length, Settings};
+use iced::{Application, Background, Color, Column, Command, Container, Element, Length, Settings};
 
 mod data;
 mod message;
@@ -36,6 +36,7 @@ pub struct Fuzzr {
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
+    background_color: Color,
 }
 
 impl Application for Fuzzr {
@@ -57,9 +58,14 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
+                background_color: Color::new(0.2, 0.2, 0.2, 1.0),
             },
             Command::none(),
         )
+    }
+
+    fn background_color(&self) -> Color {
+        self.background_color
     }
 
     fn title(&self) -> String {

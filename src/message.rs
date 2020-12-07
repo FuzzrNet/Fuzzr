@@ -5,4 +5,5 @@ use crate::page;
 pub enum Message {
     PageChanged(page::PageType),
     ContentPublished(content::ContentItem),
+    TestButtonPressed,
 }

@@ -1,38 +1,42 @@
-use iced::{button, scrollable, Button, Column, Element, Row, Text};
+use iced::{
+    button, scrollable, Align, Background, Button, Color, Element, HorizontalAlignment, Length,
+    Row, Text,
+};
 
 use crate::data::content::ContentItem;
 use crate::message::Message;
-use crate::page::PageType;
-
-#[derive(Debug, Clone)]
-pub struct PageButton {
-    label_text: String,
-    button_state: button::State,
-    page_type: PageType,
-}
+// use crate::page::PageType;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
+    background_color: Color,
     pub items: Vec<ContentItem>,
-    pub buttons: Vec<PageButton>,
     pub scroll: scrollable::State,
+    pub night_mode: button::State,
+    pub day_mode: button::State,
 }
 
 impl DashPage {
     pub fn new() -> DashPage {
         DashPage {
+            background_color: Color::BLACK,
             items: vec![],
-            buttons: vec![PageButton {
-                label_text: "TestButton".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Dashboard,
-            }],
             scroll: scrollable::State::new(),
+            night_mode: button::State::new(),
+            day_mode: button::State::new(),
+            // buttons: vec![PageButton {
+            //     label_text: "TestButton".to_string(),
+            //     button_state: button::State::new(),
+            //     page_type: PageType::Dashboard,
+            // }],
         }
     }
 
     // fn update(&mut self, msg: Message) {
     //   match msg {
+    //       Message::TestButtonPressed {
+    //           self.test_action does_an_action;
+    //       }
     //     Message::ContentPublished(content_item) => {
     //       let DashPage { items, .. } = self;
     //       items.push(content_item);
@@ -41,55 +45,84 @@ impl DashPage {
     //   }
     // }
 
-    pub fn view(&self) -> Element<Message, Message> {
-        let dash_info_columns = Column::new();
-        let dash_info_rows = Row::new();
+    pub fn view(&mut self) -> Element<Message> {
+        let DashPage {
+            night_mode,
+            // day_mode,
+            ..
+        } = self;
 
-        let dash_info_rows: Element<_> = dash_info_columns
-            .push(Text::new("Welcome to Fuzzr!!").size(18))
+        // let dash_info_columns = Column::new();
+        let test_button = |state, label, message, style| {
+            Button::new(
+                state,
+                Text::new(label)
+                    .width(Length::Fill)
+                    .horizontal_alignment(HorizontalAlignment::Center)
+                    .size(16),
+            )
+            .width(Length::Fill)
+            .padding(8)
+            .on_press(message)
+            .style(style)
+        };
+
+        let dash_info_row = Row::new()
             .spacing(20)
-            .padding(20)
+            .align_items(Align::Start)
+            .push(Text::new("Welcome to Fuzzr!!").size(16))
             .push(Text::new("TODO: Relevant user info here").size(14))
-            .spacing(20)
-            .padding(20)
-            // .push(Button::new(button::State::new(), "TestButton".to_string())
+            .push(test_button(
+                night_mode,
+                "Test Button",
+                Message::TestButtonPressed,
+                style::Button::Primary,
+            ))
             .into();
 
-        let dash_info_columns: Element<_> = dash_info_columns
-            .push(Text::new("Welcome to Fuzzr!!").size(18))
-            .spacing(20)
-            .padding(20)
-            .push(Text::new("TODO: Relevant user info here").size(14))
-            .spacing(20)
-            .padding(20)
-            // .push(Button::new(button::State::new(), "TestButton".to_string())
-            .into();
-
-        dash_info_columns,
-        dash_info_rows
+        dash_info_row
     }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Layout {
-    Row,
-    Column,
+    // Row,
+// Column,
 }
 
 mod style {
-    use iced::{button, Background, Color, Vector};
+    use iced::{button, container, Background, Color, Vector};
+
+    pub enum Page {
+        Background,
+    }
 
     pub enum Button {
         Primary,
-        Secondary,
+        // Secondary,
+    }
+
+    impl container::StyleSheet for Page {
+        fn style(&self) -> container::Style {
+            container::Style {
+                background: Some(Background::Color(match self {
+                    Page::Background => Color::from_rgb(0.5, 0.5, 0.5),
+                })),
+                text_color: Some(Color::BLACK),
+                border_radius: 3.0,
+                border_width: 3.0,
+                border_color: Color::WHITE,
+                ..container::Style::default()
+            }
+        }
     }
 
     impl button::StyleSheet for Button {
         fn active(&self) -> button::Style {
             button::Style {
                 background: Some(Background::Color(match self {
-                    Button::Primary => Color::from_rgb(0.11, 0.42, 0.87),
-                    Button::Secondary => Color::from_rgb(0.5, 0.5, 0.5),
+                    Button::Primary => Color::from_rgb(0.85, 0.3, 0.1),
+                    // Button::Secondary => Color::from_rgb(0.5, 0.5, 0.5),
                 })),
                 border_radius: 12.0,
                 shadow_offset: Vector::new(1.0, 1.0),
