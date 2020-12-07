@@ -1,4 +1,5 @@
 pub mod content;
+pub mod ipfs;
 
 // use content::ContentItem;
 

@@ -15,16 +15,19 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # System
 directories-next = "2.0"
-async-std = { version = "1.7", features = ["unstable"] }
 env_logger = "0.8"
+tokio = "0.2"
 # UI
 iced = { version = "0.2", features = [
   "wgpu",
   "default_system_font",
-  "async-std",
   "qr_code",
   "image",
 ] }
 iced_native = "0.3"
 # Data
-ipfs-embed = "0.9"
+sled = "0.34"
+# Experimental Rust-native IPFS Embed
+# ipfs-embed = "0.9"
+# ipfs-embed-core = "0.9"
+# libipld = "0.8"
