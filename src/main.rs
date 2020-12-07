@@ -1,6 +1,5 @@
 use iced::{
-    Application, Color, Column, Command, Container, Element, Length, Settings,
-    Subscription,
+    Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
 use iced_native::{window::Event::FileDropped, Event};
 
@@ -86,7 +85,10 @@ impl Application for Fuzzr {
         };
 
         match event {
-            Message::PageChanged(page_type) => self.current_page = page_type,
+            Message::PageChanged(page_type) => {
+                self.current_page = page_type.clone();
+                self.page_buttons.active_page = page_type;
+            }
             Message::FileDroppedOnWindow(_) => {
                 update_page(event);
             }

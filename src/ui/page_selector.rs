@@ -13,6 +13,7 @@ pub struct PageButton {
 #[derive(Debug, Clone)]
 pub struct PageSelector {
     buttons: Vec<PageButton>,
+    pub active_page: PageType,
 }
 
 impl PageSelector {
@@ -48,7 +49,10 @@ impl PageSelector {
             });
         }
 
-        PageSelector { buttons }
+        PageSelector {
+            buttons,
+            active_page: PageType::Dashboard,
+        }
     }
 
     pub fn view(&mut self) -> Element<Message> {
