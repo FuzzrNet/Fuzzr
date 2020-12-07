@@ -17,3 +17,4 @@ Feel free to send some XMR to the address below. And if you do so, feel free to 
 `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
 
 If you'd like to get in touch with us, just send an email to those listed in the Cargo.toml.
+Built with rust, for native desktop platforms, using iced and ipfs.
