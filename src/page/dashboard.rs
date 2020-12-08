@@ -1,10 +1,24 @@
 use iced::{
-    button, scrollable, Align, Button, Color, Element, HorizontalAlignment, Length, Row, Text,
+    button, scrollable, Align, Button, Color, Column, Element, HorizontalAlignment, Length,
+    ProgressBar, Row, Text,
 };
 
 use crate::data::content::ContentItem;
+use crate::data::initialize::Initialize;
 use crate::message::Message;
 // use crate::page::PageType;
+
+#[derive(Debug)]
+enum Initialize {
+    Idle { button: button::State },
+    Initializing { progress: f32 },
+    Finished { button: button::State },
+    Errored { button: button::State },
+}
+pub enum InitializeMessage {
+    Initialize,
+    InitializationProgressed(initialize::Progress),
+}
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
@@ -64,6 +78,13 @@ impl DashPage {
                 Message::TestButtonPressed,
                 style::Button::Primary,
             ))
+            .into();
+
+        let initialization_card: Element<_> = Column::new()
+            .max_width(540)
+            .spacing(20)
+            .padding(20)
+            .push(dash_info_row)
             .into();
 
         dash_info_row
