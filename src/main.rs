@@ -1,6 +1,5 @@
 use iced::{
-    Application, Color, Column, Command, Container, Element, Length, Settings,
-    Subscription,
+    Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
 use iced_native::{window::Event::FileDropped, Event};
 

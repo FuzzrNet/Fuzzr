@@ -1,3 +1,5 @@
+use iced::pane_grid;
+
 use crate::data::content;
 use crate::page;
 
@@ -7,4 +9,5 @@ pub enum Message {
     PageChanged(page::PageType),
     ContentPublished(content::ContentItem),
     TestButtonPressed,
+    Close(pane_grid::Pane),
 }

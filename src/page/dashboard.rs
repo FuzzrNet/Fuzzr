@@ -1,10 +1,10 @@
 use iced::{
-    button, executor, scrollable, Align, Application, Button, Color, Column, Command, Container,
-    Element, HorizontalAlignment, Length, ProgressBar, Row, Subscription, Text,
+    button, pane_grid, scrollable, Align, Button, Color, Column, Container, Element,
+    HorizontalAlignment, Length, PaneGrid, Scrollable, Text,
 };
 
 use crate::data::content::ContentItem;
-use crate::data::initialize;
+// use crate::data::initialize;
 use crate::message::Message;
 // use crate::page::PageType;
 
@@ -13,16 +13,24 @@ pub struct DashPage {
     background_color: Color,
     items: Vec<ContentItem>,
     scroll: scrollable::State,
-    night_mode: button::State,
+    panes: pane_grid::State<Content>,
+    panes_created: usize,
+    focus: Option<pane_grid::Pane>,
+    // night_mode: button::State,
 }
 
 impl DashPage {
     pub fn new() -> DashPage {
+        let (panes, _) = pane_grid::State::new(Content::new(0));
+
         DashPage {
             background_color: Color::BLACK,
             items: vec![],
             scroll: scrollable::State::new(),
-            night_mode: button::State::new(),
+            panes,
+            panes_created: 1,
+            focus: None,
+            // night_mode: button::State::new(),
         }
     }
 
@@ -33,9 +41,54 @@ impl DashPage {
     }
 
     pub fn view(&mut self) -> Element<Message> {
-        let DashPage { night_mode, .. } = self;
+        let DashPage {
+            background_color, ..
+        } = self;
 
-        let test_button = |state, label, message, style| {
+        let focus = self.focus;
+        let total_panes = self.panes.len();
+
+        let pane_grid = PaneGrid::new(&mut self.panes, |pane, content| {
+            let is_focused = focus == Some(pane);
+
+            let title_bar = pane_grid::TitleBar::new(format!("Pane {}", content.id)).padding(10);
+            // .style(style::TitleBar { is_focused });
+
+            pane_grid::Content::new(content.view(pane, total_panes)).title_bar(title_bar)
+            // .style(style::Pane { is_focused })
+        })
+        .width(Length::Fill)
+        .height(Length::Fill)
+        .spacing(10);
+
+        Container::new(pane_grid)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .into()
+    }
+}
+
+#[derive(Debug, Clone)]
+struct Content {
+    id: usize,
+    scroll: scrollable::State,
+    close: button::State,
+}
+
+impl Content {
+    fn new(id: usize) -> Self {
+        Content {
+            id,
+            scroll: scrollable::State::new(),
+            close: button::State::new(),
+        }
+    }
+
+    fn view(&mut self, pane: pane_grid::Pane, total_panes: usize) -> Element<Message> {
+        let Content { scroll, close, .. } = self;
+
+        let button = |state, label, message, style| {
             Button::new(
                 state,
                 Text::new(label)
@@ -49,20 +102,32 @@ impl DashPage {
             .style(style)
         };
 
-        let dash_info_row = Row::new()
-            .spacing(20)
+        let mut controls = Column::new()
+            .spacing(5)
             .align_items(Align::Start)
+            .max_width(150)
             .push(Text::new("Welcome to Fuzzr!!").size(16))
             .push(Text::new("TODO: Relevant user info here").size(14))
-            .push(test_button(
-                night_mode,
-                "Test Button",
-                Message::TestButtonPressed,
+            .push(button(
+                // Do some button-ey action
+                close,
+                "Close",
+                Message::Close(pane),
                 style::Button::Primary,
-            ))
-            .into();
+            ));
 
-        dash_info_row
+        let content = Scrollable::new(scroll)
+            .width(Length::Fill)
+            .spacing(10)
+            .align_items(Align::Center)
+            .push(controls);
+
+        Container::new(content)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(5)
+            .center_y()
+            .into()
     }
 }
 
