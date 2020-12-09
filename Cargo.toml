@@ -27,6 +27,8 @@ iced = { version = "0.2", features = [
 iced_native = "0.3"
 # Data
 sled = "0.34"
+iced_futures = "0.2.0"
+reqwest = "0.10.9"
 # Experimental Rust-native IPFS Embed
 # ipfs-embed = "0.9"
 # ipfs-embed-core = "0.9"
