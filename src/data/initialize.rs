@@ -3,11 +3,11 @@ use iced_futures::futures;
 // TODO initialize ipfs, xmrig
 // https://github.com/hecrj/iced/blob/master/examples/download_progress/src/download.rs
 
-pub fn file<T: ToString>(url: T) -> iced::Subscription<Progress> {
-    iced::Subscription::from_recipe(Initialize {
-        url: url.to_string(),
-    })
-}
+// pub fn file<T: ToString>(url: T) -> iced::Subscription<Progress> {
+//     iced::Subscription::from_recipe(Initialize {
+//         url: url.to_string(),
+//     })
+// }
 
 pub struct Initialize {
     url: String,
