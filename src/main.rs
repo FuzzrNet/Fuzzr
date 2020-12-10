@@ -17,6 +17,11 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
+use data::ipfs_client;
+
+use async_std::sync::Arc;
+use ipfs_embed::core::Result;
+
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
 
@@ -34,6 +39,7 @@ struct Pages {
 
 #[derive(Debug, Clone)]
 pub struct Fuzzr {
+    // ipfs_client: IpfsClient,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -58,8 +64,9 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
+                // ipfs_client: None,
             },
-            Command::none(),
+            Command::perform(ipfs_client::add(), Message::ContentSuccess),
         )
     }
 
@@ -78,6 +85,9 @@ impl Application for Fuzzr {
 
         match event {
             Message::PageChanged(page_type) => self.current_page = page_type,
+            Message::ContentPublished(content_item) => {
+                // self.ipfs_client.add_path(content_item.path);
+            }
             Message::FileDroppedOnWindow(_) => {
                 update_page(event);
             }
