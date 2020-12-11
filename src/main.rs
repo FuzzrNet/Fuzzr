@@ -2,8 +2,6 @@ use iced::{Application, Column, Command, Container, Element, Length, Settings, S
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
-use ipfs_embed::core::{Cid, Error, Result};
-use std::path::PathBuf;
 
 mod data;
 mod message;
@@ -46,12 +44,6 @@ pub struct Fuzzr {
     page_buttons: PageSelector,
 }
 
-async fn ipfs_lock(ipfs_client: Arc<Mutex<IpfsClient>>, path: PathBuf) -> Result<Cid, Arc<Error>> {
-    let ipfs_client = ipfs_client.clone();
-    let ipfs_client = ipfs_client.lock().await;
-    ipfs_client.add_file_from_path(path).await
-}
-
 impl Application for Fuzzr {
     type Executor = iced::executor::Default;
     type Message = message::Message;
@@ -82,15 +74,12 @@ impl Application for Fuzzr {
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
-        let mut update_page = |event: Message| match self.current_page {
-            PageType::Dashboard => self.pages.dash.update(event),
-            PageType::Feed => self.pages.feed.update(event),
-            PageType::Publish => self.pages.publish.update(event),
-            PageType::Content => self.pages.content.update(event),
-            PageType::Testing => self.pages.testing.update(event),
-        };
-
-        let page_event = event.clone();
+        // Update all pages with all messages.
+        self.pages.dash.update(event.clone());
+        self.pages.feed.update(event.clone());
+        self.pages.publish.update(event.clone());
+        self.pages.content.update(event.clone());
+        self.pages.testing.update(event.clone());
 
         match event {
             Message::PageChanged(page_type) => {
@@ -104,16 +93,13 @@ impl Application for Fuzzr {
                 }
                 Command::none()
             }
-            Message::FileDroppedOnWindow(path) => {
-                update_page(page_event);
-
-                match self.ipfs_client.clone() {
-                    Some(ipfs_client) => {
-                        Command::perform(ipfs_lock(ipfs_client, path), Message::ContentAddedToIpfs)
-                    }
-                    None => Command::none(),
-                }
-            }
+            Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
+                Some(ipfs_client) => Command::perform(
+                    IpfsClient::ipfs_add_file_from_path(ipfs_client, path),
+                    Message::ContentAddedToIpfs,
+                ),
+                None => Command::none(),
+            },
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
                     Ok(cid) => println!("Content successfully added to IPFS! Cid: {}", cid),
@@ -123,7 +109,18 @@ impl Application for Fuzzr {
                     ),
                 }
                 Command::none()
-            } // _ => Command::none(),
+            }
+            Message::ContentPageLoadContent => {
+                let cid_string = self.pages.content.input_value.clone();
+                match self.ipfs_client.clone() {
+                    Some(ipfs_client) => Command::perform(
+                        IpfsClient::ipfs_get(ipfs_client, cid_string),
+                        Message::ContentPageImageLoaded,
+                    ),
+                    None => Command::none(),
+                }
+            }
+            _ => Command::none(),
         }
     }
 

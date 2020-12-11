@@ -10,4 +10,7 @@ pub enum Message {
     PageChanged(page::PageType),
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     ContentAddedToIpfs(Result<Cid, Arc<Error>>),
+    ContentPageInputChanged(String),
+    ContentPageLoadContent,
+    ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
 }

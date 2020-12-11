@@ -12,10 +12,11 @@ use libipld::{alias, Cid, DagCbor};
 
 use std::fmt;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::time::Duration;
 
 use async_std::fs::read;
-use async_std::sync::Arc;
+use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
 // use image::io::Reader as ImageReader;
 
@@ -70,6 +71,26 @@ impl IpfsClient {
         let content = self.ipfs.get(cid).await?;
 
         Ok(content)
+    }
+
+    pub async fn ipfs_add_file_from_path(
+        ipfs_client: Arc<Mutex<IpfsClient>>,
+        path: PathBuf,
+    ) -> Result<Cid, Arc<Error>> {
+        let ipfs_client = ipfs_client.clone();
+        let ipfs_client = ipfs_client.lock().await;
+        ipfs_client.add_file_from_path(path).await
+    }
+
+    pub async fn ipfs_get(
+        ipfs_client: Arc<Mutex<IpfsClient>>,
+        cid_string: String,
+    ) -> Result<Vec<u8>, Arc<Error>> {
+        let ipfs_client = ipfs_client.clone();
+        let ipfs_client = ipfs_client.lock().await;
+        let cid = Cid::from_str(&cid_string).unwrap();
+        let data = ipfs_client.get(&cid).await?;
+        Ok(data.to_bytes())
     }
 }
 
