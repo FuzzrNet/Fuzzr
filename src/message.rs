@@ -1,4 +1,7 @@
 // use crate::data::content;
+use iced::pane_grid;
+
+use crate::data::content;
 use crate::data::ipfs_client::IpfsClient;
 use crate::page;
 
@@ -9,6 +12,10 @@ use ipfs_embed::core::{Cid, Error, Result};
 pub enum Message {
     FileDroppedOnWindow(std::path::PathBuf),
     PageChanged(page::PageType),
+    ContentPublished(content::ContentItem),
+    TestButtonPressed,
+    Close(pane_grid::Pane),
+    SplitPane,
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     ContentAddedToIpfs(Result<Cid, Arc<Error>>),
     ContentPageInputChanged(String),
