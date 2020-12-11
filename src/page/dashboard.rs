@@ -1,9 +1,10 @@
-use iced::{Align, Column, Container, Element, Length, Row, Text};
+use iced::{
+    Align, Column, Container, Element, HorizontalAlignment, Length, ProgressBar, Row, Text,
+};
+// use iced_native::ProgressBar;
 
-// use crate::data::content::ContentItem;
 // use crate::data::initialize;
 use crate::message::Message;
-// use crate::page::PageType;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
@@ -31,20 +32,35 @@ impl DashPage {
         let user_stats = Column::new()
             .align_items(Align::Start)
             .width(Length::Fill)
+            .height(Length::Fill)
             .spacing(5)
             .padding(10)
             .push(Text::new("User Stats").size(20))
             .push(Text::new("Welcome to Fuzzr").size(16));
 
+        let value = 50.0;
+        let initialize = ProgressBar::new(0.0..=100.0, value);
+        let spacer_row = Row::new().height(Length::Fill);
+
         let fuzzr_stats = Column::new()
             .align_items(Align::End)
             .width(Length::Fill)
+            .height(Length::Fill)
             .spacing(5)
             .padding(10)
             .push(Text::new("Fuzzr Stats").size(20))
-            .push(Text::new("Fuzzr is still in pre-alpha").size(16));
+            .push(Text::new("Fuzzr is still in pre-alpha").size(16))
+            .push(spacer_row)
+            .push(
+                Text::new("Initialization")
+                    .size(12)
+                    .horizontal_alignment(HorizontalAlignment::Center),
+            )
+            .push(initialize)
+            .padding(10);
 
         let dash_container = Row::new().push(user_stats).push(fuzzr_stats);
+        // .push(initialize);
 
         Container::new(dash_container)
             .width(Length::Fill)
@@ -54,6 +70,23 @@ impl DashPage {
             .into()
     }
 }
+
+//     fn view(&mut self) -> Element<Message> {
+//         Column::new()
+//             .padding(20)
+//             .push(ProgressBar::new(0.0..=100.0, self.value))
+//             // .push(
+//             //     Slider::new(
+//             //         &mut self.progress_bar_slider,
+//             //         0.0..=100.0,
+//             //         self.value,
+//             //         Message::SliderChanged,
+//             //     )
+//             //     .step(0.01),
+//             // )
+//             .into()
+//     }
+// }
 
 // mod style {
 

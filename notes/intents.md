@@ -10,6 +10,7 @@
 - integrated media players and encoders
   - [gstreamer](https://crates.io/keywords/gstreamer) looks like our best bet, remarkably enough.
 - markdown for text contributions for now (no wysiwyg)
+- mobile support
 
 ## viewing
 
@@ -27,7 +28,7 @@
 - #hashbank / hash balance / hashrate
 - fuzzfeed
 
-## identities
+## identities / aliases
 
 - this gives you bubbles, and that's okay
 - separation of account (node) and identity
@@ -43,3 +44,9 @@
 - you can subscribe to contributors **or** tags.
 - gold star for, this content was published earlier than the timestamp in the blockchain.
 - download for free, but stream for hashes.
+
+## MunShits
+
+  - Every client is a WireGuard client, creating a sort of sort-of meshnet
+    - Pay some hashes for routing through certain regions/jurisdictions
+  - Ability to create your own section of the network (like a webpage), simply and graphically, and publish to it
