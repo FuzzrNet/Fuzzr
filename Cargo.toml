@@ -16,20 +16,21 @@ serde_json = "1.0"
 # System
 directories-next = "2.0"
 env_logger = "0.8"
-tokio = "0.2"
+async-std = "1.8"
+anyhow = "1.0"
 # UI
 iced = { version = "0.2", features = [
   "wgpu",
   "default_system_font",
-  "qr_code",
   "image",
+  "async-std"
 ] }
 iced_native = "0.3"
 # Data
 sled = "0.34"
 iced_futures = "0.2.0"
 reqwest = "0.10.9"
+image = "0.23"
 # Experimental Rust-native IPFS Embed
-# ipfs-embed = "0.9"
-# ipfs-embed-core = "0.9"
-# libipld = "0.8"
+ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", ref = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
+libipld = "0.8"
