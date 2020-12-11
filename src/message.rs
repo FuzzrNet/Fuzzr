@@ -1,6 +1,4 @@
-use iced::pane_grid;
-
-use crate::data::content;
+// use crate::data::content;
 use crate::data::ipfs_client::IpfsClient;
 use crate::page;
 
