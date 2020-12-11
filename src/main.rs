@@ -1,6 +1,8 @@
 use iced::{Application, Column, Command, Container, Element, Length, Settings, Subscription};
 use iced_native::{window::Event::FileDropped, Event};
 
+use async_std::sync::{Arc, Mutex};
+
 mod data;
 mod message;
 mod page;
@@ -17,13 +19,15 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
+use data::ipfs_client::IpfsClient;
+
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
 
     Fuzzr::run(Settings::default())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 struct Pages {
     dash: DashPage,
     feed: FeedPage,
@@ -32,8 +36,9 @@ struct Pages {
     testing: TestingPage,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Fuzzr {
+    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -58,8 +63,9 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
+                ipfs_client: None,
             },
-            Command::none(),
+            Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
     }
 
@@ -68,23 +74,54 @@ impl Application for Fuzzr {
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
-        let mut update_page = |event: Message| match self.current_page {
-            PageType::Dashboard => self.pages.dash.update(event),
-            PageType::Feed => self.pages.feed.update(event),
-            PageType::Publish => self.pages.publish.update(event),
-            PageType::Content => self.pages.content.update(event),
-            PageType::Testing => self.pages.testing.update(event),
-        };
+        // Update all pages with all messages.
+        self.pages.dash.update(event.clone());
+        self.pages.feed.update(event.clone());
+        self.pages.publish.update(event.clone());
+        self.pages.content.update(event.clone());
+        self.pages.testing.update(event.clone());
 
         match event {
-            Message::PageChanged(page_type) => self.current_page = page_type,
-            Message::FileDroppedOnWindow(_) => {
-                update_page(event);
+            Message::PageChanged(page_type) => {
+                self.current_page = page_type.to_owned();
+                Command::none()
             }
-            _ => {}
-        };
-
-        Command::none()
+            Message::IpfsReady(ipfs_client) => {
+                match ipfs_client {
+                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
+                    Err(_) => {}
+                }
+                Command::none()
+            }
+            Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
+                Some(ipfs_client) => Command::perform(
+                    IpfsClient::ipfs_add_file_from_path(ipfs_client, path),
+                    Message::ContentAddedToIpfs,
+                ),
+                None => Command::none(),
+            },
+            Message::ContentAddedToIpfs(cid) => {
+                match cid {
+                    Ok(cid) => println!("Content successfully added to IPFS! Cid: {}", cid),
+                    Err(err) => println!(
+                        "Something went wrong when attempting to add content to IPFS. Error: {}",
+                        err
+                    ),
+                }
+                Command::none()
+            }
+            Message::ContentPageLoadContent => {
+                let cid_string = self.pages.content.input_value.clone();
+                match self.ipfs_client.clone() {
+                    Some(ipfs_client) => Command::perform(
+                        IpfsClient::ipfs_get(ipfs_client, cid_string),
+                        Message::ContentPageImageLoaded,
+                    ),
+                    None => Command::none(),
+                }
+            }
+            _ => Command::none(),
+        }
     }
 
     fn subscription(&self) -> Subscription<Message> {
