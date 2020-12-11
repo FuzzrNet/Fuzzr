@@ -1,4 +1,4 @@
-use iced::{text_input, Element, Row, Text};
+use iced::{text_input, Column, Container, Element, Length, Text};
 
 // use crate::data::content::ContentItem;
 use crate::message::Message;
@@ -24,8 +24,13 @@ impl ContentPage {
     }
 
     pub fn view(&self) -> Element<Message> {
-        Row::new()
-            .push(Text::new("TODO: Content page").size(16))
+        let content_container = Column::new().push(Text::new("TODO: Content page").size(18));
+
+        Container::new(content_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
             .into()
     }
 }

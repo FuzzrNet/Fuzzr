@@ -1,5 +1,5 @@
 use iced::{
-    Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
+    Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
 use iced_native::{window::Event::FileDropped, Event};
 
@@ -61,7 +61,7 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
-                background_color: Color::new(0.2, 0.2, 0.2, 1.0),
+                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
             },
             Command::none(),
         )
@@ -115,15 +115,16 @@ impl Application for Fuzzr {
         };
 
         let content: Element<_> = Column::new()
-            .max_width(540)
             .spacing(20)
             .padding(20)
             .push(self.page_buttons.view())
+            .align_items(Align::Center)
             .push(page)
             .into();
 
         Container::new(content)
             .height(Length::Fill)
+            .width(Length::Fill)
             .center_y()
             .into()
     }

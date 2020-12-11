@@ -10,4 +10,5 @@ pub enum Message {
     ContentPublished(content::ContentItem),
     TestButtonPressed,
     Close(pane_grid::Pane),
+    SplitPane,
 }
