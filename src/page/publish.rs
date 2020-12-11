@@ -1,4 +1,4 @@
-use iced::{image, text_input, Column, Element, Image, Row, Text};
+use iced::{image, text_input, Column, Container, Element, Image, Length, Text};
 
 use crate::message::Message;
 
@@ -35,9 +35,13 @@ impl PublishPage {
             )),
         };
 
-        Row::new()
-            .push(Text::new("TODO: Publish page").size(16))
-            .push(drop_zone)
+        let publish_container = Column::new().push(drop_zone);
+
+        Container::new(publish_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
             .into()
     }
 }

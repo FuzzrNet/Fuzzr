@@ -1,4 +1,6 @@
-use iced::{Application, Column, Command, Container, Element, Length, Settings, Subscription};
+use iced::{
+    Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
+};
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
@@ -42,6 +44,7 @@ pub struct Fuzzr {
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
+    background_color: Color,
 }
 
 impl Application for Fuzzr {
@@ -63,10 +66,15 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
+                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
+    }
+
+    fn background_color(&self) -> Color {
+        self.background_color
     }
 
     fn title(&self) -> String {
@@ -144,15 +152,16 @@ impl Application for Fuzzr {
         };
 
         let content: Element<_> = Column::new()
-            .max_width(540)
             .spacing(20)
             .padding(20)
             .push(self.page_buttons.view())
+            .align_items(Align::Center)
             .push(page)
             .into();
 
         Container::new(content)
             .height(Length::Fill)
+            .width(Length::Fill)
             .center_y()
             .into()
     }

@@ -1,7 +1,8 @@
 pub mod content;
+pub mod initialize;
+pub mod ipfs_client;
 // pub mod task_processor;
 // mod tasks;
-pub mod ipfs_client;
 
 // use content::ContentItem;
 

@@ -4,5 +4,5 @@
   "editor.formatOnSave": true,
   "files.insertFinalNewline": true,
   "editor.insertSpaces": true,
-  "editor.defaultFormatter": "matklad.rust-analyzer"
+  "editor.defaultFormatter": "rust-lang.rust"
 }

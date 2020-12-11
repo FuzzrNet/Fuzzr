@@ -1,4 +1,5 @@
-use iced::{scrollable, Element, Row, Text};
+use iced::{scrollable, Column, Element, Length, Text};
+use iced_native::Container;
 
 use crate::data::content::ContentItem;
 use crate::message::Message;
@@ -24,8 +25,13 @@ impl FeedPage {
     }
 
     pub fn view(&self) -> Element<Message> {
-        Row::new()
-            .push(Text::new("TODO: Feed page").size(16))
+        let feed_container = Column::new().push(Text::new("TODO: Feed page").size(18));
+
+        Container::new(feed_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
             .into()
     }
 }

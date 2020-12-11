@@ -1,4 +1,4 @@
-use iced::{image, text_input, Column, Element, Image, Row, Text, TextInput};
+use iced::{image, text_input, Column, Container, Element, Image, Length, Row, Text, TextInput};
 
 // use crate::data::content::ContentItem;
 use crate::message::Message;
@@ -52,6 +52,13 @@ impl ContentPage {
             )),
         };
 
-        Row::new().push(input).push(content_image).into()
+        let content_container = Row::new().push(input).push(content_image);
+
+        Container::new(content_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
+            .into()
     }
 }
