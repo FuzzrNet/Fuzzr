@@ -1,6 +1,6 @@
 pub mod content;
-pub mod ipfs_client;
 pub mod initialize;
+pub mod ipfs_client;
 // pub mod task_processor;
 // mod tasks;
 
