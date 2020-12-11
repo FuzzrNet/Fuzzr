@@ -1,9 +1,7 @@
-use iced::{Align, Column, Container, Element, Length, Row, Text};
+use iced::{Align, Column, Container, Element, Length, ProgressBar, Row, Text};
 
-// use crate::data::content::ContentItem;
 // use crate::data::initialize;
 use crate::message::Message;
-// use crate::page::PageType;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
@@ -46,11 +44,50 @@ impl DashPage {
 
         let dash_container = Row::new().push(user_stats).push(fuzzr_stats);
 
+        let initialize =
+
         Container::new(dash_container)
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)
             .center_x()
+            .into()
+    }
+}
+
+#[derive(Default)]
+struct Progress {
+    value: f32,
+}
+
+impl Progress {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    fn title(&self) -> String {
+        String::from("Initialization Progress")
+    }
+
+    fn update(&mut self, message: Message) {
+        match message {
+            _ => {}
+        }
+    }
+
+    fn view(&mut self) -> Element<Message> {
+        Column::new()
+            .padding(20)
+            .push(ProgressBar::new(0.0..=100.0, self.value))
+            // .push(
+            //     Slider::new(
+            //         &mut self.progress_bar_slider,
+            //         0.0..=100.0,
+            //         self.value,
+            //         Message::SliderChanged,
+            //     )
+            //     .step(0.01),
+            // )
             .into()
     }
 }
