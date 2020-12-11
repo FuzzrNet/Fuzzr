@@ -14,9 +14,10 @@ use std::fmt;
 use std::path::PathBuf;
 use std::time::Duration;
 
+use async_std::fs::read;
 use async_std::sync::Arc;
 use directories_next::ProjectDirs;
-use image::io::Reader as ImageReader;
+// use image::io::Reader as ImageReader;
 
 use crate::data::content::{ContentItem, ImageContent};
 
@@ -51,13 +52,11 @@ impl IpfsClient {
     }
 
     // TODO: temporary, until task_processor is finished
-    pub async fn add_image_from_path(&self, path: PathBuf) -> Result<Cid, Arc<Error>> {
-        let img = ImageReader::open(path).unwrap().decode().unwrap();
+    pub async fn add_file_from_path(&self, path: PathBuf) -> Result<Cid, Arc<Error>> {
+        let buffer = async_std::fs::read(path).await.unwrap();
 
         let block = ContentItemBlock {
-            content: ContentItem::Image(ImageContent {
-                buffer: img.to_bytes(),
-            }),
+            content: ContentItem::Image(ImageContent { buffer }), // TODO: validate via magic number
         };
 
         let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, &block)?;

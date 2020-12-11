@@ -1,7 +1,9 @@
 use iced::{Application, Column, Command, Container, Element, Length, Settings, Subscription};
 use iced_native::{window::Event::FileDropped, Event};
 
-use async_std::sync::Arc;
+use async_std::sync::{Arc, Mutex};
+use ipfs_embed::core::{Cid, Error, Result};
+use std::path::PathBuf;
 
 mod data;
 mod message;
@@ -19,7 +21,7 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::ipfs_client::{self, IpfsClient};
+use data::ipfs_client::IpfsClient;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -38,10 +40,16 @@ struct Pages {
 
 #[derive(Clone, Debug)]
 pub struct Fuzzr {
-    ipfs_client: Option<Arc<IpfsClient>>,
+    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
+}
+
+async fn ipfs_lock(ipfs_client: Arc<Mutex<IpfsClient>>, path: PathBuf) -> Result<Cid, Arc<Error>> {
+    let ipfs_client = ipfs_client.clone();
+    let ipfs_client = ipfs_client.lock().await;
+    ipfs_client.add_file_from_path(path).await
 }
 
 impl Application for Fuzzr {
@@ -91,7 +99,7 @@ impl Application for Fuzzr {
             }
             Message::IpfsReady(ipfs_client) => {
                 match ipfs_client {
-                    Ok(client) => self.ipfs_client = Some(Arc::new(client)),
+                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
                     Err(_) => {}
                 }
                 Command::none()
@@ -101,16 +109,21 @@ impl Application for Fuzzr {
 
                 match self.ipfs_client.clone() {
                     Some(ipfs_client) => {
-                        let ipfs_client_real = ipfs_client.clone();
-                        Command::perform(
-                            ipfs_client_real.add_image_from_path(path),
-                            Message::ContentAddedToIpfs,
-                        )
+                        Command::perform(ipfs_lock(ipfs_client, path), Message::ContentAddedToIpfs)
                     }
                     None => Command::none(),
                 }
             }
-            _ => Command::none(),
+            Message::ContentAddedToIpfs(cid) => {
+                match cid {
+                    Ok(cid) => println!("Content successfully added to IPFS! Cid: {}", cid),
+                    Err(err) => println!(
+                        "Something went wrong when attempting to add content to IPFS. Error: {}",
+                        err
+                    ),
+                }
+                Command::none()
+            } // _ => Command::none(),
         }
     }
 
