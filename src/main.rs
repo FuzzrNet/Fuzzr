@@ -1,6 +1,8 @@
 use iced::{Application, Column, Command, Container, Element, Length, Settings, Subscription};
 use iced_native::{window::Event::FileDropped, Event};
 
+use async_std::sync::Arc;
+
 mod data;
 mod message;
 mod page;
@@ -17,10 +19,7 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::ipfs_client;
-
-use async_std::sync::Arc;
-use ipfs_embed::core::Result;
+use data::ipfs_client::{self, IpfsClient};
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -28,7 +27,7 @@ pub fn main() -> iced::Result {
     Fuzzr::run(Settings::default())
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 struct Pages {
     dash: DashPage,
     feed: FeedPage,
@@ -37,9 +36,9 @@ struct Pages {
     testing: TestingPage,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Fuzzr {
-    // ipfs_client: IpfsClient,
+    ipfs_client: Option<Arc<IpfsClient>>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -64,9 +63,9 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
-                // ipfs_client: None,
+                ipfs_client: None,
             },
-            Command::perform(ipfs_client::add(), Message::ContentSuccess),
+            Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
     }
 
@@ -83,18 +82,36 @@ impl Application for Fuzzr {
             PageType::Testing => self.pages.testing.update(event),
         };
 
-        match event {
-            Message::PageChanged(page_type) => self.current_page = page_type,
-            Message::ContentPublished(content_item) => {
-                // self.ipfs_client.add_path(content_item.path);
-            }
-            Message::FileDroppedOnWindow(_) => {
-                update_page(event);
-            }
-            _ => {}
-        };
+        let page_event = event.clone();
 
-        Command::none()
+        match event {
+            Message::PageChanged(page_type) => {
+                self.current_page = page_type.to_owned();
+                Command::none()
+            }
+            Message::IpfsReady(ipfs_client) => {
+                match ipfs_client {
+                    Ok(client) => self.ipfs_client = Some(Arc::new(client)),
+                    Err(_) => {}
+                }
+                Command::none()
+            }
+            Message::FileDroppedOnWindow(path) => {
+                update_page(page_event);
+
+                match self.ipfs_client.clone() {
+                    Some(ipfs_client) => {
+                        let ipfs_client_real = ipfs_client.clone();
+                        Command::perform(
+                            ipfs_client_real.add_image_from_path(path),
+                            Message::ContentAddedToIpfs,
+                        )
+                    }
+                    None => Command::none(),
+                }
+            }
+            _ => Command::none(),
+        }
     }
 
     fn subscription(&self) -> Subscription<Message> {

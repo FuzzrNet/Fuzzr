@@ -1,14 +1,13 @@
-use crate::data::content;
+use crate::data::ipfs_client::IpfsClient;
 use crate::page;
 
 use async_std::sync::Arc;
-use ipfs_embed::core::Error;
-use ipfs_embed::core::Result;
+use ipfs_embed::core::{Cid, Error, Result};
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub enum Message {
     FileDroppedOnWindow(std::path::PathBuf),
     PageChanged(page::PageType),
-    ContentPublished(content::ContentItem),
-    ContentSuccess(Result<(), Arc<Error>>),
+    IpfsReady(Result<IpfsClient, Arc<Error>>),
+    ContentAddedToIpfs(Result<Cid, Arc<Error>>),
 }
