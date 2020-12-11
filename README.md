@@ -1,8 +1,8 @@
 # Fuzzr
 
-Fuzzr intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
+Fuzzr is intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
 
-The focus is ensuring content distribution, censorship resistance, and keeping usesrs as anonymous as they care to be. No user registration required. Encryption of content isn't necessarily a focus for this project, but ensuring secure, unfettered encrypted connections to all anonymized peers is.
+The focus is ensuring content distribution, censorship resistance, and keeping users as anonymous as they care to be. No user registration required. Encryption of content at rest isn't necessarily a focus for this project, but ensuring secure, unfettered encrypted connections to all anonymized peers is.
 
 This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app".
 
