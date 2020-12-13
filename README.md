@@ -1,3 +1,6 @@
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
+[![Build status](https://github.com/FuzzrNet/fuzzr/workflows/Rust/badge.svg)](github.com/FuzzrNet/fuzzr/actions?query=branch:master)
+
 # Fuzzr
 
 Fuzzr is intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
