@@ -2192,7 +2192,7 @@ checksum = "2ee15951c035f79eddbef745611ec962f63f4558f1dadf98ab723cc603487c6f"
 [[package]]
 name = "ipfs-embed"
 version = "0.9.0"
-source = "git+https://github.com/ipfs-rust/ipfs-embed.git#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
+source = "git+https://github.com/ipfs-rust/ipfs-embed.git?rev=a852c5f637dfb08a97d5a08a08cc86e81f5c9d96#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
 dependencies = [
  "async-std",
  "async-trait",
@@ -2209,7 +2209,7 @@ dependencies = [
 [[package]]
 name = "ipfs-embed-core"
 version = "0.9.0"
-source = "git+https://github.com/ipfs-rust/ipfs-embed.git#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
+source = "git+https://github.com/ipfs-rust/ipfs-embed.git?rev=a852c5f637dfb08a97d5a08a08cc86e81f5c9d96#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -2224,7 +2224,7 @@ dependencies = [
 [[package]]
 name = "ipfs-embed-db"
 version = "0.9.0"
-source = "git+https://github.com/ipfs-rust/ipfs-embed.git#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
+source = "git+https://github.com/ipfs-rust/ipfs-embed.git?rev=a852c5f637dfb08a97d5a08a08cc86e81f5c9d96#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
 dependencies = [
  "anyhow",
  "async-std",
@@ -2241,7 +2241,7 @@ dependencies = [
 [[package]]
 name = "ipfs-embed-net"
 version = "0.9.0"
-source = "git+https://github.com/ipfs-rust/ipfs-embed.git#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
+source = "git+https://github.com/ipfs-rust/ipfs-embed.git?rev=a852c5f637dfb08a97d5a08a08cc86e81f5c9d96#a852c5f637dfb08a97d5a08a08cc86e81f5c9d96"
 dependencies = [
  "async-std",
  "fnv",
