@@ -1,4 +1,4 @@
-use iced::{button, Button, Element, Row, Text};
+use iced::{button, Background, Button, Color, Element, Row, Text};
 
 use crate::message::Message;
 use crate::page::PageType;
@@ -70,5 +70,52 @@ impl PageSelector {
                 )
             })
             .into()
+    }
+}
+
+const ACTIVE: Color = Color::from_rgb(
+    0xFF as f32 / 255.0,
+    0xFF as f32 / 255.0,
+    0xFF as f32 / 255.0,
+);
+
+const HOVERED: Color = Color::from_rgb(
+    0x4B as f32 / 255.0,
+    0x4B as f32 / 255.0,
+    0x4B as f32 / 255.0,
+);
+
+const INACTIVE: Color = Color::from_rgb(
+    0x00 as f32 / 255.0,
+    0x00 as f32 / 255.0,
+    0x00 as f32 / 255.0,
+);
+
+pub struct ButtonStyle;
+
+impl button::StyleSheet for ButtonStyle {
+    fn active(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(ACTIVE)),
+            border_radius: 3.0,
+            text_color: Color::WHITE,
+            ..button::Style::default()
+        }
+    }
+
+    fn hovered(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(HOVERED)),
+            text_color: Color::BLACK,
+            ..self.active()
+        }
+    }
+
+    fn disabled(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(INACTIVE)),
+            text_color: Color::BLACK,
+            ..self.hovered()
+        }
     }
 }
