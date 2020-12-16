@@ -1,10 +1,13 @@
 // Application data formats
 
-use std::path::PathBuf;
+use libipld::DagCbor;
 
-#[derive(Debug, Clone)]
-pub struct ContentItem {
-    pub path: PathBuf,
-    pub id: usize,
-    pub content: String,
+#[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
+pub struct ImageContent {
+    pub buffer: Vec<u8>,
+}
+
+#[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
+pub enum ContentItem {
+    Image(ImageContent),
 }

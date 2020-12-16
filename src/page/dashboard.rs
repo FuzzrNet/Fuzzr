@@ -1,128 +1,162 @@
 use iced::{
-    button, scrollable, Align, Button, Color, Element, HorizontalAlignment, Length, Row, Text,
+    Align, Column, Container, Element, HorizontalAlignment, Length, ProgressBar, Row, Text,
 };
+// use iced_native::ProgressBar;
 
-use crate::data::content::ContentItem;
+// use crate::data::initialize;
 use crate::message::Message;
-// use crate::page::PageType;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
-    background_color: Color,
-    items: Vec<ContentItem>,
-    scroll: scrollable::State,
-    night_mode: button::State,
+    // items: Vec<ContentItem>,
+// night_mode: button::State,
 }
 
 impl DashPage {
     pub fn new() -> DashPage {
         DashPage {
-            background_color: Color::BLACK,
-            items: vec![],
-            scroll: scrollable::State::new(),
-            night_mode: button::State::new(),
-            // buttons: vec![PageButton {
-            //     label_text: "TestButton".to_string(),
-            //     button_state: button::State::new(),
-            //     page_type: PageType::Dashboard,
-            // }],
+            // items: vec![],
+            // night_mode: button::State::new(),
         }
     }
 
     pub fn update(&mut self, msg: Message) {
         match msg {
             _ => {}
-        };
+        }
     }
 
-    pub fn view(&mut self) -> Element<Message> {
-        let DashPage { night_mode, .. } = self;
+    pub fn view(&self) -> Element<Message> {
+        // let DashPage { .. } = self;
 
-        // let dash_info_columns = Column::new();
-        let test_button = |state, label, message, style| {
-            Button::new(
-                state,
-                Text::new(label)
-                    .width(Length::Fill)
-                    .horizontal_alignment(HorizontalAlignment::Center)
-                    .size(16),
-            )
-            .width(Length::Fill)
-            .padding(8)
-            .on_press(message)
-            .style(style)
-        };
-
-        let dash_info_row = Row::new()
-            .spacing(20)
+        let user_stats = Column::new()
             .align_items(Align::Start)
-            .push(Text::new("Welcome to Fuzzr!!").size(16))
-            .push(Text::new("TODO: Relevant user info here").size(14))
-            .push(test_button(
-                night_mode,
-                "Test Button",
-                Message::TestButtonPressed,
-                style::Button::Primary,
-            ))
-            .into();
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .spacing(5)
+            .padding(10)
+            .push(Text::new("User Stats").size(20))
+            .push(Text::new("Welcome to Fuzzr").size(16));
 
-        dash_info_row
+        let value = 50.0;
+        let initialize = ProgressBar::new(0.0..=100.0, value);
+        let spacer_row = Row::new().height(Length::Fill);
+
+        let fuzzr_stats = Column::new()
+            .align_items(Align::End)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .spacing(5)
+            .padding(10)
+            .push(Text::new("Fuzzr Stats").size(20))
+            .push(Text::new("Fuzzr is still in pre-alpha").size(16))
+            .push(spacer_row)
+            .push(
+                Text::new("Initialization")
+                    .size(12)
+                    .horizontal_alignment(HorizontalAlignment::Center),
+            )
+            .push(initialize)
+            .padding(10);
+
+        let dash_container = Row::new().push(user_stats).push(fuzzr_stats);
+        // .push(initialize);
+
+        Container::new(dash_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
+            .into()
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Layout {
-    // Row,
-// Column,
-}
+//     fn view(&mut self) -> Element<Message> {
+//         Column::new()
+//             .padding(20)
+//             .push(ProgressBar::new(0.0..=100.0, self.value))
+//             // .push(
+//             //     Slider::new(
+//             //         &mut self.progress_bar_slider,
+//             //         0.0..=100.0,
+//             //         self.value,
+//             //         Message::SliderChanged,
+//             //     )
+//             //     .step(0.01),
+//             // )
+//             .into()
+//     }
+// }
 
-mod style {
-    use iced::{button, Background, Color, Vector};
+// mod style {
 
-    // pub enum Page {
-    //     Background,
-    // }
+//     // There is none
 
-    pub enum Button {
-        Primary,
-        // Secondary,
-    }
+//     use iced::{container, Color};
 
-    // impl container::StyleSheet for Page {
-    //     fn style(&self) -> container::Style {
-    //         container::Style {
-    //             background: Some(Background::Color(match self {
-    //                 Page::Background => Color::from_rgb(0.5, 0.5, 0.5),
-    //             })),
-    //             text_color: Some(Color::BLACK),
-    //             border_radius: 3.0,
-    //             border_width: 3.0,
-    //             border_color: Color::WHITE,
-    //             ..container::Style::default()
-    //         }
-    //     }
-    // }
+//     const BLACK: Color = Color::from_rgb(
+//         0xFF as f32 / 255.0,
+//         0xFF as f32 / 255.0,
+//         0xFF as f32 / 255.0,
+//     );
 
-    impl button::StyleSheet for Button {
-        fn active(&self) -> button::Style {
-            button::Style {
-                background: Some(Background::Color(match self {
-                    Button::Primary => Color::from_rgb(0.85, 0.3, 0.1),
-                    // Button::Secondary => Color::from_rgb(0.5, 0.5, 0.5),
-                })),
-                border_radius: 12.0,
-                shadow_offset: Vector::new(1.0, 1.0),
-                text_color: Color::from_rgb8(0xEE, 0xEE, 0xEE),
-                ..button::Style::default()
-            }
-        }
+//     const WHITE: Color = Color::from_rgb(
+//         0x00 as f32 / 255.0,
+//         0x00 as f32 / 255.0,
+//         0x00 as f32 / 255.0,
+//     );
 
-        fn hovered(&self) -> button::Style {
-            button::Style {
-                text_color: Color::WHITE,
-                shadow_offset: Vector::new(1.0, 2.0),
-                ..self.active()
-            }
-        }
-    }
-}
+//     const ORANGE: Color = Color::from_rgb(
+//         0xFF as f32 / 255.0,
+//         0x45 as f32 / 255.0,
+//         0x00 as f32 / 255.0,
+//     );
+// pub struct ContainerStyle;
+
+// impl container::StyleSheet for ContainerStyle {
+//     fn style(&self) -> Style {
+//         let text_color = match self {
+//             ContainerStyle::Text_Color => (Some(ORANGE))
+//         }
+//     }
+// }}
+
+// #[derive(Debug, Clone)]
+// pub struct Contents {}
+
+// impl Contents {
+//     pub fn new(id: usize) -> Self {
+//         Contents {}
+//     }
+
+//     fn view() -> Element<Message> {
+//         // let Contents { .. } = self;
+//         let button = |state, label, message, style| {
+//             Button::new(
+//                 state,
+//                 Text::new(label)
+//                     .width(Length::Fill)
+//                     .horizontal_alignment(HorizontalAlignment::Center)
+//                     .size(16),
+//             )
+//             .width(Length::Fill)
+//             .padding(8)
+//             .on_press(message)
+//             .style(style)
+//         };
+//         let user_stats = Column::new()
+//             .push(
+//                 Row::new()
+//                     .spacing(5)
+//                     .padding(10)
+//                     .push(Text::new("Welcome to Fuzzr!!").size(16)),
+//             )
+//             .push(
+//                 Row::new()
+//                     .spacing(5)
+//                     .max_width(200)
+//                     .padding(10)
+//                     .push(Text::new("TODO: Relevant user info here").size(14)),
+//             );
+//     }
+// }
