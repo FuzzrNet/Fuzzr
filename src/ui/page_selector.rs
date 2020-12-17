@@ -8,7 +8,7 @@ pub struct PageButton {
     label_text: String,
     button_state: button::State,
     page_type: PageType,
-    // button_style: ButtonStyle,
+    button_style: ButtonStyle,
 }
 
 #[derive(Debug, Clone)]
@@ -24,22 +24,25 @@ impl PageSelector {
                 label_text: "Dashboard".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Dashboard,
-                // button_style: ButtonStyle,
+                button_style: ButtonStyle,
             },
             PageButton {
                 label_text: "Feed".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Feed,
+                button_style: ButtonStyle,
             },
             PageButton {
                 label_text: "Publish".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Publish,
+                button_style: ButtonStyle,
             },
             PageButton {
                 label_text: "Content".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Content,
+                button_style: ButtonStyle,
             },
         ];
 
@@ -48,6 +51,7 @@ impl PageSelector {
                 label_text: "Testing".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Testing,
+                button_style: ButtonStyle,
             });
         }
 
@@ -70,6 +74,7 @@ impl PageSelector {
                     )
                     .on_press(Message::PageChanged(page_button.page_type.clone())),
                 )
+                // Somewhere in here a fucking ButtonStyle.disabled, idk
             })
             .into()
     }
