@@ -99,7 +99,7 @@ impl button::StyleSheet for ButtonStyle {
             background: Some(Background::Color(ACTIVE)),
             border_radius: 3.0,
             text_color: Color::WHITE,
-            ..button::Style::default()
+            ..self.disabled()
         }
     }
 
