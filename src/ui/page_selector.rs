@@ -8,6 +8,7 @@ pub struct PageButton {
     label_text: String,
     button_state: button::State,
     page_type: PageType,
+    // button_style: ButtonStyle,
 }
 
 #[derive(Debug, Clone)]
@@ -23,6 +24,7 @@ impl PageSelector {
                 label_text: "Dashboard".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Dashboard,
+                // button_style: ButtonStyle,
             },
             PageButton {
                 label_text: "Feed".to_string(),
@@ -91,6 +93,7 @@ const INACTIVE: Color = Color::from_rgb(
     0x00 as f32 / 255.0,
 );
 
+#[derive(Debug, Clone)]
 pub struct ButtonStyle;
 
 impl button::StyleSheet for ButtonStyle {
@@ -106,6 +109,7 @@ impl button::StyleSheet for ButtonStyle {
     fn hovered(&self) -> button::Style {
         button::Style {
             background: Some(Background::Color(HOVERED)),
+            border_radius: 3.0,
             text_color: Color::BLACK,
             ..self.active()
         }
@@ -114,6 +118,7 @@ impl button::StyleSheet for ButtonStyle {
     fn disabled(&self) -> button::Style {
         button::Style {
             background: Some(Background::Color(INACTIVE)),
+            border_radius: 3.0,
             text_color: Color::BLACK,
             ..self.hovered()
         }
