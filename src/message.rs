@@ -1,8 +1,6 @@
-// use crate::data::content;
 use iced::pane_grid;
 
 use crate::data::content;
-use crate::data::ipfs_client::IpfsClient;
 use crate::page;
 
 use async_std::sync::Arc;
@@ -16,7 +14,7 @@ pub enum Message {
     TestButtonPressed,
     Close(pane_grid::Pane),
     SplitPane,
-    IpfsReady(Result<IpfsClient, Arc<Error>>),
+    IpfsReady(Result<bool, Arc<Error>>),
     ContentAddedToIpfs(Result<Cid, Arc<Error>>),
     ContentPageInputChanged(String),
     ContentPageLoadContent,

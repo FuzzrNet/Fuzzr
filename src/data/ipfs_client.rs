@@ -16,11 +16,16 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use async_std::fs::read;
-use async_std::sync::{Arc, Mutex};
+use async_std::sync::{Arc, Mutex, MutexGuard};
 use directories_next::ProjectDirs;
 // use image::io::Reader as ImageReader;
 
 use crate::data::content::{ContentItem, ImageContent};
+
+type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
+type MaybeIpfs = Option<Arc<Mutex<IpfsEmbed>>>;
+type ThreadsafeIpfsClient = Arc<Mutex<IpfsClient>>;
+type ThreadsafeIpfsResult<T> = Result<T, Arc<Error>>;
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
 pub struct ContentItemBlock {
@@ -29,30 +34,55 @@ pub struct ContentItemBlock {
 
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>,
+    ipfs: MaybeIpfs,
 }
 
 impl IpfsClient {
-    pub async fn new() -> Result<IpfsClient, Arc<Error>> {
+    pub fn new() -> IpfsClient {
+        IpfsClient { ipfs: None }
+    }
+
+    pub async fn init(&mut self) -> Result<bool, Arc<Error>> {
         let path = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => project_dirs.data_local_dir().to_owned(),
             None => PathBuf::from("/tmp/fuzzr"),
         };
         let cache_size: usize = 10;
-        let ipfs = DefaultIpfs::default(Some(path.join("blocks")), cache_size).await?;
 
-        Ok(IpfsClient { ipfs })
+        self.ipfs = Some(Arc::new(Mutex::new(
+            DefaultIpfs::default(Some(path.join("blocks")), cache_size).await?,
+        )));
+
+        Ok(true)
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
         let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, block)?;
-        self.ipfs.insert(&ipld_block).await?;
-        let cid = *ipld_block.cid();
 
-        Ok(cid)
+        if let Some(ipfs) = self.ipfs.clone() {
+            let ipfs = ipfs.lock().await;
+            ipfs.insert(&ipld_block).await?;
+            let cid = *ipld_block.cid();
+            Ok(cid)
+        } else {
+            Err(Arc::new(Error::msg(
+                "Embedded IPFS not yet initialized when content was added",
+            )))
+        }
     }
 
-    // TODO: temporary, until task_processor is finished
+    pub async fn get(&self, cid: &Cid) -> Result<Block<DefaultParams>, Arc<Error>> {
+        if let Some(ipfs) = self.ipfs.clone() {
+            let ipfs = ipfs.lock().await;
+            let content = ipfs.get(cid).await?;
+            Ok(content)
+        } else {
+            Err(Arc::new(Error::msg(
+                "Embedded IPFS not yet initialized when content was retrieved",
+            )))
+        }
+    }
+
     pub async fn add_file_from_path(&self, path: PathBuf) -> Result<Cid, Arc<Error>> {
         let buffer = async_std::fs::read(path).await.unwrap();
 
@@ -60,36 +90,18 @@ impl IpfsClient {
             content: ContentItem::Image(ImageContent { buffer }), // TODO: validate via magic number
         };
 
-        let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, &block)?;
-        self.ipfs.insert(&ipld_block).await?;
-        let cid = *ipld_block.cid();
+        let cid = self.add(&block).await?;
 
         Ok(cid)
     }
 
-    pub async fn get(&self, cid: &Cid) -> Result<Block<DefaultParams>, Arc<Error>> {
-        let content = self.ipfs.get(cid).await?;
-
-        Ok(content)
-    }
-
-    pub async fn ipfs_add_file_from_path(
-        ipfs_client: Arc<Mutex<IpfsClient>>,
-        path: PathBuf,
-    ) -> Result<Cid, Arc<Error>> {
-        let ipfs_client = ipfs_client.clone();
-        let ipfs_client = ipfs_client.lock().await;
-        ipfs_client.add_file_from_path(path).await
-    }
-
-    pub async fn ipfs_get(
-        ipfs_client: Arc<Mutex<IpfsClient>>,
+    pub async fn get_bytes_from_cid_string(
+        &self,
         cid_string: String,
     ) -> Result<Vec<u8>, Arc<Error>> {
-        let ipfs_client = ipfs_client.clone();
-        let ipfs_client = ipfs_client.lock().await;
         let cid = Cid::from_str(&cid_string).unwrap();
-        let data = ipfs_client.get(&cid).await?;
+        let data = self.get(&cid).await?;
+
         Ok(data.to_bytes())
     }
 }
@@ -99,6 +111,11 @@ impl fmt::Debug for IpfsClient {
         write!(f, "<TODO IpfsClient debug formatting>")
     }
 }
+
+// pub async fn init_ipfs(ipfs_client: Arc<Mutex<IpfsClient>>) -> ThreadsafeIpfsResult<bool> {
+//     let mut ipfs = ipfs_client.lock().await;
+//     Ok(ipfs.init().await?)
+// }
 
 // TODO: Graveyard of potentially useful shit
 // let index = sled::open(path.join("index"))?;
