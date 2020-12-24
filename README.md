@@ -1,6 +1,6 @@
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Build status](https://github.com/FuzzrNet/fuzzr/workflows/Rust/badge.svg)](github.com/FuzzrNet/fuzzr/actions?query=branch:master)
-[![Discord](https://img.shields.io/discord/788559109011406889?style=plastic)]
+![Discord](https://img.shields.io/discord/788559109011406889?style=plastic)
 
 # Fuzzr
 
