@@ -1,5 +1,6 @@
 [![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
 [![Build status](https://github.com/FuzzrNet/fuzzr/workflows/Rust/badge.svg)](github.com/FuzzrNet/fuzzr/actions?query=branch:master)
+[![Discord](https://img.shields.io/discord/788559109011406889?style=plastic)]
 
 # Fuzzr
 
@@ -23,4 +24,4 @@ Feel free to send some XMR to the address below. And if you do so, feel free to 
 
 `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
 
-If you'd like to get in touch with us, just send an email to those listed in the Cargo.toml
+If you'd like to get in touch with us, you can find us on [Discord](https://discord.gg/QgzXCErwkM).
