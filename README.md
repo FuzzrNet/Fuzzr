@@ -1,6 +1,6 @@
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![Build status](https://github.com/FuzzrNet/fuzzr/workflows/Rust/badge.svg)](github.com/FuzzrNet/fuzzr/actions?query=branch:master)
-![Discord](https://img.shields.io/discord/788559109011406889?style=plastic)
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg?style=flat-square)](http://unlicense.org/)
+[![Build status](https://img.shields.io/github/workflow/status/FuzzrNet/fuzzr/Rust/main?style=flat-square)](https://github.com/FuzzrNet/fuzzr/actions?query=branch:main)
+[![Discord](https://img.shields.io/discord/788559109011406889?style=flat-square&logo=discord)](https://discord.gg/cvgbcSwYzy)
 
 # Fuzzr
 
