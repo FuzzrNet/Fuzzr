@@ -21,7 +21,8 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::ipfs_client::IpfsClient;
+// use data::ipfs_client::IpfsClient;
+use data::task_processor::TaskProcessor;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -40,8 +41,9 @@ struct Pages {
 
 #[derive(Clone, Debug)]
 pub struct Fuzzr {
-    ipfs_client: Arc<Mutex<IpfsClient>>,
-    ipfs_ready: bool,
+    // ipfs_client: Arc<Mutex<IpfsClient>>,
+    // ipfs_ready: bool,
+    task_processor: TaskProcessor,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
