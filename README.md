@@ -18,6 +18,8 @@ This project is a massive work in progress. Not all of these goals are currently
 
 Only desktop Linux platforms are supported for now. Support is planned for all platforms except for web. This project is intended to make the web and all web technologies less necessary than they once were by doing what people use the web for in a standardized and hyper-minimal way.
 
+For more, see our milestones document: [Periodic Project Milestones and Goals](notes/milestones.md)
+
 ## Support development!
 
 Feel free to send some XMR to the address below. And if you do so, feel free to reach out, or promote what we're doing.
