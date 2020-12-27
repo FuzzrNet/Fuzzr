@@ -1,24 +1,52 @@
-// use crate::data::content;
 use iced::pane_grid;
 
-use crate::data::content;
-use crate::data::ipfs_client::IpfsClient;
 use crate::page;
-
-use async_std::sync::Arc;
-use ipfs_embed::core::{Cid, Error, Result};
 
 #[derive(Clone, Debug)]
 pub enum Message {
     FileDroppedOnWindow(std::path::PathBuf),
     PageChanged(page::PageType),
-    ContentPublished(content::ContentItem),
     TestButtonPressed,
     Close(pane_grid::Pane),
     SplitPane,
-    IpfsReady(Result<IpfsClient, Arc<Error>>),
-    ContentAddedToIpfs(Result<Cid, Arc<Error>>),
     ContentPageInputChanged(String),
     ContentPageLoadContent,
-    ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
+    #[cfg(feature = "ipfs_rs")]
+    Backend(ipfs::IpfsMessage)
+    #[cfg(feature = "sled_db")]
+    Backend(sled::SledMessage)
+}
+
+#[cfg(feature = "ipfs_rs")]
+pub mod ipfs {
+    use async_std::sync::Arc;
+    use ipfs_embed::core::{Cid, Error, Result};
+
+    use crate::data::content;
+    use crate::data::ipfs_client::IpfsClient;
+
+    #[derive(Clone, Debug)]
+    pub enum IpfsMessage {
+        ContentPublished(content::ContentItem),
+        IpfsReady(Result<IpfsClient, Arc<Error>>),
+        ContentAddedToIpfs(Result<Cid, Arc<Error>>),
+        ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
+    }
+}
+
+#[cfg(feature = "sled_db")]
+pub mod sled {
+    use async_std::sync::Arc;
+    use ipfs_embed::core::{Cid, Error, Result};
+
+    use crate::data::content;
+    use crate::data::ipfs_client::IpfsClient;
+
+    #[derive(Clone, Debug)]
+    pub enum IpfsMessage {
+        ContentPublished(content::ContentItem),
+        IpfsReady(Result<IpfsClient, Arc<Error>>),
+        ContentAddedToIpfs(Result<Cid, Arc<Error>>),
+        ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
+    }
 }

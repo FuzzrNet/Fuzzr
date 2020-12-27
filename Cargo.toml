@@ -30,9 +30,18 @@ iced = { version = "0.2", features = [
 iced_native = "0.3"
 iced_futures = "0.2.0"
 # Data
-sled = "0.34"
+sled = { version = "0.34", optional = true }
 image = "0.23"
 reqwest = "0.10.9"
 # Experimental Rust-native IPFS Embed
-ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
-libipld = "0.8"
+ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96", optional = true }
+libipld = { version = "0.8", optional = true }
+# Website
+quiche = { version = "0.6.0", optional = true }
+
+[features]
+default = ["sled_db", "website"]
+website = ["quiche"]
+sled_db = ["sled"]
+ipfs_rs = ["ipfs-embed", "libipld"]
+ipfs_go = []

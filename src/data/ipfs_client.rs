@@ -1,3 +1,4 @@
+#![cfg(feature = "ipfs_rs")]
 #![allow(unused_imports)] // TODO: Dependencies cleanup
 use ipfs_embed::core::{BitswapStorage, BitswapStore, BitswapSync, Error, Result, Storage};
 use ipfs_embed::db::StorageService;

@@ -9,6 +9,7 @@ mod data;
 mod message;
 mod page;
 mod ui;
+mod web;
 
 use page::PageType;
 
@@ -21,7 +22,14 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
+#[cfg(feature = "ipfs_rs")]
 use data::ipfs_client::IpfsClient;
+
+#[cfg(feature = "sled_db")]
+use data::sled_backend::SledBackend;
+
+#[cfg(feature = "website")]
+use web::server::WebServer;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -40,7 +48,10 @@ struct Pages {
 
 #[derive(Clone, Debug)]
 pub struct Fuzzr {
-    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
+    #[cfg(feature = "ipfs_rs")]
+    data_backend: Option<Arc<Mutex<IpfsClient>>>,
+    #[cfg(feature = "sled_db")]
+    data_backend: Option<Arc<Mutex<SledBackend>>>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -67,6 +78,7 @@ impl Application for Fuzzr {
                 current_page: PageType::Dashboard,
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
+                #[cfg(feature = "ipfs_rs")]
                 ipfs_client: None,
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
