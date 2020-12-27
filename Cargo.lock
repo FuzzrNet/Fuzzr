@@ -1510,6 +1510,7 @@ dependencies = [
  "image",
  "ipfs-embed",
  "libipld",
+ "log",
  "pretty_env_logger",
  "reqwest",
  "serde",

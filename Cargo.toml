@@ -12,6 +12,7 @@ license = "Unlicense"
 [dependencies]
 # Debugging
 pretty_env_logger = "0.4"
+log = "0.4"
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
@@ -32,7 +33,7 @@ iced_futures = "0.2.0"
 # Data
 sled = "0.34"
 image = "0.23"
-reqwest = "0.10.9"
+reqwest = "0.10"
 # Experimental Rust-native IPFS Embed
 ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
 libipld = "0.8"

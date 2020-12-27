@@ -8,11 +8,18 @@ pub struct ImageContent {
 }
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
-pub enum ContentItem {
-    Image(ImageContent),
+pub struct PageContent {
+    // Metadata(PageMetadata),
+    pub content: String,
 }
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
-pub enum PageContent {
-    Content(String),
+pub enum ContentItem {
+    Image(ImageContent),
+    Page(PageContent),
+}
+
+#[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
+pub struct ContentItemBlock {
+    content: ContentItem,
 }
