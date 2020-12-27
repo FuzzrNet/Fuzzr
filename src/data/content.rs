@@ -11,3 +11,8 @@ pub struct ImageContent {
 pub enum ContentItem {
     Image(ImageContent),
 }
+
+#[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
+pub enum PageContent {
+    Content(String),
+}

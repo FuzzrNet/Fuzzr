@@ -21,4 +21,6 @@ pub enum Message {
     ContentPageInputChanged(String),
     ContentPageLoadContent,
     ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
+    SitePageContentChanged(String),
+    SitePagePublishButtonClicked,
 }

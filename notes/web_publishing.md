@@ -7,7 +7,7 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 
 ## 0.1 - Basic Publishing
 
-- [ ] Text entry
+- [x] Text entry
 - [ ] Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)
 - [ ] Warp server
 - [ ] Configure cloudflared Argo tunnel daemon

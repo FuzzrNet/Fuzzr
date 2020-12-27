@@ -16,6 +16,8 @@ use page::content::ContentPage;
 use page::dashboard::DashPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
+use page::settings::SettingsPage;
+use page::site::SitePage;
 use page::testing::TestingPage;
 
 use message::Message;
@@ -35,6 +37,8 @@ struct Pages {
     feed: FeedPage,
     publish: PublishPage,
     content: ContentPage,
+    site: SitePage,
+    settings: SettingsPage,
     testing: TestingPage,
 }
 
@@ -58,13 +62,15 @@ impl Application for Fuzzr {
             feed: FeedPage::new(),
             publish: PublishPage::new(),
             content: ContentPage::new(),
+            site: SitePage::new(),
+            settings: SettingsPage::new(),
             testing: TestingPage::new(),
         };
 
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Dashboard,
+                current_page: PageType::Site,
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
@@ -87,6 +93,8 @@ impl Application for Fuzzr {
         self.pages.feed.update(event.clone());
         self.pages.publish.update(event.clone());
         self.pages.content.update(event.clone());
+        self.pages.site.update(event.clone());
+        self.pages.settings.update(event.clone());
         self.pages.testing.update(event.clone());
 
         match event {
@@ -128,6 +136,16 @@ impl Application for Fuzzr {
                     None => Command::none(),
                 }
             }
+            Message::SitePagePublishButtonClicked => match self.ipfs_client.clone() {
+                Some(_ipfs_client) => {
+                    println!("TODO: Page publish button clicked: {}", self.pages.site.input_value);
+                    Command::none()
+            //         Command::perform(
+            //         IpfsClient::ipfs_update_page_content(ipfs_client, self.pages.site.input_value),
+            //         Message::ContentAddedToIpfs,
+                },
+                None => Command::none(),
+            },
             _ => Command::none(),
         }
     }
@@ -148,6 +166,8 @@ impl Application for Fuzzr {
             PageType::Feed => self.pages.feed.view(),
             PageType::Publish => self.pages.publish.view(),
             PageType::Content => self.pages.content.view(),
+            PageType::Site => self.pages.site.view(),
+            PageType::Settings => self.pages.settings.view(),
             PageType::Testing => self.pages.testing.view(),
         };
 
