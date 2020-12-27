@@ -1,3 +1,4 @@
+use libipld::Cid;
 use std::time::Duration;
 
 type BytesProcessed = u64; // max value: 18.45 exabytes
@@ -19,14 +20,14 @@ enum TaskState {
 #[derive(Clone, Debug)]
 pub struct IpfsAddTask {
     input: Vec<u8>,
-    output: Hash,
+    output: Cid,
     state: TaskState,
     perf: TaskRate,
 }
 
 // #[derive(Clone, Debug)]
 // pub struct IpfsGetTask {
-//     input: Hash,
+//     input: Cid,
 //     output: Vec<u8>,
 //     state: TaskState,
 //     perf: TaskRate,
@@ -34,7 +35,7 @@ pub struct IpfsAddTask {
 
 #[derive(Clone, Debug)]
 pub struct IpfsGetTask {
-    input: Hash,
+    input: Cid,
     output: Vec<u8>,
     state: TaskState,
     perf: TaskRate,

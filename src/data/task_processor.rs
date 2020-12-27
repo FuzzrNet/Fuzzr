@@ -1,3 +1,5 @@
+use std::hash::Hash;
+
 use iced::futures;
 use iced::Subscription;
 
@@ -33,7 +35,7 @@ pub enum State {
     Finished,
 }
 
-#[derive(Clone, Debug)]
+#[derive(PartialEq, Eq, Hash, Clone, Debug)]
 pub struct TaskProcessor {
     ipfs_client: Option<IpfsClient>,
     tasks: Vec<Task>,
@@ -57,10 +59,8 @@ where
     type Output = Progress;
 
     fn hash(&self, state: &mut H) {
-        use std::hash::Hash;
-
         std::any::TypeId::of::<Self>().hash(state);
-        self.url.hash(state);
+        self.tasks.hash(state);
     }
 
     fn stream(
