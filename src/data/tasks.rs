@@ -1,24 +1,10 @@
-use libipld::Cid;
 use std::path::PathBuf;
 use std::time::Duration;
+use std::hash::Hash;
 
-type BytesProcessed = u64; // max value: 18.45 exabytes
+use libipld::Cid;
 
-#[derive(Clone, Debug)]
-enum TaskRate {
-    ImageScale(Duration, BytesProcessed),
-    IpfsAdd(Duration, BytesProcessed),
-    IpfsGet(Duration, BytesProcessed),
-}
-
-#[derive(Clone, Debug)]
-enum TaskState {
-    Running,
-    Finished(Duration),
-    Error(String),
-}
-
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct IpfsAddFromFileTask {
     pub input: Option<PathBuf>,
     pub output: Option<Cid>,
@@ -26,7 +12,7 @@ pub struct IpfsAddFromFileTask {
     // perf: TaskRate,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub struct IpfsGetTask {
     pub input: Option<Cid>,
     pub output: Option<Vec<u8>>,
@@ -34,10 +20,25 @@ pub struct IpfsGetTask {
     // perf: TaskRate,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Hash)]
 pub enum Task {
     // IpfsInit(),
     IpfsAddFromFile(IpfsAddFromFileTask),
     IpfsGet(IpfsGetTask),
     // ImageProcess(),
+}
+
+#[derive(Clone, Debug)]
+pub enum TasksStatus {
+    Working { progress: f32 },
+    Idle,
+    Errors(Vec<String>),
+}
+
+type BytesProcessed = u64; // max value: 18.45 exabytes
+
+#[derive(Clone, Debug)]
+pub struct TaskRates {
+    pub ipfs_add_from_file: (Duration, BytesProcessed),
+    pub ipfs_get: (Duration, BytesProcessed)
 }

@@ -1,30 +1,32 @@
+use std::hash::Hash;
+use std::time::Duration;
+
 use iced_futures::futures;
 
 use crate::data::tasks::Task;
 
 // Just a little utility function
-pub fn file<T: ToString>(url: T) -> iced::Subscription<Progress> {
-    iced::Subscription::from_recipe(Download {
-        url: url.to_string(),
+pub fn run_task<T: ToString>(task: Task) -> iced::Subscription<Progress> {
+    iced::Subscription::from_recipe(TaskProcessor {
+        task,
     })
 }
 
-pub struct Download {
-    url: String,
+#[derive(Hash)]
+pub struct TaskProcessor {
+    task: Task,
 }
 
-// Make sure iced can use our download stream
-impl<H, I> iced_native::subscription::Recipe<H, I> for Download
+impl<H, I> iced_native::subscription::Recipe<H, I> for TaskProcessor
 where
     H: std::hash::Hasher,
 {
     type Output = Progress;
 
     fn hash(&self, state: &mut H) {
-        use std::hash::Hash;
 
         std::any::TypeId::of::<Self>().hash(state);
-        self.url.hash(state);
+        self.task.hash(state);
     }
 
     fn stream(
@@ -32,10 +34,10 @@ where
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         Box::pin(futures::stream::unfold(
-            State::Ready(self.url),
-            |state| async move {
-                match state {
-                    State::Ready(url) => {
+            State::Ready(self.task),
+            |task_state| async move {
+                match task_state {
+                    Task::IpfsAddFromFile(task) => {
                         let response = reqwest::get(&url).await;
 
                         match response {
@@ -95,17 +97,26 @@ where
 #[derive(Debug, Clone)]
 pub enum Progress {
     Started,
-    Advanced(f32),
+    Working(f32),
     Finished,
     Errored,
 }
 
+// pub enum State {
+//     Ready(String),
+//     Downloading {
+//         response: reqwest::Response,
+//         total: u64,
+//         downloaded: u64,
+//     },
+//     Finished,
+// }
+
+type BytesProcessed = u64; // max value: 18.45 exabytes
+
+#[derive(Clone, Debug)]
 pub enum State {
-    Ready(String),
-    Downloading {
-        response: reqwest::Response,
-        total: u64,
-        downloaded: u64,
-    },
-    Finished,
+    Ready(Task),
+    Finished(Duration, BytesProcessed),
+    Error(String),
 }

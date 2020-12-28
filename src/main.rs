@@ -13,6 +13,7 @@ mod data;
 mod message;
 mod page;
 mod ui;
+mod task;
 
 use page::PageType;
 
@@ -29,8 +30,8 @@ use ui::page_selector::PageSelector;
 
 use data::content::{ContentItem, ContentItemBlock, PageContent};
 use data::ipfs_client::IpfsClient;
-use data::task_processor::Download;
-use data::tasks::{IpfsAddFromFileTask, Task};
+// use data::task_processor::Download;
+// use data::tasks::{IpfsAddFromFileTask, Task, TasksStatus};
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -54,6 +55,7 @@ pub struct Fuzzr {
     ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
     task_sender: UnboundedSender<Task>,
     task_receiver: UnboundedReceiver<Task>,
+    tasks_status: TasksStatus,
     ipfs_ready: bool,
     pages: Pages, // All pages in the app
     current_page: PageType,
@@ -83,6 +85,7 @@ impl Application for Fuzzr {
             ipfs_client: None,
             task_sender,
             task_receiver,
+            tasks_status: TasksStatus::Idle,
             ipfs_ready: false,
             pages,
             current_page: PageType::Site,
@@ -168,7 +171,10 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        match self {
+        match self.tasks_status {
+            TasksStatus::Working { progress } => {
+
+            }
             _ => iced_native::subscription::events_with(|event, _status| match event {
                 Event::Window(window_event) => match window_event {
                     FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),

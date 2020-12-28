@@ -24,7 +24,7 @@ use iced_futures::futures::channel::mpsc;
 use iced_futures::futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use crate::data::content::{ContentItem, ContentItemBlock, ImageContent, PageContent};
-use crate::data::tasks::Task;
+// use crate::data::tasks::Task;
 
 type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
 type MaybeIpfs = Option<Arc<Mutex<IpfsEmbed>>>;
@@ -34,13 +34,11 @@ type ThreadsafeIpfsResult<T> = Result<T, Arc<Error>>;
 #[derive(Clone)]
 pub struct IpfsClient {
     ipfs: MaybeIpfs,
-    // task_sender: UnboundedSender<Task>,
-    // task_receiver: UnboundedReceiver<Task>,
+    task_sender: UnboundedSender<Task>,
 }
 
 impl IpfsClient {
-    // task_sender: UnboundedSender<Task>, task_receiver: UnboundedReceiver<Task>
-    pub async fn new() -> Result<IpfsClient, Arc<Error>> {
+    pub async fn new(task_sender: UnboundedSender<Task>, task_receiver: UnboundedReceiver<Task>) -> Result<IpfsClient, Arc<Error>> {
         let path = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => project_dirs.data_local_dir().to_owned(),
             None => PathBuf::from("/tmp/fuzzr"),
@@ -53,7 +51,7 @@ impl IpfsClient {
                 .unwrap(),
         )));
 
-        Ok(IpfsClient { ipfs }) // task_sender, task_receiver
+        Ok(IpfsClient { ipfs, task_sender }) // task_sender, task_receiver
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
