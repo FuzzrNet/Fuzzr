@@ -8,11 +8,12 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 ## 0.1 - Basic Publishing
 
 - [x] Text entry
-- [ ] Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)
+- [x] ~~Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)~~
+- [ ] Save text in local Git site repo, similar to how static sites do.
 - [ ] Warp server
 - [ ] Configure cloudflared Argo tunnel daemon
-    - [ ] [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
-    - [ ] [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
+    - [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
+    - [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
 
 ## 0.2 - Web UI
 

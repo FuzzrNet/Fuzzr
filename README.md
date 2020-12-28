@@ -16,28 +16,32 @@ We want to reinvent the web to be much, much simpler, and to move past it. The W
 
 This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app". Any FuzzrWeb sites will not include a crypto miner of any kind. That's called cryptojacking, it's incredibly inefficient, and is wrong to do without someone's explicit knowledge.
 
-To learn more about our plans for FuzzrWeb, Fuzzr's bridge to the web, take a look at this document: [Fuzzr Web Publishing](notes/web_publishing.md)
+To learn more about our plans for FuzzrWeb, Fuzzr's bridge to the web, take a look at this document: [Fuzzr Web Publishing](docs/web_publishing.md)
 
 ## Status
 
-This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the notes directory. Feedback always appreciated, feel free to  Drop us an issue.
+This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the [docs directory](docs/). Feedback always appreciated, so feel free to drop us an issue. Also, some docs may be out of sync with others. If you notice something that needs improvement, __contributions are welcome.__
 
-Only desktop Linux platforms are officially supported for now. The code should compile to other platforms, but no guarantees it will work out of the box. As the project grows, we'll have more contributors who develop on other systems, but as of now, the overwhelming majority of our contributors run Linux.
+Please be aware, the overwhelming majority of our contributors run Linux, so if you would like the project to build on the platform of your choice, __contributions are welcome.__
 
-Support is eventually planned for all platforms except for web. As with anything, if you see something you would like to see, or if something seems broken, let us know.
+Support is eventually planned for all platforms except for web. As with anything, if you see something you would like to see, or if something seems broken, let us know. Contributions take a variety of forms, not just writing code.
 
 To run the project, all you need to do is [install Rust](https://rustup.rs), check out the code using git, and run `cargo run` in the project directory. It's pretty simple compared to other projects, and should work well out of the box easily enough.
 
 This project is intended to make the web and all web technologies less necessary than they once were by doing what people use the web for in a standardized and hyper-minimal way.
 
-For more, see our milestones document: [Periodic Project Milestones and Goals](notes/milestones.md)
+For more, see our milestones document: [Periodic Project Milestones and Goals](docs/milestones.md)
 
 ## Contribute
 
-We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts.
+We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts. __Contributions welcome.__
 
-If you'd like to reach out and learn more, we use a Discord community server to coordinate. There's a link to join our server at the top of this README.
+If you'd like to reach out and learn more, we use a Discord community server to coordinate:
 
-Feel free to send some XMR to the address below. And if you do so, feel free to reach out, or promote what we're doing.
+[![Discord](https://img.shields.io/discord/788559109011406889?style=for-the-badge&logo=discord)](https://discord.gg/cvgbcSwYzy)
 
-`8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
+__(There's also a link to join our server at the top of this README.)__
+
+Feel free to send some Monero to the address below. And if you do so, feel free to reach out, or promote what we're doing. Any little bit helps, it's a form of encouragement.
+
+XMR: `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
