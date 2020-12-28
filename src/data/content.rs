@@ -21,5 +21,5 @@ pub enum ContentItem {
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
 pub struct ContentItemBlock {
-    content: ContentItem,
+    pub content: ContentItem,
 }

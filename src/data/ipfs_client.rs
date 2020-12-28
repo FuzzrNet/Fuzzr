@@ -21,7 +21,7 @@ use directories_next::ProjectDirs;
 
 use iced_futures::futures;
 use iced_futures::futures::channel::mpsc;
-use iced_futures::futures::channel::mpsc::{UnboundedSender, UnboundedReceiver};
+use iced_futures::futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use crate::data::content::{ContentItem, ContentItemBlock, ImageContent, PageContent};
 use crate::data::tasks::Task;
@@ -31,7 +31,7 @@ type MaybeIpfs = Option<Arc<Mutex<IpfsEmbed>>>;
 type ThreadsafeIpfsClient = Arc<Mutex<IpfsClient>>;
 type ThreadsafeIpfsResult<T> = Result<T, Arc<Error>>;
 
-// #[derive(Clone)]
+#[derive(Clone)]
 pub struct IpfsClient {
     ipfs: MaybeIpfs,
     // task_sender: UnboundedSender<Task>,
@@ -40,22 +40,20 @@ pub struct IpfsClient {
 
 impl IpfsClient {
     // task_sender: UnboundedSender<Task>, task_receiver: UnboundedReceiver<Task>
-    pub fn new() -> IpfsClient {
-        IpfsClient { ipfs: None } // task_sender, task_receiver
-    }
-
-    pub async fn init(&mut self) -> Result<bool, Arc<Error>> {
+    pub async fn new() -> Result<IpfsClient, Arc<Error>> {
         let path = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => project_dirs.data_local_dir().to_owned(),
             None => PathBuf::from("/tmp/fuzzr"),
         };
         let cache_size: usize = 10;
 
-        self.ipfs = Some(Arc::new(Mutex::new(
-            DefaultIpfs::default(Some(path.join("blocks")), cache_size).await?,
+        let ipfs = Some(Arc::new(Mutex::new(
+            DefaultIpfs::default(Some(path.join("blocks")), cache_size)
+                .await
+                .unwrap(),
         )));
 
-        Ok(true)
+        Ok(IpfsClient { ipfs }) // task_sender, task_receiver
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {

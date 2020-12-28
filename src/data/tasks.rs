@@ -1,6 +1,6 @@
 use libipld::Cid;
-use std::time::Duration;
 use std::path::PathBuf;
+use std::time::Duration;
 
 type BytesProcessed = u64; // max value: 18.45 exabytes
 
@@ -20,16 +20,16 @@ enum TaskState {
 
 #[derive(Clone, Debug)]
 pub struct IpfsAddFromFileTask {
-    input: PathBuf,
-    output: Option<Cid>,
+    pub input: PathBuf,
+    pub output: Option<Cid>,
     // state: TaskState,
     // perf: TaskRate,
 }
 
 #[derive(Clone, Debug)]
 pub struct IpfsGetTask {
-    input: Cid,
-    output: Option<Vec<u8>>,
+    pub input: Cid,
+    pub output: Option<Vec<u8>>,
     // state: TaskState,
     // perf: TaskRate,
 }

@@ -53,9 +53,7 @@ where
                                     Some((Progress::Errored, State::Finished))
                                 }
                             }
-                            Err(_) => {
-                                Some((Progress::Errored, State::Finished))
-                            }
+                            Err(_) => Some((Progress::Errored, State::Finished)),
                         }
                     }
                     State::Downloading {
@@ -66,8 +64,7 @@ where
                         Ok(Some(chunk)) => {
                             let downloaded = downloaded + chunk.len() as u64;
 
-                            let percentage =
-                                (downloaded as f32 / total as f32) * 100.0;
+                            let percentage = (downloaded as f32 / total as f32) * 100.0;
 
                             Some((
                                 Progress::Advanced(percentage),

@@ -1,13 +1,13 @@
 use iced::{
     Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
-use iced_native::{window::Event::FileDropped, Event};
 use iced_futures::futures;
 use iced_futures::futures::channel::mpsc;
-use iced_futures::futures::channel::mpsc::{UnboundedSender, UnboundedReceiver};
+use iced_futures::futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
+use iced_native::{window::Event::FileDropped, Event};
 
 use log::info;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 mod data;
 mod message;
@@ -28,9 +28,9 @@ use message::Message;
 use ui::page_selector::PageSelector;
 
 use data::content::{ContentItem, ContentItemBlock, PageContent};
-use data::ipfs_client::{IpfsClient};
-use data::tasks::{Task, IpfsAddFromFileTask};
+use data::ipfs_client::IpfsClient;
 use data::task_processor::Download;
+use data::tasks::{IpfsAddFromFileTask, Task};
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -51,9 +51,9 @@ struct Pages {
 
 #[derive(Debug)]
 pub struct Fuzzr {
-    // ipfs_client: Arc<IpfsClient>,
-    // task_sender: UnboundedSender<Task>,
-    // task_receiver: UnboundedReceiver<Task>,
+    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
+    task_sender: UnboundedSender<Task>,
+    task_receiver: UnboundedReceiver<Task>,
     ipfs_ready: bool,
     pages: Pages, // All pages in the app
     current_page: PageType,
@@ -77,22 +77,20 @@ impl Application for Fuzzr {
             testing: TestingPage::new(),
         };
 
-        // let (mut task_sender, task_receiver) = mpsc::unbounded::<Task>();
-        let ipfs_client = IpfsClient::new();
+        let (mut task_sender, task_receiver) = mpsc::unbounded::<Task>();
 
-        (
-            Fuzzr {
-                // ipfs_client: Arc::new(ipfs_client),
-                // task_sender,
-                // task_receiver,
-                ipfs_ready: false,
-                pages,
-                current_page: PageType::Site,
-                page_buttons: PageSelector::new(),
-                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
-            },
-            Command::perform(ipfs_client.init(), Message::IpfsReady),
-        )
+        let app = Fuzzr {
+            ipfs_client: None,
+            task_sender,
+            task_receiver,
+            ipfs_ready: false,
+            pages,
+            current_page: PageType::Site,
+            page_buttons: PageSelector::new(),
+            background_color: Color::new(1.0, 1.0, 1.0, 1.0),
+        };
+
+        (app, Command::perform(IpfsClient::new(), Message::IpfsReady))
     }
 
     fn background_color(&self) -> Color {
@@ -118,19 +116,20 @@ impl Application for Fuzzr {
                 self.current_page = page_type.to_owned();
                 Command::none()
             }
-            Message::IpfsReady(ipfs_ready) => {
-                match ipfs_ready {
-                    Ok(is_ready) => self.ipfs_ready = is_ready,
-                    Err(_) => self.ipfs_ready = false,
+            Message::IpfsReady(ipfs_client) => {
+                match ipfs_client {
+                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
+                    Err(_) => {}
                 }
                 Command::none()
             }
             Message::FileDroppedOnWindow(path) => {
                 // Command::perform(ipfs.add_file_from_path(path), Message::ContentAddedToIpfs)
-                self.task_sender.unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
-                    input: path,
-                    output: None,
-                }));
+                self.task_sender
+                    .unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
+                        input: path,
+                        output: None,
+                    }));
                 Command::none()
             }
             Message::ContentAddedToIpfs(cid) => {
@@ -151,17 +150,18 @@ impl Application for Fuzzr {
             //     )
             //     Command::none()
             // }
-            Message::SitePagePublishButtonClicked => {
-                info!(
-                    "Page publish button clicked with content: {}",
-                    self.pages.site.input_value
-                );
-                let content = self.pages.site.input_value.clone();
-                let block = ContentItemBlock {
-                    content: ContentItem::Page(PageContent { content }),
-                };
-                Command::perform(ipfs.add(&block), Message::ContentAddedToIpfs)
-            }
+            // Message::SitePagePublishButtonClicked => {
+            //     info!(
+            //         "Page publish button clicked with content: {}",
+            //         self.pages.site.input_value
+            //     );
+            //     let content = self.pages.site.input_value.clone();
+            //     let block = ContentItemBlock {
+            //         content: ContentItem::Page(PageContent { content }),
+            //     };
+            //     // Command::perform(ipfs.add(&block), Message::ContentAddedToIpfs) // TODO
+            //     Command::none()
+            // }
             _ => Command::none(),
         }
     }
@@ -174,7 +174,7 @@ impl Application for Fuzzr {
                     _ => None,
                 },
                 _ => None,
-            })
+            }),
         }
     }
 
