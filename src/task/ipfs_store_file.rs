@@ -10,12 +10,12 @@ use async_std::fs;
 use libipld::{Cid};
 use std::path::PathBuf;
 use crate::data::content::{ContentItemBlock, ContentItem, ImageContent};
-use crate::data::ipfs_client::IpfsClient;
+use crate::data::ipfs_client::MaybeIpfsClient;
 
 // What is needed to create this task?
 pub struct IpfsStoreFile {
     path: PathBuf,
-    ipfs_client: IpfsClient,
+    ipfs_client: MaybeIpfsClient,
 }
 
 // What is the result output type?
@@ -60,7 +60,7 @@ pub enum State {
 }
 
 // Utility function
-pub fn ipfs_store_file_from_path_to_cid(path: PathBuf, ipfs_client: IpfsClient) -> iced::Subscription<Progress> {
+pub fn ipfs_store_file_from_path_to_cid(path: PathBuf, ipfs_client: MaybeIpfsClient) -> iced::Subscription<Progress> {
     iced::Subscription::from_recipe(IpfsStoreFile {
         path,
         ipfs_client,
@@ -125,21 +125,28 @@ where
                         }
                     }
                     State::LoadedFromFilesystem {started, elapsed, size, result} => {
-                        let result = self.ipfs_client.add(&result).await;
+                        if let Some(ipfs_client) = self.ipfs_client.clone() {
+                            let ipfs_client = ipfs_client.lock().await;
+                            let result = ipfs_client.add(&result).await;
 
-                        match result {
-                            Ok(cid) => {
-                                let elapsed = started.elapsed();
-                                Some((Progress::Stored {
-                                    processed: size,
-                                    elapsed,
-                                    result: cid,
-                                }, State::Finished))
+                            match result {
+                                Ok(cid) => {
+                                    let elapsed = started.elapsed();
+                                    Some((Progress::Stored {
+                                        processed: size,
+                                        elapsed,
+                                        result: cid,
+                                    }, State::Finished))
+                                }
+                                Err(err) => {
+                                    error!("Could not store file in IPFS: {}", err);
+                                    Some((Progress::Errored("Could not store file in IPFS".into()), State::Finished))
+                                }
                             }
-                            Err(err) => {
-                                error!("Could not store file in IPFS: {}", err);
-                                Some((Progress::Errored("Could not store file in IPFS".into()), State::Finished))
-                            }
+                        }
+                        else {
+                            error!("Could find IPFS client");
+                            Some((Progress::Errored("Could not find IPFS client".into()), State::Finished))
                         }
                     }
                     State::Finished => {

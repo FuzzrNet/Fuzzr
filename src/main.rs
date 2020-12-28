@@ -1,13 +1,10 @@
 use iced::{
     Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
-use iced_futures::futures;
-use iced_futures::futures::channel::mpsc;
-use iced_futures::futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 use iced_native::{window::Event::FileDropped, Event};
 
-use log::info;
-use std::sync::{Arc, Mutex};
+use log::{info, error};
+use async_std::sync::{Arc, Mutex};
 
 mod data;
 mod message;
@@ -28,10 +25,10 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::content::{ContentItem, ContentItemBlock, PageContent};
-use data::ipfs_client::IpfsClient;
-// use data::task_processor::Download;
-// use data::tasks::{IpfsAddFromFileTask, Task, TasksStatus};
+use data::ipfs_client::{IpfsClient, MaybeIpfsClient};
+
+use task::Task;
+use task::ipfs_store_file::ipfs_store_file_from_path_to_cid;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -52,11 +49,9 @@ struct Pages {
 
 #[derive(Debug)]
 pub struct Fuzzr {
-    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
-    task_sender: UnboundedSender<Task>,
-    task_receiver: UnboundedReceiver<Task>,
-    tasks_status: TasksStatus,
-    ipfs_ready: bool,
+    ipfs_client: MaybeIpfsClient,
+    current_task: Task,
+    pending_tasks: Vec<Task>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -79,14 +74,10 @@ impl Application for Fuzzr {
             testing: TestingPage::new(),
         };
 
-        let (task_sender, task_receiver) = mpsc::unbounded::<Task>();
-
         let app = Fuzzr {
             ipfs_client: None,
-            task_sender,
-            task_receiver,
-            tasks_status: TasksStatus::Idle,
-            ipfs_ready: false,
+            current_task: Task::Idle,
+            pending_tasks: vec![],
             pages,
             current_page: PageType::Site,
             page_buttons: PageSelector::new(),
@@ -128,18 +119,20 @@ impl Application for Fuzzr {
             }
             Message::FileDroppedOnWindow(path) => {
                 // Command::perform(ipfs.add_file_from_path(path), Message::ContentAddedToIpfs)
-                self.task_sender
-                    .unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
-                        input: Some(path),
-                        output: None,
-                    }))
-                    .unwrap();
+
+                // self.task_sender
+                //     .unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
+                //         input: Some(path),
+                //         output: None,
+                //     }))
+                //     .unwrap();
+
                 Command::none()
             }
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
-                    Ok(cid) => println!("Content successfully added to IPFS! Cid: {}", cid),
-                    Err(err) => println!(
+                    Ok(cid) => info!("Content successfully added to IPFS! Cid: {}", cid),
+                    Err(err) => error!(
                         "Something went wrong when attempting to add content to IPFS. Error: {}",
                         err
                     ),
@@ -171,9 +164,9 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        match self.tasks_status {
-            TasksStatus::Working { progress } => {
-
+        match self.current_task {
+            Task::IpfsStoreFile(path) => {
+                ipfs_store_file_from_path_to_cid(path, self.ipfs_client).map(Message::IpfsStoreFileProgress)
             }
             _ => iced_native::subscription::events_with(|event, _status| match event {
                 Event::Window(window_event) => match window_event {
