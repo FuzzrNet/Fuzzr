@@ -129,7 +129,8 @@ impl Application for Fuzzr {
                     .unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
                         input: Some(path),
                         output: None,
-                    })).unwrap();
+                    }))
+                    .unwrap();
                 Command::none()
             }
             Message::ContentAddedToIpfs(cid) => {
