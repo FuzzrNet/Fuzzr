@@ -2,9 +2,12 @@ use iced::{
     Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
 };
 use iced_native::{window::Event::FileDropped, Event};
+use iced_futures::futures;
+use iced_futures::futures::channel::mpsc;
+use iced_futures::futures::channel::mpsc::{UnboundedSender, UnboundedReceiver};
 
 use log::info;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 
 mod data;
 mod message;
@@ -25,7 +28,9 @@ use message::Message;
 use ui::page_selector::PageSelector;
 
 use data::content::{ContentItem, ContentItemBlock, PageContent};
-use data::ipfs_client::IpfsClient;
+use data::ipfs_client::{IpfsClient};
+use data::tasks::{Task, IpfsAddFromFileTask};
+use data::task_processor::Download;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -44,9 +49,11 @@ struct Pages {
     testing: TestingPage,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct Fuzzr {
-    ipfs_client: Arc<Mutex<IpfsClient>>,
+    // ipfs_client: Arc<IpfsClient>,
+    // task_sender: UnboundedSender<Task>,
+    // task_receiver: UnboundedReceiver<Task>,
     ipfs_ready: bool,
     pages: Pages, // All pages in the app
     current_page: PageType,
@@ -70,11 +77,14 @@ impl Application for Fuzzr {
             testing: TestingPage::new(),
         };
 
+        // let (mut task_sender, task_receiver) = mpsc::unbounded::<Task>();
         let ipfs_client = IpfsClient::new();
 
         (
             Fuzzr {
-                ipfs_client: Arc::new(Mutex::new(ipfs_client)),
+                // ipfs_client: Arc::new(ipfs_client),
+                // task_sender,
+                // task_receiver,
                 ipfs_ready: false,
                 pages,
                 current_page: PageType::Site,
@@ -116,8 +126,12 @@ impl Application for Fuzzr {
                 Command::none()
             }
             Message::FileDroppedOnWindow(path) => {
-                let ipfs = self.ipfs_client.lock().unwrap();
-                Command::perform(ipfs.add_file_from_path(path), Message::ContentAddedToIpfs)
+                // Command::perform(ipfs.add_file_from_path(path), Message::ContentAddedToIpfs)
+                self.task_sender.unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
+                    input: path,
+                    output: None,
+                }));
+                Command::none()
             }
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
@@ -129,23 +143,22 @@ impl Application for Fuzzr {
                 }
                 Command::none()
             }
-            Message::ContentPageLoadContent => {
-                let cid_string = self.pages.content.input_value.clone();
-                let ipfs = self.ipfs_client.lock().unwrap();
-                Command::perform(
-                    ipfs.get_bytes_from_cid_string(cid_string),
-                    Message::ContentPageImageLoaded,
-                )
-            }
+            // Message::ContentPageLoadContent => {
+            //     let cid_string = self.pages.content.input_value.clone();
+            //     Command::perform(
+            //         ipfs.get_bytes_from_cid_string(cid_string),
+            //         Message::ContentPageImageLoaded,
+            //     )
+            //     Command::none()
+            // }
             Message::SitePagePublishButtonClicked => {
                 info!(
                     "Page publish button clicked with content: {}",
                     self.pages.site.input_value
                 );
-                let ipfs = self.ipfs_client.lock().unwrap();
-                let content = self.pages.site.input_value;
+                let content = self.pages.site.input_value.clone();
                 let block = ContentItemBlock {
-                    content: ContentItem::Page(PageContent { content }), // TODO: validate via magic number
+                    content: ContentItem::Page(PageContent { content }),
                 };
                 Command::perform(ipfs.add(&block), Message::ContentAddedToIpfs)
             }
@@ -154,13 +167,15 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        iced_native::subscription::events_with(|event, _status| match event {
-            Event::Window(window_event) => match window_event {
-                FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+        match self {
+            _ => iced_native::subscription::events_with(|event, _status| match event {
+                Event::Window(window_event) => match window_event {
+                    FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+                    _ => None,
+                },
                 _ => None,
-            },
-            _ => None,
-        })
+            })
+        }
     }
 
     fn view(&mut self) -> Element<Message> {

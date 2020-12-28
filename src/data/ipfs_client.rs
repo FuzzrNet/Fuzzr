@@ -1,4 +1,4 @@
-#![allow(unused_imports)] // TODO: Dependencies cleanup
+// #![allow(unused_imports)] // TODO: Dependencies cleanup
 use ipfs_embed::core::{BitswapStorage, BitswapStore, BitswapSync, Error, Result, Storage};
 use ipfs_embed::db::StorageService;
 use ipfs_embed::net::{NetworkConfig, NetworkService};
@@ -16,24 +16,32 @@ use std::str::FromStr;
 use std::time::Duration;
 
 use async_std::fs::read;
-use async_std::sync::{Arc, Mutex, MutexGuard};
+use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
 
+use iced_futures::futures;
+use iced_futures::futures::channel::mpsc;
+use iced_futures::futures::channel::mpsc::{UnboundedSender, UnboundedReceiver};
+
 use crate::data::content::{ContentItem, ContentItemBlock, ImageContent, PageContent};
+use crate::data::tasks::Task;
 
 type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
 type MaybeIpfs = Option<Arc<Mutex<IpfsEmbed>>>;
 type ThreadsafeIpfsClient = Arc<Mutex<IpfsClient>>;
 type ThreadsafeIpfsResult<T> = Result<T, Arc<Error>>;
 
-#[derive(Clone)]
+// #[derive(Clone)]
 pub struct IpfsClient {
     ipfs: MaybeIpfs,
+    // task_sender: UnboundedSender<Task>,
+    // task_receiver: UnboundedReceiver<Task>,
 }
 
 impl IpfsClient {
+    // task_sender: UnboundedSender<Task>, task_receiver: UnboundedReceiver<Task>
     pub fn new() -> IpfsClient {
-        IpfsClient { ipfs: None }
+        IpfsClient { ipfs: None } // task_sender, task_receiver
     }
 
     pub async fn init(&mut self) -> Result<bool, Arc<Error>> {
