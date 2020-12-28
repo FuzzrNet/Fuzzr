@@ -77,7 +77,7 @@ impl Application for Fuzzr {
             testing: TestingPage::new(),
         };
 
-        let (mut task_sender, task_receiver) = mpsc::unbounded::<Task>();
+        let (task_sender, task_receiver) = mpsc::unbounded::<Task>();
 
         let app = Fuzzr {
             ipfs_client: None,
@@ -127,9 +127,9 @@ impl Application for Fuzzr {
                 // Command::perform(ipfs.add_file_from_path(path), Message::ContentAddedToIpfs)
                 self.task_sender
                     .unbounded_send(Task::IpfsAddFromFile(IpfsAddFromFileTask {
-                        input: path,
+                        input: Some(path),
                         output: None,
-                    }));
+                    })).unwrap();
                 Command::none()
             }
             Message::ContentAddedToIpfs(cid) => {

@@ -20,7 +20,7 @@ enum TaskState {
 
 #[derive(Clone, Debug)]
 pub struct IpfsAddFromFileTask {
-    pub input: PathBuf,
+    pub input: Option<PathBuf>,
     pub output: Option<Cid>,
     // state: TaskState,
     // perf: TaskRate,
@@ -28,7 +28,7 @@ pub struct IpfsAddFromFileTask {
 
 #[derive(Clone, Debug)]
 pub struct IpfsGetTask {
-    pub input: Cid,
+    pub input: Option<Cid>,
     pub output: Option<Vec<u8>>,
     // state: TaskState,
     // perf: TaskRate,
