@@ -20,9 +20,9 @@ To learn more about our plans for FuzzrWeb, Fuzzr's bridge to the web, take a lo
 
 ## Status
 
-This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the [docs directory](docs/). Feedback always appreciated, so feel free to drop us an issue. Also, some docs may be out of sync with others. If you notice something that needs improvement, __contributions are welcome.__
+This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the [docs directory](docs/). Feedback always appreciated, so feel free to drop us an issue. Also, some docs may be out of sync with others. If you notice something that needs improvement, _contributions are welcome._
 
-Please be aware, the overwhelming majority of our contributors run Linux, so if you would like the project to build on the platform of your choice, __contributions are welcome.__
+Please be aware, the overwhelming majority of our contributors run Linux, so if you would like the project to build on the platform of your choice, _contributions are welcome._
 
 Support is eventually planned for all platforms except for web. As with anything, if you see something you would like to see, or if something seems broken, let us know. Contributions take a variety of forms, not just writing code.
 
@@ -32,16 +32,18 @@ This project is intended to make the web and all web technologies less necessary
 
 For more, see our milestones document: [Periodic Project Milestones and Goals](docs/milestones.md)
 
-## Contribute
+## Contributing
 
-We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts. __Contributions welcome.__
+We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts. _Contributions welcome._
 
 If you'd like to reach out and learn more, we use a Discord community server to coordinate:
 
 [![Discord](https://img.shields.io/discord/788559109011406889?style=for-the-badge&logo=discord)](https://discord.gg/cvgbcSwYzy)
 
-__(There's also a link to join our server at the top of this README.)__
+_(There's also a link to join our server at the top of this README.)_
 
 Feel free to send some Monero to the address below. And if you do so, feel free to reach out, or promote what we're doing. Any little bit helps, it's a form of encouragement.
 
 XMR: `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
+
+For more, see our [Contributions document](CONTRIBUTING.md)
