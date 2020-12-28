@@ -47,15 +47,16 @@ pub enum Progress {
 
 // What steps are required to track task state?
 pub enum State {
-    Ready,
+    Ready(PathBuf, MaybeIpfsClient),
     ReadFileSize {
+        path: PathBuf,
+        ipfs_client: MaybeIpfsClient,
         started: Instant,
-        elapsed: Duration,
         size: Size,
     },
     LoadedFromFilesystem {
+        ipfs_client: MaybeIpfsClient,
         started: Instant,
-        elapsed: Duration,
         size: Size,
         result: ContentItemBlock,
     },
@@ -88,109 +89,113 @@ where
         self: Box<Self>,
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
-        Box::pin(futures::stream::unfold(State::Ready, |state| async move {
-            // What needs to happen during each step of the task state? (One step per "await")
-            match state {
-                State::Ready => {
-                    let started = Instant::now();
+        Box::pin(futures::stream::unfold(
+            State::Ready(self.path, self.ipfs_client),
+            |state| async move {
+                // What needs to happen during each step of the task state? (One step per "await")
+                match state {
+                    State::Ready(path, ipfs_client) => {
+                        let started = Instant::now();
 
-                    match fs::metadata(self.path).await {
-                        Ok(metadata) => {
-                            let size: Size = metadata.len();
-                            let elapsed = started.elapsed();
-                            Some((
-                                Progress::Reading(size),
-                                State::ReadFileSize {
-                                    started,
-                                    elapsed,
-                                    size,
-                                },
-                            ))
-                        }
-                        Err(err) => {
-                            error!("Could not read file size: {}", err);
-                            Some((
-                                Progress::Errored("Could not read file size".into()),
-                                State::Finished,
-                            ))
-                        }
-                    }
-                }
-                State::ReadFileSize {
-                    started,
-                    elapsed,
-                    size,
-                } => {
-                    match fs::read(self.path).await {
-                        Ok(result) => {
-                            let elapsed = started.elapsed();
-                            let block = ContentItemBlock {
-                                content: ContentItem::Image(ImageContent { buffer: result }), // TODO: validate via magic number
-                            };
-                            Some((
-                                Progress::Loaded(elapsed),
-                                State::LoadedFromFilesystem {
-                                    started,
-                                    elapsed,
-                                    size,
-                                    result: block,
-                                },
-                            ))
-                        }
-                        Err(err) => {
-                            error!("Could not read file data: {}", err);
-                            Some((
-                                Progress::Errored("Could not read file data".into()),
-                                State::Finished,
-                            ))
-                        }
-                    }
-                }
-                State::LoadedFromFilesystem {
-                    started,
-                    elapsed,
-                    size,
-                    result,
-                } => {
-                    if let Some(ipfs_client) = self.ipfs_client.clone() {
-                        let ipfs_client = ipfs_client.lock().await;
-                        let result = ipfs_client.add(&result).await;
-
-                        match result {
-                            Ok(cid) => {
-                                let elapsed = started.elapsed();
+                        match fs::metadata(&path).await {
+                            Ok(metadata) => {
+                                let size: Size = metadata.len();
                                 Some((
-                                    Progress::Stored {
-                                        processed: size,
-                                        elapsed,
-                                        result: cid,
+                                    Progress::Reading(size),
+                                    State::ReadFileSize {
+                                        path,
+                                        ipfs_client,
+                                        started,
+                                        size,
                                     },
-                                    State::Finished,
                                 ))
                             }
                             Err(err) => {
-                                error!("Could not store file in IPFS: {}", err);
+                                error!("Could not read file size: {}", err);
                                 Some((
-                                    Progress::Errored("Could not store file in IPFS".into()),
+                                    Progress::Errored("Could not read file size".into()),
                                     State::Finished,
                                 ))
                             }
                         }
-                    } else {
-                        error!("Could find IPFS client");
-                        Some((
-                            Progress::Errored("Could not find IPFS client".into()),
-                            State::Finished,
-                        ))
+                    }
+                    State::ReadFileSize {
+                        path,
+                        ipfs_client,
+                        started,
+                        size,
+                    } => {
+                        match fs::read(&path).await {
+                            Ok(result) => {
+                                let elapsed = started.elapsed();
+                                let block = ContentItemBlock {
+                                    content: ContentItem::Image(ImageContent { buffer: result }), // TODO: validate via magic number
+                                };
+                                Some((
+                                    Progress::Loaded(elapsed),
+                                    State::LoadedFromFilesystem {
+                                        ipfs_client,
+                                        started,
+                                        size,
+                                        result: block,
+                                    },
+                                ))
+                            }
+                            Err(err) => {
+                                error!("Could not read file data: {}", err);
+                                Some((
+                                    Progress::Errored("Could not read file data".into()),
+                                    State::Finished,
+                                ))
+                            }
+                        }
+                    }
+                    State::LoadedFromFilesystem {
+                        ipfs_client,
+                        started,
+                        size,
+                        result,
+                    } => {
+                        if let Some(ipfs_client) = &ipfs_client {
+                            let ipfs_client = ipfs_client.lock().await;
+                            let result = ipfs_client.add(&result).await;
+
+                            match result {
+                                Ok(cid) => {
+                                    let elapsed = started.elapsed();
+                                    Some((
+                                        Progress::Stored {
+                                            processed: size,
+                                            elapsed,
+                                            result: cid,
+                                        },
+                                        State::Finished,
+                                    ))
+                                }
+                                Err(err) => {
+                                    error!("Could not store file in IPFS: {}", err);
+                                    Some((
+                                        Progress::Errored("Could not store file in IPFS".into()),
+                                        State::Finished,
+                                    ))
+                                }
+                            }
+                        } else {
+                            error!("Could find IPFS client");
+                            Some((
+                                Progress::Errored("Could not find IPFS client".into()),
+                                State::Finished,
+                            ))
+                        }
+                    }
+                    State::Finished => {
+                        // Do not change this
+                        let _: () = iced::futures::future::pending().await;
+
+                        None
                     }
                 }
-                State::Finished => {
-                    // Do not change this
-                    let _: () = iced::futures::future::pending().await;
-
-                    None
-                }
-            }
-        }))
+            },
+        ))
     }
 }
