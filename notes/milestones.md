@@ -10,7 +10,7 @@ Periodic updates to this document will be made to better communicate and record 
 - Demo-quality desktop-native iced UI
     - Very good progress here, will be very useful as a springboard for future work.
 - Integrated ipfs-embed-rs
-    - Although quite capable, it's not ideal, simply because the traffic might not be as compatible or capable as mainline go-ipfs.
+    - Although quite capable, it's not ideal, simply because the traffic might not be as compatible or capable as mainline go-ipfs. That said, I'm not 100% ready to give up on it yet.
 - Initial demo (even if it has some bugs)
     - The demo works in terms of being capable of adding image data to ipfs-embed-rs, but it's not yet capable of pulling it back out.
 - An initial implementation of a combined asynchronous task management backend has been outlined in a draft PR.
