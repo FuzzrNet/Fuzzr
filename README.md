@@ -6,13 +6,17 @@
 
 Fuzzr is intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
 
-We want to reinvent the web to be much, much simpler, and to move past it. The Web is __mostly__ centralized (including much of "DWeb" infrastructure), but the broader Internet __mostly__ isn't. That's why the FuzzrWeb should eventually move to the FuzzrNet, and the Fuzzr client can both serve FuzzrWeb sites, access other Fuzzr sites on the FuzzrNet, and also mine to compensate contributors, and stream video and audio.
-
 A major focus of our project is ensuring content distribution, censorship resistance, and keeping users as anonymous as they care to be. No user registration is required. Encryption of content at rest isn't necessarily a focus for this project, but ensuring secure, unfettered encrypted connections to all anonymized peers is.
+
+This project is built with Rust for native desktop (and laptop) OS platforms, using [iced](https://github.com/hecrj/iced) for UI and [embedded IPFS](https://github.com/ipfs-rust/ipfs-embed/) for data.
+
+## FuzzrWeb vs FuzzrNet
+
+We want to reinvent the web to be much, much simpler, and to move past it. The Web is __mostly__ centralized (including much of "DWeb" infrastructure), but the broader Internet __mostly__ isn't. That's why the FuzzrWeb should eventually move to the FuzzrNet, and the Fuzzr client can both serve FuzzrWeb sites, access other Fuzzr sites on the FuzzrNet, and also mine to compensate contributors, and stream video and audio.
 
 This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app". Any FuzzrWeb sites will not include a crypto miner of any kind. That's called cryptojacking, it's incredibly inefficient, and is wrong to do without someone's explicit knowledge.
 
-This project is built with Rust for native desktop (and laptop) OS platforms, using [iced](https://github.com/hecrj/iced) for UI and [embedded IPFS](https://github.com/ipfs-rust/ipfs-embed/) for data.
+To learn more about our plans for FuzzrWeb, Fuzzr's bridge to the web, take a look at this document: [Fuzzr Web Publishing](notes/web_publishing.md)
 
 ## Status
 
