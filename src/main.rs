@@ -3,14 +3,14 @@ use iced::{
 };
 use iced_native::{window::Event::FileDropped, Event};
 
-use log::{info, error};
 use async_std::sync::{Arc, Mutex};
+use log::{error, info};
 
 mod data;
 mod message;
 mod page;
-mod ui;
 mod task;
+mod ui;
 
 use page::PageType;
 
@@ -27,8 +27,8 @@ use ui::page_selector::PageSelector;
 
 use data::ipfs_client::{IpfsClient, MaybeIpfsClient};
 
-use task::Task;
 use task::ipfs_store_file::ipfs_store_file_from_path_to_cid;
+use task::Task;
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -164,9 +164,10 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        match self.current_task {
+        match &self.current_task {
             Task::IpfsStoreFile(path) => {
-                ipfs_store_file_from_path_to_cid(path, self.ipfs_client).map(Message::IpfsStoreFileProgress)
+                ipfs_store_file_from_path_to_cid(path.clone(), self.ipfs_client.clone())
+                    .map(Message::IpfsStoreFileProgress)
             }
             _ => iced_native::subscription::events_with(|event, _status| match event {
                 Event::Window(window_event) => match window_event {

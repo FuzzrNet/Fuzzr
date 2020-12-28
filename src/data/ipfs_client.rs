@@ -1,13 +1,13 @@
 use ipfs_embed::core::{Error, Result};
 use ipfs_embed::db::StorageService;
-use ipfs_embed::net::{NetworkService};
+use ipfs_embed::net::NetworkService;
 use ipfs_embed::DefaultIpfs;
 use ipfs_embed::Ipfs;
 use libipld::block::Block;
 use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
 use libipld::store::{DefaultParams, Store};
-use libipld::{Cid};
+use libipld::Cid;
 
 use std::fmt;
 use std::path::PathBuf;
@@ -15,7 +15,7 @@ use std::path::PathBuf;
 use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
 
-use crate::data::content::{ContentItemBlock};
+use crate::data::content::ContentItemBlock;
 
 type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
 
