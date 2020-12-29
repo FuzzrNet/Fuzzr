@@ -19,6 +19,7 @@ pretty_env_logger = "0.4"
 log = "0.4"
 async-std = "1.8"
 anyhow = "1.0"
+parking_lot = "0.11"
 # UI
 iced = { version = "0.2", features = [
   "wgpu",

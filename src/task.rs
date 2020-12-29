@@ -11,12 +11,19 @@ use std::time::Duration;
 //     Errors(Vec<String>),
 // }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Task {
     Idle,
     IpfsStoreFile(PathBuf),
     IpfsLoadCid(Cid),
 }
+
+// #[derive(Clone, Debug, PartialEq)]
+// pub enum Tasks {
+//     Idle,
+//     IpfsStoreFile(Vec<PathBuf>),
+//     IpfsLoadCid(Vec<Cid>),
+// }
 
 type Size = u64; // max value: 18.45 exabytes
 

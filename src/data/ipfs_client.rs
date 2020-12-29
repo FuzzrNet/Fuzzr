@@ -18,6 +18,7 @@ use directories_next::ProjectDirs;
 use crate::data::content::ContentItemBlock;
 
 type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
+pub type MaybeIpfsClient = Option<Arc<Mutex<IpfsClient>>>;
 
 #[derive(Clone)]
 pub struct IpfsClient {
@@ -57,4 +58,3 @@ impl fmt::Debug for IpfsClient {
     }
 }
 
-pub type MaybeIpfsClient = Option<Arc<Mutex<IpfsClient>>>;

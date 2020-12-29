@@ -3,8 +3,9 @@ use iced::{
 };
 use iced_native::{window::Event::FileDropped, Event};
 
-use async_std::sync::{Arc, Mutex};
+use async_std::sync::{Arc};
 use log::{error, info};
+use parking_lot::Mutex;
 
 mod data;
 mod message;
@@ -36,6 +37,33 @@ pub fn main() -> iced::Result {
     Fuzzr::run(Settings::default())
 }
 
+type TaskQueue = Arc<Mutex<(Option<Task>, Vec<Task>)>>;
+
+#[derive(Debug, Clone)]
+pub struct TaskQueues {
+    ipfs_store_file: TaskQueue,
+}
+
+// type TaskQueuesRef = Arc<Mutex<TaskQueues>>;
+
+// async fn add_task(task: Task, task_queue: TaskQueue) -> Vec<Subscription<Message>> {
+//     let task_queues = task_queues.lock().await;
+//     let (current_task, pending_tasks) = task_queues.ipfs_store_file;
+//     let tasks = vec![];
+
+//     match current_task {
+//         Some(_) => {}
+//         None => {
+//             if !pending_tasks.is_empty() {
+//                 let task = pending_tasks[0];
+//                 ipfs_store_file_from_path_to_cid(path.clone(), self.ipfs_client.clone())
+//                     .map(Message::IpfsStoreFileProgress)
+//                 tasks.push();
+//             }
+//         }
+//     }
+// }
+
 #[derive(Clone, Debug)]
 struct Pages {
     dash: DashPage,
@@ -50,13 +78,23 @@ struct Pages {
 #[derive(Debug)]
 pub struct Fuzzr {
     ipfs_client: MaybeIpfsClient,
-    current_task: Task,
-    pending_tasks: Vec<Task>,
+    // task_queues: TaskQueues,
+    pending_subscriptions: Arc<Mutex<Vec<Subscription<Message>>>>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
     background_color: Color,
 }
+
+// fn add_task(task: &mut Task, current_task: &mut Task, pending_tasks: &mut Vec<Task>) {
+//     if current_task == &Task::Idle {
+//         current_task = task;
+//     } else {
+//         pending_tasks.push(task.clone());
+//     }
+// }
+
+// fn finish_task(task: Task, current_task: &mut Task, pending_tasks: &mut Vec<Task>) {}
 
 impl Application for Fuzzr {
     type Executor = iced::executor::Default;
@@ -76,8 +114,18 @@ impl Application for Fuzzr {
 
         let app = Fuzzr {
             ipfs_client: None,
-            current_task: Task::Idle,
-            pending_tasks: vec![],
+            // task_queues: TaskQueues {
+            //     ipfs_store_file: Arc::new(Mutex::new((None, vec![]))),
+            // },
+            pending_subscriptions: Arc::new(Mutex::new(vec![
+                iced_native::subscription::events_with(|event, _status| match event {
+                    Event::Window(window_event) => match window_event {
+                        FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+                        _ => None,
+                    },
+                    _ => None,
+                }),
+            ])),
             pages,
             current_page: PageType::Site,
             page_buttons: PageSelector::new(),
@@ -112,7 +160,7 @@ impl Application for Fuzzr {
             }
             Message::IpfsReady(ipfs_client) => {
                 match ipfs_client {
-                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
+                    Ok(client) => self.ipfs_client = Some(Arc::new(async_std::sync::Mutex::new(client))),
                     Err(_) => {}
                 }
                 Command::none()
@@ -126,6 +174,12 @@ impl Application for Fuzzr {
                 //         output: None,
                 //     }))
                 //     .unwrap();
+
+                // self.current_task = Task::IpfsStoreFile(path);
+
+                let mut pending_subscriptions = self.pending_subscriptions.lock();
+                pending_subscriptions.push(ipfs_store_file_from_path_to_cid(path.clone(), self.ipfs_client.clone())
+                    .map(Message::IpfsStoreFileProgress));
 
                 Command::none()
             }
@@ -164,19 +218,49 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        match &self.current_task {
-            Task::IpfsStoreFile(path) => {
-                ipfs_store_file_from_path_to_cid(path.clone(), self.ipfs_client.clone())
-                    .map(Message::IpfsStoreFileProgress)
-            }
-            _ => iced_native::subscription::events_with(|event, _status| match event {
+        Subscription::batch(vec![
+            iced_native::subscription::events_with(|event, _status| match event {
                 Event::Window(window_event) => match window_event {
                     FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
                     _ => None,
                 },
                 _ => None,
             }),
-        }
+        ])
+
+        // tasks.extend(self.pending_subscriptions);
+
+        // let (current_task, pending_tasks) = self.task_queues.ipfs_store_file;
+
+        // match current_task {
+        //     Some(_) => {}
+        //     None => {
+        //         if !pending_tasks.is_empty() {
+        //             tasks.push(pending_tasks[0]);
+        //         }
+        //     }
+        // }
+
+        // let pending_subscriptions = Arc::clone(&self.pending_subscriptions);
+        // let pending_subscriptions = pending_subscriptions.lock();
+
+        // Subscription::batch(*pending_subscriptions)
+
+
+        // match &self.current_task {
+        //     Task::IpfsStoreFile(path) => {
+        //         // self.current_task = Task::Idle;
+        //         ipfs_store_file_from_path_to_cid(path.clone(), self.ipfs_client.clone())
+        //             .map(Message::IpfsStoreFileProgress)
+        //     }
+        //     _ => iced_native::subscription::events_with(|event, _status| match event {
+        //                 Event::Window(window_event) => match window_event {
+        //                     FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+        //                     _ => None,
+        //                 },
+        //                 _ => None,
+        //             }),
+        // }
     }
 
     fn view(&mut self) -> Element<Message> {

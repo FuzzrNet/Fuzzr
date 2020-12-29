@@ -14,7 +14,7 @@ use std::path::PathBuf;
 
 // What is needed to create this task?
 pub struct IpfsStoreFile {
-    path: PathBuf,
+    // path: PathBuf,
     ipfs_client: MaybeIpfsClient,
 }
 
@@ -65,10 +65,9 @@ pub enum State {
 
 // Utility function
 pub fn ipfs_store_file_from_path_to_cid(
-    path: PathBuf,
     ipfs_client: MaybeIpfsClient,
 ) -> iced::Subscription<Progress> {
-    iced::Subscription::from_recipe(IpfsStoreFile { path, ipfs_client })
+    iced::Subscription::from_recipe(IpfsStoreFile { ipfs_client })
 }
 
 // Task implementation
@@ -87,7 +86,7 @@ where
 
     fn stream(
         self: Box<Self>,
-        _input: futures::stream::BoxStream<'static, I>,
+        input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         Box::pin(futures::stream::unfold(
             State::Ready(self.path, self.ipfs_client),

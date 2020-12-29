@@ -1497,6 +1497,7 @@ dependencies = [
  "ipfs-embed",
  "libipld",
  "log",
+ "parking_lot",
  "pretty_env_logger",
  "reqwest",
  "serde",
