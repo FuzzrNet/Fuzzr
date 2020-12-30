@@ -19,33 +19,47 @@ impl PageSelector {
     pub fn new() -> PageSelector {
         let mut buttons = vec![
             PageButton {
-                label_text: "Dashboard".to_string(),
+                label_text: "Site".to_string(),
                 button_state: button::State::new(),
-                page_type: PageType::Dashboard,
+                page_type: PageType::Site,
             },
             PageButton {
-                label_text: "Feed".to_string(),
+                label_text: "Settings".to_string(),
                 button_state: button::State::new(),
-                page_type: PageType::Feed,
-            },
-            PageButton {
-                label_text: "Publish".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Publish,
-            },
-            PageButton {
-                label_text: "Content".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Content,
+                page_type: PageType::Settings,
             },
         ];
 
         if std::env::var("RUST_LOG").unwrap_or_default() == "fuzzr" {
-            buttons.push(PageButton {
-                label_text: "Testing".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Testing,
-            });
+            let hidden_buttons = vec![
+                PageButton {
+                    label_text: "Dashboard".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Dashboard,
+                },
+                PageButton {
+                    label_text: "Feed".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Feed,
+                },
+                PageButton {
+                    label_text: "Publish".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Publish,
+                },
+                PageButton {
+                    label_text: "Content".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Content,
+                },
+                PageButton {
+                    label_text: "Testing".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Testing,
+                },
+            ];
+
+            buttons.extend(hidden_buttons);
         }
 
         PageSelector { buttons }

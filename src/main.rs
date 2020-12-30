@@ -4,6 +4,7 @@ use iced::{
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
+use log::{error, info};
 
 mod data;
 mod message;
@@ -16,12 +17,14 @@ use page::content::ContentPage;
 use page::dashboard::DashPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
+use page::settings::SettingsPage;
+use page::site::SitePage;
 use page::testing::TestingPage;
 
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::ipfs_client::IpfsClient;
+use data::ipfs_client::{IpfsClient, MaybeIpfsClient};
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -35,12 +38,14 @@ struct Pages {
     feed: FeedPage,
     publish: PublishPage,
     content: ContentPage,
+    site: SitePage,
+    settings: SettingsPage,
     testing: TestingPage,
 }
 
 #[derive(Clone, Debug)]
 pub struct Fuzzr {
-    ipfs_client: Option<Arc<Mutex<IpfsClient>>>,
+    ipfs_client: MaybeIpfsClient,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -58,6 +63,8 @@ impl Application for Fuzzr {
             feed: FeedPage::new(),
             publish: PublishPage::new(),
             content: ContentPage::new(),
+            site: SitePage::new(),
+            settings: SettingsPage::new(),
             testing: TestingPage::new(),
         };
 
@@ -78,7 +85,7 @@ impl Application for Fuzzr {
     }
 
     fn title(&self) -> String {
-        "Fuzzr".to_string()
+        "Fuzzr".into()
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
@@ -87,6 +94,8 @@ impl Application for Fuzzr {
         self.pages.feed.update(event.clone());
         self.pages.publish.update(event.clone());
         self.pages.content.update(event.clone());
+        self.pages.site.update(event.clone());
+        self.pages.settings.update(event.clone());
         self.pages.testing.update(event.clone());
 
         match event {
@@ -102,16 +111,17 @@ impl Application for Fuzzr {
                 Command::none()
             }
             Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
-                Some(ipfs_client) => Command::perform(
-                    IpfsClient::ipfs_add_file_from_path(ipfs_client, path),
-                    Message::ContentAddedToIpfs,
-                ),
+                Some(ipfs_client) => Command::none(),
+                // Command::perform(
+                //     IpfsClient::ipfs_add_file_from_path(ipfs_client, path),
+                //     Message::ContentAddedToIpfs,
+                // ),
                 None => Command::none(),
             },
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
-                    Ok(cid) => println!("Content successfully added to IPFS! Cid: {}", cid),
-                    Err(err) => println!(
+                    Ok(cid) => info!("Content successfully added to IPFS! Cid: {}", cid),
+                    Err(err) => error!(
                         "Something went wrong when attempting to add content to IPFS. Error: {}",
                         err
                     ),
@@ -121,10 +131,11 @@ impl Application for Fuzzr {
             Message::ContentPageLoadContent => {
                 let cid_string = self.pages.content.input_value.clone();
                 match self.ipfs_client.clone() {
-                    Some(ipfs_client) => Command::perform(
-                        IpfsClient::ipfs_get(ipfs_client, cid_string),
-                        Message::ContentPageImageLoaded,
-                    ),
+                    Some(ipfs_client) => Command::none(), // TODO: IPFS refactor
+                    // Command::perform(
+                    //     IpfsClient::ipfs_get(ipfs_client, cid_string),
+                    //     Message::ContentPageImageLoaded,
+                    // ),
                     None => Command::none(),
                 }
             }
@@ -148,6 +159,8 @@ impl Application for Fuzzr {
             PageType::Feed => self.pages.feed.view(),
             PageType::Publish => self.pages.publish.view(),
             PageType::Content => self.pages.content.view(),
+            PageType::Site => self.pages.site.view(),
+            PageType::Settings => self.pages.settings.view(),
             PageType::Testing => self.pages.testing.view(),
         };
 
