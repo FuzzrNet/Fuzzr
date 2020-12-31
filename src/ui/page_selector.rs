@@ -41,11 +41,25 @@ impl PageSelector {
         ];
 
         if std::env::var("RUST_LOG").unwrap_or_default() == "fuzzr" {
-            buttons.push(PageButton {
-                label_text: "Testing".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Testing,
-            });
+            let hidden_buttons = vec![
+                PageButton {
+                    label_text: "Site".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Site,
+                },
+                PageButton {
+                    label_text: "Settings".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Settings,
+                },
+                PageButton {
+                    label_text: "Testing".to_string(),
+                    button_state: button::State::new(),
+                    page_type: PageType::Testing,
+                },
+            ];
+
+            buttons.extend(hidden_buttons);
         }
 
         PageSelector { buttons }

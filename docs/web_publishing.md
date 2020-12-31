@@ -9,11 +9,16 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 
 - [x] Text entry
 - [x] ~~Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)~~
+- [ ] Finish task processor for easier evented IO
 - [ ] Save text in local Git site repo, similar to how static sites do.
 - [ ] Warp server
 - [ ] Configure cloudflared Argo tunnel daemon
     - [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
     - [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
+
+## 0.1.1 - Task Refactor
+
+- [ ] Tasks should be refactored out into separate files, making files like `main.rs` less unwieldy, and tasks easier to contribute without making boilerplate changes in a dozen different places.
 
 ## 0.2 - Web UI
 
@@ -39,7 +44,11 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
     - [ ] Dark mode setting persistence
     - [ ] Fallback to default (dark theme)
 
-## 0.3 - Crypto monetization v1 - Fuzzr (website, crypto)
+## 0.2.2 - Multi-site Support
+
+- [ ] Support multiple site profiles, and multiple Argo tunnel configurations per Fuzzr client
+
+## 0.3 - Crypto monetization v1
 
 - [ ] Miner config
     - [ ] Communicate with locally running xmrig HTTP API

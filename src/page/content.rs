@@ -1,6 +1,7 @@
 use iced::{image, text_input, Column, Container, Element, Image, Length, Row, Text, TextInput};
+use log::{error, info};
 
-// use crate::data::content::ContentItem;
+use crate::data::content::ContentItem;
 use crate::message::Message;
 
 #[derive(Debug, Clone)]
@@ -24,12 +25,19 @@ impl ContentPage {
             Message::ContentPageInputChanged(value) => {
                 self.input_value = value;
             }
-            Message::ContentPageImageLoaded(buffer) => {
-                self.image = match buffer {
-                    Ok(image_data) => Some(image::Handle::from_memory(image_data)),
-                    Err(_) => None,
+            Message::ContentPageContentLoaded(content_item) => match content_item {
+                Ok(content_item) => match content_item {
+                    ContentItem::Image(image_content) => {
+                        self.image = Some(image::Handle::from_memory(image_content.buffer));
+                    }
+                    _ => {
+                        info!("Data loaded, but not shown");
+                    }
+                },
+                Err(err) => {
+                    error!("Error loading content item from IPFS: {}", err);
                 }
-            }
+            },
             _ => {}
         };
     }
