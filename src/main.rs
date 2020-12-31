@@ -128,10 +128,7 @@ impl Application for Fuzzr {
                         }
                     },
                     Err(err) => {
-                        error!(
-                        "Something went wrong when attempting to add content to IPFS. Error: {}",
-                        err
-                    );
+                        error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
                     }
                 }
                 Command::none()
