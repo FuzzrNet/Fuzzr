@@ -9,6 +9,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Nightly toolchain
+        run: rustup toolchain install nightly
       - name: Lint
         run: cargo fmt -- --check
       - name: Build
