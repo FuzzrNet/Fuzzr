@@ -4,7 +4,7 @@ use iced::{
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
-use log::{error, info};
+use log::error;
 
 mod data;
 mod message;
@@ -72,7 +72,7 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::View, // Default page
+                current_page: PageType::Publish, // Default page
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
@@ -119,11 +119,20 @@ impl Application for Fuzzr {
             },
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
-                    Ok(cid) => info!("Content successfully added to IPFS! Cid: {}", cid),
-                    Err(err) => error!(
+                    Ok(maybe_cid) => match maybe_cid {
+                        Some(cid) => {
+                            println!("Content successfully added to IPFS! Cid: {}", cid);
+                        }
+                        None => {
+                            error!("No CID was returned when attempting to store content in IPFS.");
+                        }
+                    },
+                    Err(err) => {
+                        error!(
                         "Something went wrong when attempting to add content to IPFS. Error: {}",
                         err
-                    ),
+                    );
+                    }
                 }
                 Command::none()
             }

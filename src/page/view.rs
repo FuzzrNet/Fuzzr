@@ -1,16 +1,15 @@
-use iced::{
-    image, text_input, Column, Container, Element, Image, Length, /* Row, Text, */ TextInput,
-};
-use log::{error, info};
+use iced::{text_input, Column, Container, Element, Length, /* Row, Text, */ TextInput};
+use log::error;
 
 use crate::data::content::ContentItem;
 use crate::message::Message;
+use crate::ui::content_view;
 
 #[derive(Debug, Clone)]
 pub struct ViewPage {
     input_state: text_input::State,
     pub input_value: String,
-    image: Option<image::Handle>,
+    content: Option<ContentItem>,
 }
 
 impl ViewPage {
@@ -18,7 +17,7 @@ impl ViewPage {
         ViewPage {
             input_state: text_input::State::new(),
             input_value: String::new(),
-            image: None,
+            content: None,
         }
     }
 
@@ -28,14 +27,9 @@ impl ViewPage {
                 self.input_value = value;
             }
             Message::ViewPageContentLoaded(content_item) => match content_item {
-                Ok(content_item) => match content_item {
-                    ContentItem::Image(image_content) => {
-                        self.image = Some(image::Handle::from_memory(image_content.buffer));
-                    }
-                    _ => {
-                        info!("Data loaded, but not shown");
-                    }
-                },
+                Ok(content_item) => {
+                    self.content = Some(content_item);
+                }
                 Err(err) => {
                     error!("Error loading content item from IPFS: {}", err);
                 }
@@ -55,11 +49,9 @@ impl ViewPage {
         .size(16)
         .on_submit(Message::ViewPageLoadContent);
 
-        let content_image = match &self.image {
-            Some(image) => Column::new().push(Image::new(image.clone())),
-            None => Column::new(), /* .push(Text::new(
-                                       "Start adding content by dropping the file or folder here",
-                                   )),*/
+        let content_image = match &self.content {
+            Some(content) => Column::new().push(content_view::view(&content)),
+            None => Column::new(),
         };
 
         let content_container = Column::new().push(input).push(content_image);

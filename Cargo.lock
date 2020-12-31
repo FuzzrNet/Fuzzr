@@ -1504,6 +1504,7 @@ dependencies = [
  "iced_futures",
  "iced_native",
  "image",
+ "infer",
  "ipfs-embed",
  "libipld",
  "log",
@@ -2139,6 +2140,12 @@ dependencies = [
  "autocfg",
  "hashbrown",
 ]
+
+[[package]]
+name = "infer"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cf59e35fc908934bb8dea859433fc2b837ac5268d846077c8084ed8a57a31d17"
 
 [[package]]
 name = "inplace_it"

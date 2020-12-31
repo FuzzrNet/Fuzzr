@@ -7,10 +7,7 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 
 ## 0.1 - Basic Content Publishing
 
-- [x] Text entry
-- [x] ~~Finish task processor for easier evented IO~~
-- [x] Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)
-- [ ] Content publishing
+- [ ] Publish page can both upload text and images
     - [ ] Switch between text and image upload
     - [ ] Additional metadata fields on publish screen:
         - Title
@@ -24,12 +21,16 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
     - [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
     - [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
 
+## 0.1.1 - FuzzrWeb Viewer
+
+- [ ] CommonMark rendering
+- [ ] Links navigate to other paths
+
 ## 0.2 - Web UI
 
 - [ ] Iced web UI
 - [ ] Websockets
 - [ ] CBOR packets
-- [ ] Clientside CommonMark rendering
 - [ ] Static file server
 - [ ] Usage and Setup Documentation for Publishers
 
