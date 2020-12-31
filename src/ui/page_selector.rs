@@ -24,9 +24,9 @@ impl PageSelector {
                 page_type: PageType::Publish,
             },
             PageButton {
-                label_text: "Content".to_string(),
+                label_text: "View".to_string(),
                 button_state: button::State::new(),
-                page_type: PageType::Content,
+                page_type: PageType::View,
             },
         ];
 

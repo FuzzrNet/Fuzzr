@@ -7,15 +7,15 @@ use crate::data::content::ContentItem;
 use crate::message::Message;
 
 #[derive(Debug, Clone)]
-pub struct ContentPage {
+pub struct ViewPage {
     input_state: text_input::State,
     pub input_value: String,
     image: Option<image::Handle>,
 }
 
-impl ContentPage {
-    pub fn new() -> ContentPage {
-        ContentPage {
+impl ViewPage {
+    pub fn new() -> ViewPage {
+        ViewPage {
             input_state: text_input::State::new(),
             input_value: String::new(),
             image: None,
@@ -24,10 +24,10 @@ impl ContentPage {
 
     pub fn update(&mut self, msg: Message) {
         match msg {
-            Message::ContentPageInputChanged(value) => {
+            Message::ViewPageInputChanged(value) => {
                 self.input_value = value;
             }
-            Message::ContentPageContentLoaded(content_item) => match content_item {
+            Message::ViewPageContentLoaded(content_item) => match content_item {
                 Ok(content_item) => match content_item {
                     ContentItem::Image(image_content) => {
                         self.image = Some(image::Handle::from_memory(image_content.buffer));
@@ -49,11 +49,11 @@ impl ContentPage {
             &mut self.input_state,
             "Paste Content ID (CID) here",
             &self.input_value,
-            Message::ContentPageInputChanged,
+            Message::ViewPageInputChanged,
         )
         .padding(15)
         .size(16)
-        .on_submit(Message::ContentPageLoadContent);
+        .on_submit(Message::ViewPageLoadContent);
 
         let content_image = match &self.image {
             Some(image) => Column::new().push(Image::new(image.clone())),
