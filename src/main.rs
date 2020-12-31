@@ -72,7 +72,7 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Dashboard,
+                current_page: PageType::Publish, // Default page
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,

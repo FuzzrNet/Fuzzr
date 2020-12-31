@@ -60,7 +60,7 @@ To install the nightly toolchain: `rustup toolchain install nightly`
 
 Then run in a sort of live-reload mode with this command:
 
-`cargo watch -w src/*.rs -x run`
+`cargo watch -w src -x run`
 
 See also this section on Enabling Fast Compiles for your system:
 

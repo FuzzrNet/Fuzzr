@@ -1,4 +1,6 @@
-use iced::{image, text_input, Column, Container, Element, Image, Length, Row, Text, TextInput};
+use iced::{
+    image, text_input, Column, Container, Element, Image, Length, /* Row, Text, */ TextInput,
+};
 use log::{error, info};
 
 use crate::data::content::ContentItem;
@@ -55,12 +57,12 @@ impl ContentPage {
 
         let content_image = match &self.image {
             Some(image) => Column::new().push(Image::new(image.clone())),
-            None => Column::new().push(Text::new(
-                "Start adding content by dropping the file or folder here",
-            )),
+            None => Column::new(), /* .push(Text::new(
+                                       "Start adding content by dropping the file or folder here",
+                                   )),*/
         };
 
-        let content_container = Row::new().push(input).push(content_image);
+        let content_container = Column::new().push(input).push(content_image);
 
         Container::new(content_container)
             .width(Length::Fill)

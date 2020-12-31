@@ -1,5 +1,6 @@
 use iced::{
-    Align, Column, Container, Element, HorizontalAlignment, Length, /* ProgressBar, */ Row, Text,
+    Align, Column, Container, Element, HorizontalAlignment, Length, /* ProgressBar, */ Row,
+    Text,
 };
 // use iced_native::ProgressBar;
 
