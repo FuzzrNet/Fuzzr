@@ -5,25 +5,24 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 - CloudFlare Argo tunnel daemon
 - CommonMark & YFM rendering
 
-## 0.1 - Basic Publishing
+## 0.1 - Basic Content Publishing
 
 - [x] Text entry
 - [x] ~~Finish task processor for easier evented IO~~
 - [x] Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)
+- [ ] Content publishing
+    - [ ] Switch between text and image upload
+    - [ ] Additional metadata fields on publish screen:
+        - Title
+        - Description
+        - Tags
+        - Path
+- [ ] Content list
 - [ ] Warp server
     - Can respond with text and image responses
 - [ ] Configure cloudflared Argo tunnel daemon
     - [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
     - [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
-
-## 0.1.1
-
-- [ ] Content publishing
-    - [ ] Switch between text and image upload
-    - [ ] Additional metadata fields on publish screen:
-        - Title
-        - Path
-- [ ] Content list
 
 ## 0.2 - Web UI
 
