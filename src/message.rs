@@ -1,6 +1,7 @@
 use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
 
+use crate::data::content::ContentItem;
 use crate::data::ipfs_client::IpfsClient;
 use crate::page;
 
@@ -13,12 +14,10 @@ pub enum Message {
     // IPFS
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     IpfsStoreFile(PathBuf),
-    // IpfsStoreFileProgress(crate::task::ipfs_store_file::Progress),
-    // TODO: OLD:
     ContentAddedToIpfs(Result<Cid, Arc<Error>>),
     ContentPageInputChanged(String),
     ContentPageLoadContent,
-    ContentPageImageLoaded(Result<Vec<u8>, Arc<Error>>),
+    ContentPageContentLoaded(Result<ContentItem, Arc<Error>>),
     SitePageContentChanged(String),
     SitePagePublishButtonClicked,
 }

@@ -24,7 +24,8 @@ use page::testing::TestingPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::ipfs_client::{IpfsClient, MaybeIpfsClient};
+use data::ipfs_client::{IpfsClient, IpfsClientRef};
+use data::ipfs_ops::{load_file, store_file};
 
 pub fn main() -> iced::Result {
     pretty_env_logger::init();
@@ -45,7 +46,7 @@ struct Pages {
 
 #[derive(Clone, Debug)]
 pub struct Fuzzr {
-    ipfs_client: MaybeIpfsClient,
+    ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
     current_page: PageType,
     page_buttons: PageSelector,
@@ -111,11 +112,9 @@ impl Application for Fuzzr {
                 Command::none()
             }
             Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
-                Some(ipfs_client) => Command::none(),
-                // Command::perform(
-                //     IpfsClient::ipfs_add_file_from_path(ipfs_client, path),
-                //     Message::ContentAddedToIpfs,
-                // ),
+                Some(ipfs_client) => {
+                    Command::perform(store_file(path, ipfs_client), Message::ContentAddedToIpfs)
+                }
                 None => Command::none(),
             },
             Message::ContentAddedToIpfs(cid) => {
@@ -131,11 +130,10 @@ impl Application for Fuzzr {
             Message::ContentPageLoadContent => {
                 let cid_string = self.pages.content.input_value.clone();
                 match self.ipfs_client.clone() {
-                    Some(ipfs_client) => Command::none(), // TODO: IPFS refactor
-                    // Command::perform(
-                    //     IpfsClient::ipfs_get(ipfs_client, cid_string),
-                    //     Message::ContentPageImageLoaded,
-                    // ),
+                    Some(ipfs_client) => Command::perform(
+                        load_file(cid_string, ipfs_client),
+                        Message::ContentPageContentLoaded,
+                    ),
                     None => Command::none(),
                 }
             }

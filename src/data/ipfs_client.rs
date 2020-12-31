@@ -3,7 +3,6 @@ use ipfs_embed::db::StorageService;
 use ipfs_embed::net::NetworkService;
 use ipfs_embed::DefaultIpfs;
 use ipfs_embed::Ipfs;
-use libipld::block::Block;
 use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
 use libipld::store::{DefaultParams, Store};
@@ -18,7 +17,7 @@ use directories_next::ProjectDirs;
 use crate::data::content::ContentItemBlock;
 
 type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
-pub type MaybeIpfsClient = Option<Arc<Mutex<IpfsClient>>>;
+pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
 
 #[derive(Clone)]
 pub struct IpfsClient {
@@ -45,10 +44,11 @@ impl IpfsClient {
         Ok(cid)
     }
 
-    pub async fn get(&self, cid: &Cid) -> Result<Block<DefaultParams>, Arc<Error>> {
-        let content = self.ipfs.get(cid).await?;
+    pub async fn get(&self, cid: &Cid) -> Result<ContentItemBlock, Arc<Error>> {
+        let block = self.ipfs.get(cid).await?;
+        let content_item = block.decode::<DagCborCodec, ContentItemBlock>()?;
 
-        Ok(content)
+        Ok(content_item)
     }
 }
 
