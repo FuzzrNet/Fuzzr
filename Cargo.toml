@@ -9,6 +9,9 @@ edition = "2018"
 publish = false
 license = "Unlicense"
 
+[build]
+incremental = true
+
 [dependencies]
 # Debugging
 pretty_env_logger = "0.4"

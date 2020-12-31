@@ -26,8 +26,6 @@ Please be aware, the overwhelming majority of our contributors run Linux, so if 
 
 Support is eventually planned for all platforms except for web. As with anything, if you see something you would like to see, or if something seems broken, let us know. Contributions take a variety of forms, not just writing code.
 
-To run the project, all you need to do is [install Rust](https://rustup.rs), check out the code using git, and run `cargo run` in the project directory. It's pretty simple compared to other projects, and should work well out of the box easily enough.
-
 This project is intended to make the web and all web technologies less necessary than they once were by doing what people use the web for in a standardized and hyper-minimal way.
 
 For more, see our milestones document: [Periodic Project Milestones and Goals](docs/milestones.md)
@@ -47,3 +45,25 @@ Feel free to send some Monero to the address below. And if you do so, feel free 
 XMR: `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
 
 For more, see our [Contributions document](CONTRIBUTING.md)
+
+## Building
+
+To run the project, all you need to do is [install Rust](https://rustup.rs), check out the code using git, and run `cargo run` in the project directory. It's usually pretty straightforward, but if there are any issues, please reach out via Discord.
+
+It's sometimes useful to use the nightly Rust toolchain for improvements in incremental builds and runtime speed. Nightly-only code must also have stable equivalents in feature conditional compilation attribute blocks, like so: `#[cfg(feature="nightly"...)]`
+
+To install the nightly toolchain: `rustup toolchain install nightly`
+
+[Cargo watch](https://github.com/passcod/cargo-watch) can be installed (and/or updated) with this command:
+
+`cargo install --force cargo-watch`
+
+Then run in a sort of live-reload mode with this command:
+
+`cargo watch -w src/*.rs -x run`
+
+See also this section on Enabling Fast Compiles for your system:
+
+<https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional>
+
+Then run: `rustup override set nightly` for nightly builds for just this project.
