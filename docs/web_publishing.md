@@ -8,17 +8,22 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 ## 0.1 - Basic Publishing
 
 - [x] Text entry
-- [x] ~~Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)~~
-- [ ] Finish task processor for easier evented IO
-- [ ] Save text in local Git site repo, similar to how static sites do.
+- [x] ~~Finish task processor for easier evented IO~~
+- [x] Save text to existing IPFS embed backend (may have to fallback to sled backend feature flag experimentation if ipfs-embed-rs retrieval continues to be a roadblock)
 - [ ] Warp server
+    - Can respond with text and image responses
 - [ ] Configure cloudflared Argo tunnel daemon
     - [https://github.com/cloudflare/cloudflared](https://github.com/cloudflare/cloudflared)
     - [https://developers.cloudflare.com/argo-tunnel/](https://developers.cloudflare.com/argo-tunnel/)
 
-## 0.1.1 - Task Refactor
+## 0.1.1
 
-- [ ] Tasks should be refactored out into separate files, making files like `main.rs` less unwieldy, and tasks easier to contribute without making boilerplate changes in a dozen different places.
+- [ ] Content publishing
+    - [ ] Switch between text and image upload
+    - [ ] Additional metadata fields on publish screen:
+        - Title
+        - Path
+- [ ] Content list
 
 ## 0.2 - Web UI
 
@@ -70,10 +75,15 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 - [ ] Publisher notifications
 - [ ] Subscriptions
 
-## Notes
+## Backlog / Unprioritized
 
-- Look into CloudFlare cache for offline / maintenance operation
-- Look into CloudFlare HTTP/3 to HTTP/2 and HTTP 1.1 backward compatibility
+- [ ] Save text in local Git site repo, similar to how static sites do.
+    - This will require making a git-IPFS API. This could also allow us to host our code on here, too.
+
+## Additional tasks
+
+- [ ] Look into CloudFlare cache for offline / maintenance operation
+- [ ] Look into CloudFlare HTTP/3 to HTTP/2 and HTTP 1.1 backward compatibility
 
 ## Ongoing technical decisions
 
