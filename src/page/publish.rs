@@ -1,38 +1,38 @@
-use iced::{image, text_input, Column, Container, Element, Image, Length, Text};
+use iced::{Column, Container, Element, Length, Text};
 
 use crate::message::Message;
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
-    input_state: text_input::State,
-    input_value: String,
-    image: Option<image::Handle>,
+    cid: Option<String>,
 }
 
 impl PublishPage {
     pub fn new() -> PublishPage {
-        PublishPage {
-            input_state: text_input::State::new(),
-            input_value: String::new(),
-            image: None,
-        }
+        PublishPage { cid: None }
     }
 
     pub fn update(&mut self, msg: Message) {
         match msg {
-            Message::FileDroppedOnWindow(path) => {
-                self.image = Some(image::Handle::from_path(path.clone()));
-            }
+            Message::ContentAddedToIpfs(cid) => match cid {
+                Ok(cid) => match cid {
+                    Some(cid) => self.cid = Some(cid.to_string()),
+                    None => {}
+                },
+                Err(_) => {}
+            },
             _ => {}
         }
     }
 
     pub fn view(&self) -> Element<Message> {
-        let drop_zone = match &self.image {
-            Some(image) => Column::new().push(Image::new(image.clone())),
-            None => Column::new().push(Text::new(
-                "Start adding content by dropping the file or folder here",
-            )),
+        let drop_zone = match &self.cid {
+            Some(cid) => Column::new().push(Text::new(format!(
+                "{}\n\n(Clipboard copy not yet implemented, please check terminal)",
+                cid
+            ))), // Can't yet be copied to clipboard: https://github.com/hecrj/iced/issues/295
+            // May want to put preview back, but we no longer have that data here
+            None => Column::new().push(Text::new("Start adding content by dropping an image here")),
         };
 
         let publish_container = Column::new().push(drop_zone);
@@ -42,6 +42,7 @@ impl PublishPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
+            .center_y()
             .into()
     }
 }

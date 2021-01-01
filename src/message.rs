@@ -14,10 +14,10 @@ pub enum Message {
     // IPFS
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     IpfsStoreFile(PathBuf),
-    ContentAddedToIpfs(Result<Cid, Arc<Error>>),
-    ContentPageInputChanged(String),
-    ContentPageLoadContent,
-    ContentPageContentLoaded(Result<ContentItem, Arc<Error>>),
+    ContentAddedToIpfs(Result<Option<Cid>, Arc<Error>>),
+    ViewPageInputChanged(String),
+    ViewPageLoadContent,
+    ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
     SitePageContentChanged(String),
     SitePagePublishButtonClicked,
 }

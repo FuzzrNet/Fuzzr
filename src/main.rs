@@ -4,7 +4,7 @@ use iced::{
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
-use log::{error, info};
+use log::error;
 
 mod data;
 mod message;
@@ -13,13 +13,13 @@ mod ui;
 
 use page::PageType;
 
-use page::content::ContentPage;
 use page::dashboard::DashPage;
 use page::feed::FeedPage;
 use page::publish::PublishPage;
 use page::settings::SettingsPage;
 use page::site::SitePage;
 use page::testing::TestingPage;
+use page::view::ViewPage;
 
 use message::Message;
 use ui::page_selector::PageSelector;
@@ -38,7 +38,7 @@ struct Pages {
     dash: DashPage,
     feed: FeedPage,
     publish: PublishPage,
-    content: ContentPage,
+    view: ViewPage,
     site: SitePage,
     settings: SettingsPage,
     testing: TestingPage,
@@ -63,7 +63,7 @@ impl Application for Fuzzr {
             dash: DashPage::new(),
             feed: FeedPage::new(),
             publish: PublishPage::new(),
-            content: ContentPage::new(),
+            view: ViewPage::new(),
             site: SitePage::new(),
             settings: SettingsPage::new(),
             testing: TestingPage::new(),
@@ -72,7 +72,7 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Dashboard,
+                current_page: PageType::Publish, // Default page
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
@@ -94,7 +94,7 @@ impl Application for Fuzzr {
         self.pages.dash.update(event.clone());
         self.pages.feed.update(event.clone());
         self.pages.publish.update(event.clone());
-        self.pages.content.update(event.clone());
+        self.pages.view.update(event.clone());
         self.pages.site.update(event.clone());
         self.pages.settings.update(event.clone());
         self.pages.testing.update(event.clone());
@@ -119,20 +119,26 @@ impl Application for Fuzzr {
             },
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
-                    Ok(cid) => info!("Content successfully added to IPFS! Cid: {}", cid),
-                    Err(err) => error!(
-                        "Something went wrong when attempting to add content to IPFS. Error: {}",
-                        err
-                    ),
+                    Ok(maybe_cid) => match maybe_cid {
+                        Some(cid) => {
+                            println!("Content successfully added to IPFS! Cid: {}", cid);
+                        }
+                        None => {
+                            error!("No CID was returned when attempting to store content in IPFS.");
+                        }
+                    },
+                    Err(err) => {
+                        error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
+                    }
                 }
                 Command::none()
             }
-            Message::ContentPageLoadContent => {
-                let cid_string = self.pages.content.input_value.clone();
+            Message::ViewPageLoadContent => {
+                let cid_string = self.pages.view.input_value.clone();
                 match self.ipfs_client.clone() {
                     Some(ipfs_client) => Command::perform(
                         load_file(cid_string, ipfs_client),
-                        Message::ContentPageContentLoaded,
+                        Message::ViewPageContentLoaded,
                     ),
                     None => Command::none(),
                 }
@@ -156,7 +162,7 @@ impl Application for Fuzzr {
             PageType::Dashboard => self.pages.dash.view(),
             PageType::Feed => self.pages.feed.view(),
             PageType::Publish => self.pages.publish.view(),
-            PageType::Content => self.pages.content.view(),
+            PageType::View => self.pages.view.view(),
             PageType::Site => self.pages.site.view(),
             PageType::Settings => self.pages.settings.view(),
             PageType::Testing => self.pages.testing.view(),
