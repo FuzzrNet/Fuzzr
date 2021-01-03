@@ -24,14 +24,14 @@ directories-next = "2.0"
 async-std = "1.8"
 anyhow = "1.0"
 # UI
-iced = { version = "0.2", features = [
+iced = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06", features = [
   "wgpu",
   "default_system_font",
   "image",
   "async-std"
 ] }
-iced_native = "0.3"
-iced_futures = "0.2"
+iced_native = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
+iced_futures = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
 # Data
 reqwest = "0.10"
 sled = "0.34"
