@@ -101,7 +101,8 @@ impl Application for Fuzzr {
 
         match event {
             Message::PageChanged(page_type) => {
-                self.current_page = page_type.to_owned();
+                self.current_page = page_type.clone();
+                self.page_buttons.active_page = page_type.clone();
                 Command::none()
             }
             Message::IpfsReady(ipfs_client) => {
