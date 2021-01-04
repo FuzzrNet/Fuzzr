@@ -7,7 +7,7 @@ pub fn view(content: &ContentItem) -> Element<Message> {
     let content_container: Element<_> = match content {
         ContentItem::Image(image_content, _) => Column::new()
             .push(Image::new(image::Handle::from_memory(
-                image_content.buffer.clone(),
+                Vec::from(image_content.buffer.clone()),
             )))
             .into(),
         ContentItem::Text(text_content, _) => {
