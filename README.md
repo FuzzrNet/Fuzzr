@@ -1,27 +1,69 @@
-[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg)](http://unlicense.org/)
-[![Build status](https://github.com/FuzzrNet/fuzzr/workflows/Rust/badge.svg)](github.com/FuzzrNet/fuzzr/actions?query=branch:master)
-[![Discord](https://img.shields.io/discord/788559109011406889?style=plastic)]
+[![License: Unlicense](https://img.shields.io/badge/license-Unlicense-blue.svg?style=flat-square)](http://unlicense.org/)
+[![Build status](https://img.shields.io/github/workflow/status/FuzzrNet/fuzzr/Rust/main?style=flat-square)](https://github.com/FuzzrNet/fuzzr/actions?query=branch:main)
+[![Discord](https://img.shields.io/discord/788559109011406889?style=flat-square&logo=discord)](https://discord.gg/cvgbcSwYzy)
 
 # Fuzzr
 
 Fuzzr is intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
 
-The focus is ensuring content distribution, censorship resistance, and keeping users as anonymous as they care to be. No user registration required. Encryption of content at rest isn't necessarily a focus for this project, but ensuring secure, unfettered encrypted connections to all anonymized peers is.
+A major focus of our project is ensuring content distribution, censorship resistance, and keeping users as anonymous as they care to be. No user registration is required. Encryption of content at rest isn't necessarily a focus for this project, but ensuring secure, unfettered encrypted connections to all anonymized peers is.
 
-This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app".
+This project is built with Rust for native desktop (and laptop) OS platforms, using [iced](https://github.com/hecrj/iced) for UI and [embedded IPFS](https://github.com/ipfs-rust/ipfs-embed/) for data.
 
-Built with Rust, for native desktop platforms, using [iced](https://github.com/hecrj/iced) for UI and [embedded IPFS](https://github.com/ipfs-rust/ipfs-embed/).
+## FuzzrWeb vs FuzzrNet
+
+We want to reinvent the web to be much, much simpler, and to move past it. The Web is __mostly__ centralized (including much of "DWeb" infrastructure), but the broader Internet __mostly__ isn't. That's why the FuzzrWeb should eventually move to the FuzzrNet, and the Fuzzr client can both serve FuzzrWeb sites, access other Fuzzr sites on the FuzzrNet, and also mine to compensate contributors, and stream video and audio.
+
+This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app". Any FuzzrWeb sites will not include a crypto miner of any kind. That's called cryptojacking, it's incredibly inefficient, and is wrong to do without someone's explicit knowledge.
+
+To learn more about our plans for FuzzrWeb, Fuzzr's bridge to the web, take a look at this document: [Fuzzr Web Publishing](docs/web_publishing.md)
 
 ## Status
 
-This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the notes directory. Feedback appreciated. Drop us an issue.
+This project is a massive work in progress. Not all of these goals are currently met, but we do intend to. More thoughts in the [docs directory](docs/). Feedback always appreciated, so feel free to drop us an issue. Also, some docs may be out of sync with others. If you notice something that needs improvement, _contributions are welcome._
 
-Only desktop Linux platforms are supported for now. Support is planned for all platforms except for web. This project is intended to make the web and all web technologies less necessary than they once were by doing what people use the web for in a standardized and hyper-minimal way.
+Please be aware, the overwhelming majority of our contributors run Linux, so if you would like the project to build on the platform of your choice, _contributions are welcome._
 
-## Support development!
+Support is eventually planned for all platforms except for web. As with anything, if you see something you would like to see, or if something seems broken, let us know. Contributions take a variety of forms, not just writing code.
 
-Feel free to send some XMR to the address below. And if you do so, feel free to reach out, or promote what we're doing.
+This project is intended to make the web and all web technologies less necessary than they once were by doing what people use the web for in a standardized and hyper-minimal way.
 
-`8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
+For more, see our milestones document: [Periodic Project Milestones and Goals](docs/milestones.md)
 
-If you'd like to get in touch with us, you can find us on [Discord](https://discord.gg/QgzXCErwkM).
+## Contributing
+
+We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts. _Contributions welcome._
+
+If you'd like to reach out and learn more, we use a Discord community server to coordinate:
+
+[![Discord](https://img.shields.io/discord/788559109011406889?style=for-the-badge&logo=discord)](https://discord.gg/cvgbcSwYzy)
+
+_(There's also a link to join our server at the top of this README.)_
+
+Feel free to send some Monero to the address below. And if you do so, feel free to reach out, or promote what we're doing. Any little bit helps, it's a form of encouragement.
+
+XMR: `8ADbBKaunVWjdg5aWQ5ZBNDACdPVMTUBnKETaZbUZ8gMfDfpwhcBeo31kfUgCJKATMPaqmsUoxBwicTpRLg4p4F57kPJ5ab`
+
+For more, see our [Contributions document](CONTRIBUTING.md)
+
+## Building
+
+To run the project, all you need to do is [install Rust](https://rustup.rs), check out the code using git, and run `cargo run` in the project directory. It's usually pretty straightforward, but if there are any issues, please reach out via Discord.
+
+It's sometimes useful to use the nightly Rust toolchain for improvements in incremental builds and runtime speed. Nightly-only code must also have stable equivalents in feature conditional compilation attribute blocks, like so: `#[cfg(feature="nightly"...)]`
+
+To install the nightly toolchain: `rustup toolchain install nightly`
+
+[Cargo watch](https://github.com/passcod/cargo-watch) can be installed (and/or updated) with this command:
+
+`cargo install --force cargo-watch`
+
+Then run in a sort of live-reload mode with this command:
+
+`cargo watch -w src -x run`
+
+See also this section on Enabling Fast Compiles for your system:
+
+<https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional>
+
+Then run: `rustup override set nightly` for nightly builds for just this project.
