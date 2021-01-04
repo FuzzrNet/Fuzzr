@@ -1,39 +1,58 @@
-use ipfs_embed::core::{Error, Result};
+use std::fmt;
+
+use ipfs_embed::core::{BitswapStorage, Error, Result};
 use ipfs_embed::db::StorageService;
-use ipfs_embed::net::NetworkService;
-use ipfs_embed::DefaultIpfs;
+use ipfs_embed::net::{NetworkConfig, NetworkService};
 use ipfs_embed::Ipfs;
 use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
 use libipld::store::{DefaultParams, Store};
 use libipld::Cid;
 
-use std::fmt;
-use std::path::PathBuf;
-
 use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
 
 use crate::data::content::ContentItemBlock;
 
-type IpfsEmbed = Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>;
 pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
 
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: IpfsEmbed,
+    ipfs: Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>,
+    storage: Arc<StorageService<DefaultParams>>,
+    network: Arc<NetworkService<DefaultParams>>,
 }
 
 impl IpfsClient {
     pub async fn new() -> Result<IpfsClient, Arc<Error>> {
-        let path = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
-            Some(project_dirs) => project_dirs.data_local_dir().to_owned(),
-            None => PathBuf::from("/tmp/fuzzr"),
+        let sled_config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
+            Some(project_dirs) => {
+                sled::Config::new().path(project_dirs.data_local_dir().to_owned())
+            }
+            None => sled::Config::new().temporary(true),
         };
-        let cache_size: usize = 10;
-        let ipfs = DefaultIpfs::default(Some(path.join("blocks")), cache_size).await?;
 
-        Ok(IpfsClient { ipfs })
+        let sweep_interval = std::time::Duration::from_millis(10000);
+        let cache_size = 1000;
+
+        let storage = Arc::new(StorageService::open(
+            &sled_config,
+            cache_size,
+            Some(sweep_interval),
+        )?);
+
+        let bitswap_storage = BitswapStorage::new(storage.clone());
+
+        let net_config = NetworkConfig::new();
+        let network = Arc::new(NetworkService::new(net_config, bitswap_storage).await?);
+
+        let ipfs = Ipfs::new(Arc::clone(&storage), Arc::clone(&network));
+
+        Ok(IpfsClient {
+            ipfs,
+            storage,
+            network,
+        })
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
