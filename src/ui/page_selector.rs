@@ -13,6 +13,7 @@ pub struct PageButton {
 #[derive(Debug, Clone)]
 pub struct PageSelector {
     buttons: Vec<PageButton>,
+    pub active_page: PageType,
 }
 
 impl PageSelector {
@@ -62,11 +63,17 @@ impl PageSelector {
             buttons.extend(hidden_buttons);
         }
 
-        PageSelector { buttons }
+        PageSelector {
+            buttons,
+            active_page: PageType::Publish,
+        }
     }
 
     pub fn view(&mut self) -> Element<Message> {
-        let PageSelector { buttons, .. } = self;
+        let PageSelector {
+            buttons,
+            active_page,
+        } = self;
 
         buttons
             .into_iter()
@@ -76,9 +83,71 @@ impl PageSelector {
                         &mut page_button.button_state,
                         Text::new(page_button.label_text.clone()).size(16),
                     )
+                    .style(style::Button::Active {
+                        selected: page_button.page_type == *active_page,
+                    })
                     .on_press(Message::PageChanged(page_button.page_type.clone())),
                 )
             })
             .into()
+    }
+}
+
+mod style {
+    use iced::{button, Background, Color};
+
+    pub enum Button {
+        Active { selected: bool },
+    }
+
+    impl button::StyleSheet for Button {
+        fn active(&self) -> button::Style {
+            match self {
+                Button::Active { selected } => {
+                    if *selected {
+                        button::Style {
+                            background: Some(Background::Color(Color::BLACK)),
+                            border_radius: 3.0,
+                            text_color: Color::WHITE,
+                            ..button::Style::default()
+                        }
+                    } else {
+                        button::Style::default()
+                    }
+                }
+            }
+        }
+
+        fn hovered(&self) -> button::Style {
+            match self {
+                Button::Active { selected } => {
+                    if *selected {
+                        button::Style {
+                            background: Some(Background::Color(Color::BLACK)),
+                            border_radius: 3.0,
+                            text_color: Color::WHITE,
+                            ..button::Style::default()
+                        }
+                    } else {
+                        button::Style {
+                            border_color: Color::BLACK,
+                            border_radius: 3.0,
+                            border_width: 1.0,
+                            text_color: Color::BLACK,
+                            ..button::Style::default()
+                        }
+                    }
+                }
+            }
+        }
+
+        // fn disabled(&self) -> button::Style {
+        //     button::Style {
+        //         background: Some(Background::Color(INACTIVE)),
+        //         border_radius: 3.0,
+        //         text_color: Color::BLACK,
+        //         ..self.hovered()
+        //     }
+        // }
     }
 }

@@ -6,7 +6,7 @@ pub mod site;
 pub mod testing;
 pub mod view;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum PageType {
     Dashboard,
     Feed,
