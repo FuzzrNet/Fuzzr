@@ -3,6 +3,5 @@
   "files.autoSave": "onFocusChange",
   "editor.formatOnSave": true,
   "files.insertFinalNewline": true,
-  "editor.insertSpaces": true,
-  // "editor.defaultFormatter": "rust-lang.rust"
+  "editor.insertSpaces": true
 }
