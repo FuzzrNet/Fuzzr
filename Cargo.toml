@@ -1,6 +1,6 @@
 [package]
 name = "fuzzr"
-version = "0.1.0"
+version = "0.0.1"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
