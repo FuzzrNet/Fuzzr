@@ -7,7 +7,7 @@ type Px = u32;
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
 pub struct ImageContent {
-    pub buffer: Vec<u8>,
+    pub buffer: Box<[u8]>,
 }
 
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
