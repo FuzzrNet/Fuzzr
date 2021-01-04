@@ -22,6 +22,8 @@ pub async fn store_file(
         let (width_px, height_px) = image::image_dimensions(path).unwrap();
         let mime_type = infer::get(&buffer[0..4]).unwrap().mime_type().to_string();
 
+        let buffer = buffer.into_boxed_slice();
+
         let block = ContentItemBlock {
             content: ContentItem::Image(
                 ImageContent { buffer },
