@@ -12,6 +12,11 @@ license = "Unlicense"
 [build]
 incremental = true
 
+[profile.release]
+# strip = "symbols" # https://github.com/rust-lang/rust/issues/72110
+lto = true
+codegen-units = 1
+
 [dependencies]
 # Debugging
 pretty_env_logger = "0.4"
