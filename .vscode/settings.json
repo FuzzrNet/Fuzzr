@@ -1,7 +1,7 @@
 {
+  "editor.formatOnSave": true,
+  "editor.insertSpaces": true,
   "editor.tabSize": 4,
   "files.autoSave": "onFocusChange",
-  "editor.formatOnSave": true,
-  "files.insertFinalNewline": true,
-  "editor.insertSpaces": true
+  "files.insertFinalNewline": true
 }
