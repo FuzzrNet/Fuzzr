@@ -1,4 +1,4 @@
-use iced::{button, Button, Element, Row, Text};
+use iced::{button, Button, Column, Element, Row, Text};
 
 use crate::message::Message;
 use crate::page::PageType;
@@ -8,6 +8,7 @@ pub struct PageButton {
     label_text: String,
     button_state: button::State,
     page_type: PageType,
+    is_disabled: bool,
 }
 
 #[derive(Debug, Clone)]
@@ -18,50 +19,44 @@ pub struct PageSelector {
 
 impl PageSelector {
     pub fn new() -> PageSelector {
-        let mut buttons = vec![
+        let buttons = vec![
             PageButton {
                 label_text: "Publish".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Publish,
+                is_disabled: false,
             },
             PageButton {
                 label_text: "View".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::View,
+                is_disabled: false,
+            },
+            PageButton {
+                label_text: "Dashboard".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::Dashboard,
+                is_disabled: true,
+            },
+            PageButton {
+                label_text: "Feed".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::Feed,
+                is_disabled: true,
+            },
+            PageButton {
+                label_text: "Site".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::Site,
+                is_disabled: true,
+            },
+            PageButton {
+                label_text: "Settings".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::Settings,
+                is_disabled: true,
             },
         ];
-
-        if std::env::var("RUST_LOG").unwrap_or_default() == "fuzzr" {
-            let hidden_buttons = vec![
-                PageButton {
-                    label_text: "Dashboard".to_string(),
-                    button_state: button::State::new(),
-                    page_type: PageType::Dashboard,
-                },
-                PageButton {
-                    label_text: "Feed".to_string(),
-                    button_state: button::State::new(),
-                    page_type: PageType::Feed,
-                },
-                PageButton {
-                    label_text: "Site".to_string(),
-                    button_state: button::State::new(),
-                    page_type: PageType::Site,
-                },
-                PageButton {
-                    label_text: "Settings".to_string(),
-                    button_state: button::State::new(),
-                    page_type: PageType::Settings,
-                },
-                PageButton {
-                    label_text: "Testing".to_string(),
-                    button_state: button::State::new(),
-                    page_type: PageType::Testing,
-                },
-            ];
-
-            buttons.extend(hidden_buttons);
-        }
 
         PageSelector {
             buttons,
@@ -78,16 +73,28 @@ impl PageSelector {
         buttons
             .into_iter()
             .fold(Row::new(), |row, page_button| {
-                row.push(
-                    Button::new(
-                        &mut page_button.button_state,
-                        Text::new(page_button.label_text.clone()).size(16),
+                row.push(if page_button.is_disabled {
+                    Column::new().padding(2).push(
+                        Button::new(
+                            &mut page_button.button_state,
+                            Text::new(page_button.label_text.clone()).size(16),
+                        )
+                        .style(style::Button::Active {
+                            selected: page_button.page_type == *active_page,
+                        }),
                     )
-                    .style(style::Button::Active {
-                        selected: page_button.page_type == *active_page,
-                    })
-                    .on_press(Message::PageChanged(page_button.page_type.clone())),
-                )
+                } else {
+                    Column::new().padding(2).push(
+                        Button::new(
+                            &mut page_button.button_state,
+                            Text::new(page_button.label_text.clone()).size(16),
+                        )
+                        .style(style::Button::Active {
+                            selected: page_button.page_type == *active_page,
+                        })
+                        .on_press(Message::PageChanged(page_button.page_type.clone())),
+                    )
+                })
             })
             .into()
     }
@@ -107,12 +114,20 @@ mod style {
                     if *selected {
                         button::Style {
                             background: Some(Background::Color(Color::BLACK)),
-                            border_radius: 3.0,
+                            border_color: Color::BLACK,
+                            border_radius: 1.0,
+                            border_width: 1.0,
                             text_color: Color::WHITE,
                             ..button::Style::default()
                         }
                     } else {
-                        button::Style::default()
+                        button::Style {
+                            border_color: Color::BLACK,
+                            border_radius: 1.0,
+                            border_width: 1.0,
+                            text_color: Color::BLACK,
+                            ..button::Style::default()
+                        }
                     }
                 }
             }
@@ -124,16 +139,19 @@ mod style {
                     if *selected {
                         button::Style {
                             background: Some(Background::Color(Color::BLACK)),
-                            border_radius: 3.0,
+                            border_color: Color::BLACK,
+                            border_radius: 1.0,
+                            border_width: 1.0,
                             text_color: Color::WHITE,
                             ..button::Style::default()
                         }
                     } else {
                         button::Style {
+                            background: Some(Background::Color(Color::BLACK)),
                             border_color: Color::BLACK,
-                            border_radius: 3.0,
+                            border_radius: 1.0,
                             border_width: 1.0,
-                            text_color: Color::BLACK,
+                            text_color: Color::WHITE,
                             ..button::Style::default()
                         }
                     }
@@ -141,13 +159,11 @@ mod style {
             }
         }
 
-        // fn disabled(&self) -> button::Style {
-        //     button::Style {
-        //         background: Some(Background::Color(INACTIVE)),
-        //         border_radius: 3.0,
-        //         text_color: Color::BLACK,
-        //         ..self.hovered()
-        //     }
-        // }
+        fn disabled(&self) -> button::Style {
+            button::Style {
+                text_color: Color::BLACK,
+                ..button::Style::default()
+            }
+        }
     }
 }
