@@ -108,7 +108,7 @@ impl PageSelector {
                     style::Button::Active {
                         selected: *theme_night,
                     },
-                ),
+                ), // .on_press(Message::ThemeToggled()),
             )
             .into()
     }

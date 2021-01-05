@@ -20,4 +20,5 @@ pub enum Message {
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
     SitePageContentChanged(String),
     SitePagePublishButtonClicked,
+    ThemeToggled,
 }
