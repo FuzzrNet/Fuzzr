@@ -107,7 +107,7 @@ mod style {
                     if *selected {
                         button::Style {
                             background: Some(Background::Color(Color::BLACK)),
-                            border_radius: 3.0,
+                            border_radius: 1.0,
                             text_color: Color::WHITE,
                             ..button::Style::default()
                         }
@@ -124,14 +124,14 @@ mod style {
                     if *selected {
                         button::Style {
                             background: Some(Background::Color(Color::BLACK)),
-                            border_radius: 3.0,
+                            border_radius: 1.0,
                             text_color: Color::WHITE,
                             ..button::Style::default()
                         }
                     } else {
                         button::Style {
                             border_color: Color::BLACK,
-                            border_radius: 3.0,
+                            border_radius: 1.0,
                             border_width: 1.0,
                             text_color: Color::BLACK,
                             ..button::Style::default()
@@ -141,13 +141,11 @@ mod style {
             }
         }
 
-        // fn disabled(&self) -> button::Style {
-        //     button::Style {
-        //         background: Some(Background::Color(INACTIVE)),
-        //         border_radius: 3.0,
-        //         text_color: Color::BLACK,
-        //         ..self.hovered()
-        //     }
-        // }
+        fn disabled(&self) -> button::Style {
+            button::Style {
+                text_color: Color::BLACK,
+                ..button::Style::default()
+            }
+        }
     }
 }
