@@ -1,4 +1,4 @@
-use iced::{button, Button, Column, Element, Row, Text};
+use iced::{button, Button, Column, Element, Length, Row, Text};
 
 use crate::message::Message;
 use crate::page::PageType;
@@ -15,6 +15,8 @@ pub struct PageButton {
 pub struct PageSelector {
     buttons: Vec<PageButton>,
     pub active_page: PageType,
+    theme_button: button::State,
+    theme_night: bool,
 }
 
 impl PageSelector {
@@ -61,6 +63,8 @@ impl PageSelector {
         PageSelector {
             buttons,
             active_page: PageType::Publish,
+            theme_button: button::State::new(),
+            theme_night: true,
         }
     }
 
@@ -68,6 +72,8 @@ impl PageSelector {
         let PageSelector {
             buttons,
             active_page,
+            theme_button,
+            theme_night,
         } = self;
 
         buttons
@@ -96,6 +102,14 @@ impl PageSelector {
                     )
                 })
             })
+            .push(Column::new().width(Length::Fill)) // spacer column
+            .push(
+                Button::new(theme_button, Text::new("Day/Night").size(16)).style(
+                    style::Button::Active {
+                        selected: *theme_night,
+                    },
+                ),
+            )
             .into()
     }
 }
