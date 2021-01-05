@@ -18,7 +18,6 @@ use page::feed::FeedPage;
 use page::publish::PublishPage;
 use page::settings::SettingsPage;
 use page::site::SitePage;
-use page::testing::TestingPage;
 use page::view::ViewPage;
 
 use message::Message;
@@ -41,7 +40,6 @@ struct Pages {
     view: ViewPage,
     site: SitePage,
     settings: SettingsPage,
-    testing: TestingPage,
 }
 
 #[derive(Clone, Debug)]
@@ -66,7 +64,6 @@ impl Application for Fuzzr {
             view: ViewPage::new(),
             site: SitePage::new(),
             settings: SettingsPage::new(),
-            testing: TestingPage::new(),
         };
 
         (
@@ -97,7 +94,6 @@ impl Application for Fuzzr {
         self.pages.view.update(event.clone());
         self.pages.site.update(event.clone());
         self.pages.settings.update(event.clone());
-        self.pages.testing.update(event.clone());
 
         match event {
             Message::PageChanged(page_type) => {
@@ -166,7 +162,6 @@ impl Application for Fuzzr {
             PageType::View => self.pages.view.view(),
             PageType::Site => self.pages.site.view(),
             PageType::Settings => self.pages.settings.view(),
-            PageType::Testing => self.pages.testing.view(),
         };
 
         let content: Element<_> = Column::new()
