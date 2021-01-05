@@ -2,6 +2,10 @@
 [![Build status](https://img.shields.io/github/workflow/status/FuzzrNet/fuzzr/Rust/main?style=flat-square)](https://github.com/FuzzrNet/fuzzr/actions?query=branch:main)
 [![Discord](https://img.shields.io/discord/788559109011406889?style=flat-square&logo=discord)](https://discord.gg/cvgbcSwYzy)
 
+![Fuzzr v0.0.1 technical demo screen capture. Stores cute kitty image in IPFS and returns CID, then retrieves and displays the image by CID.](Fuzzr_demo_alpha.gif)
+
+> Our Iced UI and IPFS technical demo
+
 # Fuzzr
 
 Fuzzr is intended to be a censorship-resistant platform for publishing, curation, and browsing of all content (with the explicit exception of HTML). At some point, an optional cryptocurrency miner will be added, so as to assist in monetization for content creators, scalable and low-latency content distribution that cannot be interfered with, and incentivizing privacy measures.
@@ -12,7 +16,7 @@ This project is built with Rust for native desktop (and laptop) OS platforms, us
 
 ## FuzzrWeb vs FuzzrNet
 
-We want to reinvent the web to be much, much simpler, and to move past it. The Web is __mostly__ centralized (including much of "DWeb" infrastructure), but the broader Internet __mostly__ isn't. That's why the FuzzrWeb should eventually move to the FuzzrNet, and the Fuzzr client can both serve FuzzrWeb sites, access other Fuzzr sites on the FuzzrNet, and also mine to compensate contributors, and stream video and audio.
+We want to reinvent the web to be much, much simpler, and to move past it. The Web is **mostly** centralized (including much of "DWeb" infrastructure), but the broader Internet **mostly** isn't. That's why the FuzzrWeb should eventually move to the FuzzrNet, and the Fuzzr client can both serve FuzzrWeb sites, access other Fuzzr sites on the FuzzrNet, and also mine to compensate contributors, and stream video and audio.
 
 This is an architecture for an actual locally-run p2p app, not a simple web-based "decentralized app". Any FuzzrWeb sites will not include a crypto miner of any kind. That's called cryptojacking, it's incredibly inefficient, and is wrong to do without someone's explicit knowledge.
 
