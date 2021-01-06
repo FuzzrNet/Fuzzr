@@ -73,3 +73,98 @@ pub async fn load_file(
 
     Ok(data.content)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::data::ipfs_client::IpfsClient;
+
+    use async_std::{sync::Mutex, task::block_on};
+    use tempfile::tempdir;
+
+    use std::{error::Error, fs::File};
+    use std::{io::Write, path::Path};
+
+    /// Helper to create file in a directory and return full path.
+    fn write_file<P>(dir: P, data: &[u8], file_name: &str) -> Result<PathBuf, Box<dyn Error>>
+    where
+        P: AsRef<Path>,
+    {
+        let path = dir.as_ref().join(file_name);
+        let mut file = File::create(&path)?;
+        file.write_all(data)?;
+        Ok(path)
+    }
+
+    fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
+        block_on(async {
+            Ok(Arc::new(Mutex::new(
+                IpfsClient::new()
+                    .await
+                    .map_err(|e| Arc::try_unwrap(e).unwrap())?,
+            )))
+        })
+    }
+
+    #[test]
+    fn test_store_load() -> Result<(), Box<dyn Error>> {
+        let dir = tempdir()?;
+        let client_ref = new_client()?;
+
+        struct Test {
+            name: &'static str,
+            data: &'static [u8],
+            file_name: &'static str,
+            expected: ContentItem,
+        };
+        let tests = vec![
+            Test {
+                name: "round-trip smallest possible gif",
+                data: b"GIF89a\x01\0\x01\0\0\0\0;",
+                file_name: "smallest.gif",
+                expected: ContentItem::Image(
+                    ImageContent {
+                        buffer: Box::new(*b"GIF89a\x01\0\x01\0\0\0\0;"),
+                    },
+                    ImageMetadata {
+                        size_bytes: 14,
+                        mime_type: "image/gif".into(),
+                        width_px: 1,
+                        height_px: 1,
+                    },
+                ),
+            },
+            Test {
+                name: "round-trip text file",
+                data: b"howdy",
+                file_name: "howdy.txt",
+                expected: ContentItem::Text(
+                    TextContent {
+                        string: "howdy".into(),
+                    },
+                    TextMetadata { size_bytes: 5 },
+                ),
+            },
+        ];
+
+        for test in tests.into_iter() {
+            let client_ref = client_ref.clone();
+            block_on(async {
+                let path = write_file(dir.path(), test.data, test.file_name)?;
+                let cid = store_file(path, client_ref.clone())
+                    .await
+                    .map_err(|e| Arc::try_unwrap(e).unwrap())?
+                    .unwrap();
+
+                let actual = load_file(cid.to_string(), client_ref)
+                    .await
+                    .map_err(|e| Arc::try_unwrap(e).unwrap())?;
+
+                assert_eq!(test.expected, actual, "{}", test.name);
+                Ok(())
+            })
+            .map_err(|e: Box<dyn Error>| e)?;
+        }
+        Ok(())
+    }
+}
