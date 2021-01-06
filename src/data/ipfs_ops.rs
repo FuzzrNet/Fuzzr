@@ -1,9 +1,10 @@
 use async_std::fs;
 use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
-use log::error;
+use log::{info, error};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::time::Instant;
 
 use crate::data::content::{
     ContentItem, ContentItemBlock, ImageContent, ImageMetadata, TextContent, TextMetadata,
@@ -14,6 +15,8 @@ pub async fn store_file(
     path: PathBuf,
     ipfs_client: IpfsClientRef,
 ) -> Result<Option<Cid>, Arc<Error>> {
+    let start = Instant::now();
+
     let file_metadata = fs::metadata(&path).await.unwrap();
     let size_bytes = file_metadata.len();
     let buffer = fs::read(&path).await.unwrap(); // TODO: error handling
@@ -34,10 +37,13 @@ pub async fn store_file(
                     mime_type,
                 },
             ),
+            size_bytes,
         };
 
         let ipfs_client = &ipfs_client.lock().await;
         let cid = ipfs_client.add(&block).await?;
+
+        info!("Stored {:.2?}MB in {:.2?}.", size_bytes as f32 / 1_048_576_f32, start.elapsed());
 
         Ok(Some(cid))
     } else {
@@ -45,10 +51,13 @@ pub async fn store_file(
             Ok(string) => {
                 let block = ContentItemBlock {
                     content: ContentItem::Text(TextContent { string }, TextMetadata { size_bytes }),
+                    size_bytes,
                 };
 
                 let ipfs_client = &ipfs_client.lock().await;
                 let cid = ipfs_client.add(&block).await?;
+
+                info!("Stored {:.2?}MB in {:.2?}.", size_bytes as f32 / 1_048_576_f32, start.elapsed());
 
                 Ok(Some(cid))
             }
@@ -67,9 +76,13 @@ pub async fn load_file(
     cid_string: String,
     ipfs_client: IpfsClientRef,
 ) -> Result<ContentItem, Arc<Error>> {
+    let start = Instant::now();
+
     let ipfs_client = &ipfs_client.lock().await;
     let cid = Cid::from_str(&cid_string).unwrap();
     let data = ipfs_client.get(&cid).await?;
+
+    info!("Loaded {:.2?}MB in {:.2?}.", data.size_bytes as f32 / 1_048_576_f32, start.elapsed());
 
     Ok(data.content)
 }
