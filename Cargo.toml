@@ -16,6 +16,9 @@ incremental = true
 lto = true
 codegen-units = 1
 
+[dev-dependencies]
+tempfile = "3.1"
+
 [dependencies]
 # Debugging
 pretty_env_logger = "0.4"
