@@ -4,7 +4,7 @@ use iced::{
 use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
-use log::error;
+use log::{error, info};
 
 mod data;
 mod message;
@@ -27,6 +27,10 @@ use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
 
 pub fn main() -> iced::Result {
+    if std::env::var("RUST_LOG").is_err() {
+        std::env::set_var("RUST_LOG", "fuzzr");
+    }
+
     pretty_env_logger::init();
 
     Fuzzr::run(Settings::default())
@@ -118,7 +122,7 @@ impl Application for Fuzzr {
                 match cid {
                     Ok(maybe_cid) => match maybe_cid {
                         Some(cid) => {
-                            println!("Content successfully added to IPFS! Cid: {}", cid);
+                            info!("Content successfully added to IPFS! Cid: {}", cid);
                         }
                         None => {
                             error!("No CID was returned when attempting to store content in IPFS.");
