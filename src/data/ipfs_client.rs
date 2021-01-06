@@ -5,8 +5,8 @@ use ipfs_embed::db::StorageService;
 use ipfs_embed::net::{NetworkConfig, NetworkService};
 use ipfs_embed::Ipfs;
 use libipld::cbor::DagCborCodec;
-use libipld::multihash::{Code};
-use libipld::store::{StoreParams, Store};
+use libipld::multihash::Code;
+use libipld::store::{Store, StoreParams};
 use libipld::{Cid, IpldCodec};
 
 use async_std::sync::{Arc, Mutex};
@@ -27,7 +27,11 @@ impl StoreParams for MaxBlockSizeStoreParams {
 
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: Ipfs<MaxBlockSizeStoreParams, StorageService<MaxBlockSizeStoreParams>, NetworkService<MaxBlockSizeStoreParams>>,
+    ipfs: Ipfs<
+        MaxBlockSizeStoreParams,
+        StorageService<MaxBlockSizeStoreParams>,
+        NetworkService<MaxBlockSizeStoreParams>,
+    >,
     storage: Arc<StorageService<MaxBlockSizeStoreParams>>,
     network: Arc<NetworkService<MaxBlockSizeStoreParams>>,
 }
