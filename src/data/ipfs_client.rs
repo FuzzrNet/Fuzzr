@@ -20,7 +20,7 @@ pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
 struct MaxBlockSizeStoreParams;
 
 impl StoreParams for MaxBlockSizeStoreParams {
-    const MAX_BLOCK_SIZE: usize = usize::MAX;
+    const MAX_BLOCK_SIZE: usize = u32::MAX as usize - 1;
     type Codecs = IpldCodec;
     type Hashes = Code;
 }
