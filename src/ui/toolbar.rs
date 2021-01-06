@@ -12,15 +12,15 @@ pub struct PageButton {
 }
 
 #[derive(Debug, Clone)]
-pub struct PageSelector {
+pub struct Toolbar {
     buttons: Vec<PageButton>,
     pub active_page: PageType,
     theme_button: button::State,
     theme_night: bool,
 }
 
-impl PageSelector {
-    pub fn new() -> PageSelector {
+impl Toolbar {
+    pub fn new() -> Toolbar {
         let buttons = vec![
             PageButton {
                 label_text: "Publish".to_string(),
@@ -60,7 +60,7 @@ impl PageSelector {
             },
         ];
 
-        PageSelector {
+        Toolbar {
             buttons,
             active_page: PageType::Publish,
             theme_button: button::State::new(),
@@ -69,7 +69,7 @@ impl PageSelector {
     }
 
     pub fn view(&mut self) -> Element<Message> {
-        let PageSelector {
+        let Toolbar {
             buttons,
             active_page,
             theme_button,

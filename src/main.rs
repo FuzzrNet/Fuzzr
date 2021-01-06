@@ -21,7 +21,7 @@ use page::site::SitePage;
 use page::view::ViewPage;
 
 use message::Message;
-use ui::page_selector::PageSelector;
+use ui::toolbar::Toolbar;
 
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
@@ -47,7 +47,7 @@ pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
     current_page: PageType,
-    page_buttons: PageSelector,
+    page_buttons: Toolbar,
     background_color: Color,
 }
 
@@ -70,7 +70,7 @@ impl Application for Fuzzr {
             Fuzzr {
                 pages,
                 current_page: PageType::Publish, // Default page
-                page_buttons: PageSelector::new(),
+                page_buttons: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
             },
