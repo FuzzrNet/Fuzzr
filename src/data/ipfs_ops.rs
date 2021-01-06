@@ -116,7 +116,8 @@ mod tests {
             data: &'static [u8],
             file_name: &'static str,
             expected: ContentItem,
-        };
+        }
+
         let tests = vec![
             Test {
                 name: "round-trip smallest possible gif",

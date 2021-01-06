@@ -5,9 +5,9 @@ use ipfs_embed::db::StorageService;
 use ipfs_embed::net::{NetworkConfig, NetworkService};
 use ipfs_embed::Ipfs;
 use libipld::cbor::DagCborCodec;
-use libipld::multihash::Code;
-use libipld::store::{DefaultParams, Store};
-use libipld::Cid;
+use libipld::multihash::{Code};
+use libipld::store::{StoreParams, Store};
+use libipld::{Cid, IpldCodec};
 
 use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
@@ -16,11 +16,20 @@ use crate::data::content::ContentItemBlock;
 
 pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
 
+#[derive(Clone, Debug, Default)]
+struct MaxBlockSizeStoreParams;
+
+impl StoreParams for MaxBlockSizeStoreParams {
+    const MAX_BLOCK_SIZE: usize = usize::MAX;
+    type Codecs = IpldCodec;
+    type Hashes = Code;
+}
+
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: Ipfs<DefaultParams, StorageService<DefaultParams>, NetworkService<DefaultParams>>,
-    storage: Arc<StorageService<DefaultParams>>,
-    network: Arc<NetworkService<DefaultParams>>,
+    ipfs: Ipfs<MaxBlockSizeStoreParams, StorageService<MaxBlockSizeStoreParams>, NetworkService<MaxBlockSizeStoreParams>>,
+    storage: Arc<StorageService<MaxBlockSizeStoreParams>>,
+    network: Arc<NetworkService<MaxBlockSizeStoreParams>>,
 }
 
 impl IpfsClient {
