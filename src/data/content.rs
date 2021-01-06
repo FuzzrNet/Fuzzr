@@ -37,4 +37,5 @@ pub enum ContentItem {
 #[derive(Clone, DagCbor, Debug, Eq, PartialEq)]
 pub struct ContentItemBlock {
     pub content: ContentItem,
+    pub size_bytes: Bytes, // Content size, not total block size
 }
