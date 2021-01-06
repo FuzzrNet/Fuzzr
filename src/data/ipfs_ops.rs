@@ -1,7 +1,7 @@
 use async_std::fs;
 use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
-use log::{info, error};
+use log::{error, info};
 use std::path::PathBuf;
 use std::str::FromStr;
 use std::time::Instant;
@@ -43,7 +43,11 @@ pub async fn store_file(
         let ipfs_client = &ipfs_client.lock().await;
         let cid = ipfs_client.add(&block).await?;
 
-        info!("Stored {:.2?}MB in {:.2?}.", size_bytes as f32 / 1_048_576_f32, start.elapsed());
+        info!(
+            "Stored {:.2?}MB in {:.2?}.",
+            size_bytes as f32 / 1_048_576_f32,
+            start.elapsed()
+        );
 
         Ok(Some(cid))
     } else {
@@ -57,7 +61,11 @@ pub async fn store_file(
                 let ipfs_client = &ipfs_client.lock().await;
                 let cid = ipfs_client.add(&block).await?;
 
-                info!("Stored {:.2?}MB in {:.2?}.", size_bytes as f32 / 1_048_576_f32, start.elapsed());
+                info!(
+                    "Stored {:.2?}MB in {:.2?}.",
+                    size_bytes as f32 / 1_048_576_f32,
+                    start.elapsed()
+                );
 
                 Ok(Some(cid))
             }
@@ -82,7 +90,11 @@ pub async fn load_file(
     let cid = Cid::from_str(&cid_string).unwrap();
     let data = ipfs_client.get(&cid).await?;
 
-    info!("Loaded {:.2?}MB in {:.2?}.", data.size_bytes as f32 / 1_048_576_f32, start.elapsed());
+    info!(
+        "Loaded {:.2?}MB in {:.2?}.",
+        data.size_bytes as f32 / 1_048_576_f32,
+        start.elapsed()
+    );
 
     Ok(data.content)
 }
