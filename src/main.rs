@@ -21,6 +21,7 @@ use page::site::SitePage;
 use page::view::ViewPage;
 
 use message::Message;
+use ui::style::Theme;
 use ui::toolbar::Toolbar;
 
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
@@ -53,6 +54,7 @@ pub struct Fuzzr {
     current_page: PageType,
     page_buttons: Toolbar,
     background_color: Color,
+    theme: Theme,
 }
 
 impl Application for Fuzzr {
@@ -77,6 +79,7 @@ impl Application for Fuzzr {
                 page_buttons: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
+                theme: Theme::Dark,
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -144,6 +147,10 @@ impl Application for Fuzzr {
                     None => Command::none(),
                 }
             }
+            Message::ThemeChanged(theme) => {
+                self.theme = theme.clone();
+                Command::none()
+            }
             _ => Command::none(),
         }
     }
@@ -159,19 +166,27 @@ impl Application for Fuzzr {
     }
 
     fn view(&mut self) -> Element<Message> {
-        let page: Element<_> = match self.current_page {
-            PageType::Dashboard => self.pages.dash.view(),
-            PageType::Feed => self.pages.feed.view(),
-            PageType::Publish => self.pages.publish.view(),
-            PageType::View => self.pages.view.view(),
-            PageType::Site => self.pages.site.view(),
-            PageType::Settings => self.pages.settings.view(),
+        let Fuzzr {
+            theme,
+            current_page,
+            pages,
+            page_buttons,
+            ..
+        } = self;
+
+        let page: Element<_> = match current_page {
+            PageType::Dashboard => pages.dash.view(),
+            PageType::Feed => pages.feed.view(),
+            PageType::Publish => pages.publish.view(),
+            PageType::View => pages.view.view(),
+            PageType::Site => pages.site.view(),
+            PageType::Settings => pages.settings.view(),
         };
 
         let content: Element<_> = Column::new()
             .spacing(20)
             .padding(20)
-            .push(self.page_buttons.view())
+            .push(page_buttons.view())
             .align_items(Align::Center)
             .push(page)
             .into();
@@ -180,6 +195,7 @@ impl Application for Fuzzr {
             .height(Length::Fill)
             .width(Length::Fill)
             .center_y()
+            .style(*theme)
             .into()
     }
 }
