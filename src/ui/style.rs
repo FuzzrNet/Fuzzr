@@ -121,19 +121,20 @@ mod dark {
         fn active(&self) -> button::Style {
             if self.selected {
                 button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
+                    background: Some(Background::Color(Color::WHITE)),
+                    border_color: Color::WHITE,
                     border_radius: 1.0,
                     border_width: 1.0,
-                    text_color: Color::WHITE,
+                    text_color: Color::BLACK,
                     ..button::Style::default()
                 }
             } else {
                 button::Style {
-                    border_color: Color::BLACK,
+                    background: Some(Background::Color(Color::BLACK)),
+                    border_color: Color::WHITE,
                     border_radius: 1.0,
                     border_width: 1.0,
-                    text_color: Color::BLACK,
+                    text_color: Color::WHITE,
                     ..button::Style::default()
                 }
             }
@@ -142,20 +143,20 @@ mod dark {
         fn hovered(&self) -> button::Style {
             if self.selected {
                 button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
+                    background: Some(Background::Color(Color::WHITE)),
+                    border_color: Color::WHITE,
                     border_radius: 1.0,
                     border_width: 1.0,
-                    text_color: Color::WHITE,
+                    text_color: Color::BLACK,
                     ..button::Style::default()
                 }
             } else {
                 button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
+                    background: Some(Background::Color(Color::WHITE)),
+                    border_color: Color::WHITE,
                     border_radius: 1.0,
                     border_width: 1.0,
-                    text_color: Color::WHITE,
+                    text_color: Color::BLACK,
                     ..button::Style::default()
                 }
             }
@@ -163,7 +164,7 @@ mod dark {
 
         fn disabled(&self) -> button::Style {
             button::Style {
-                text_color: Color::BLACK,
+                text_color: Color::WHITE,
                 ..button::Style::default()
             }
         }

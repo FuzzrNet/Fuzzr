@@ -84,9 +84,7 @@ impl Toolbar {
                                 &mut page_button.button_state,
                                 Text::new(page_button.label_text.clone()).size(16),
                             )
-                            .style(style::Button::Active {
-                                selected: page_button.page_type == *active_page,
-                            }),
+                            .style(*theme),
                         )
                     } else {
                         Column::new().padding(2).push(
@@ -94,9 +92,7 @@ impl Toolbar {
                                 &mut page_button.button_state,
                                 Text::new(page_button.label_text.clone()).size(16),
                             )
-                            .style(style::Button::Active {
-                                selected: page_button.page_type == *active_page,
-                            })
+                            .style(*theme)
                             .on_press(Message::PageChanged(page_button.page_type.clone())),
                         )
                     })
@@ -104,7 +100,7 @@ impl Toolbar {
                 .push(Column::new().width(Length::Fill)) // spacer column
                 .push(
                     Button::new(theme_button, Text::new("Day/Night").size(16))
-                        .style(style::Button::Active { selected: true })
+                        .style(*theme)
                         .on_press(Message::ThemeChanged(match *theme {
                             Theme::Dark => Theme::Light,
                             Theme::Light => Theme::Dark,
@@ -117,70 +113,70 @@ impl Toolbar {
     }
 }
 
-mod style {
-    use iced::{button, Background, Color};
+// mod style {
+//     use iced::{button, Background, Color};
 
-    pub enum Button {
-        Active { selected: bool },
-    }
+//     pub enum Button {
+//         Active { selected: bool },
+//     }
 
-    impl button::StyleSheet for Button {
-        fn active(&self) -> button::Style {
-            match self {
-                Button::Active { selected } => {
-                    if *selected {
-                        button::Style {
-                            background: Some(Background::Color(Color::BLACK)),
-                            border_color: Color::BLACK,
-                            border_radius: 1.0,
-                            border_width: 1.0,
-                            text_color: Color::WHITE,
-                            ..button::Style::default()
-                        }
-                    } else {
-                        button::Style {
-                            border_color: Color::BLACK,
-                            border_radius: 1.0,
-                            border_width: 1.0,
-                            text_color: Color::BLACK,
-                            ..button::Style::default()
-                        }
-                    }
-                }
-            }
-        }
+//     impl button::StyleSheet for Button {
+//         fn active(&self) -> button::Style {
+//             match self {
+//                 Button::Active { selected } => {
+//                     if *selected {
+//                         button::Style {
+//                             background: Some(Background::Color(Color::BLACK)),
+//                             border_color: Color::BLACK,
+//                             border_radius: 1.0,
+//                             border_width: 1.0,
+//                             text_color: Color::WHITE,
+//                             ..button::Style::default()
+//                         }
+//                     } else {
+//                         button::Style {
+//                             border_color: Color::BLACK,
+//                             border_radius: 1.0,
+//                             border_width: 1.0,
+//                             text_color: Color::BLACK,
+//                             ..button::Style::default()
+//                         }
+//                     }
+//                 }
+//             }
+//         }
 
-        fn hovered(&self) -> button::Style {
-            match self {
-                Button::Active { selected } => {
-                    if *selected {
-                        button::Style {
-                            background: Some(Background::Color(Color::BLACK)),
-                            border_color: Color::BLACK,
-                            border_radius: 1.0,
-                            border_width: 1.0,
-                            text_color: Color::WHITE,
-                            ..button::Style::default()
-                        }
-                    } else {
-                        button::Style {
-                            background: Some(Background::Color(Color::BLACK)),
-                            border_color: Color::BLACK,
-                            border_radius: 1.0,
-                            border_width: 1.0,
-                            text_color: Color::WHITE,
-                            ..button::Style::default()
-                        }
-                    }
-                }
-            }
-        }
+//         fn hovered(&self) -> button::Style {
+//             match self {
+//                 Button::Active { selected } => {
+//                     if *selected {
+//                         button::Style {
+//                             background: Some(Background::Color(Color::BLACK)),
+//                             border_color: Color::BLACK,
+//                             border_radius: 1.0,
+//                             border_width: 1.0,
+//                             text_color: Color::WHITE,
+//                             ..button::Style::default()
+//                         }
+//                     } else {
+//                         button::Style {
+//                             background: Some(Background::Color(Color::BLACK)),
+//                             border_color: Color::BLACK,
+//                             border_radius: 1.0,
+//                             border_width: 1.0,
+//                             text_color: Color::WHITE,
+//                             ..button::Style::default()
+//                         }
+//                     }
+//                 }
+//             }
+//         }
 
-        fn disabled(&self) -> button::Style {
-            button::Style {
-                text_color: Color::BLACK,
-                ..button::Style::default()
-            }
-        }
-    }
-}
+//         fn disabled(&self) -> button::Style {
+//             button::Style {
+//                 text_color: Color::BLACK,
+//                 ..button::Style::default()
+//             }
+//         }
+//     }
+// }
