@@ -73,6 +73,21 @@ mod dark {
     //     0x25 as f32 / 255.0,
     // );
 }
+pub struct Button;
+
+impl button::StyleSheet for Button {
+    fn style(&self) -> button::Style {
+        button::Style {
+            background: Color {
+                a: 0.99,
+                ..BACKGROUND
+            }
+            .into(),
+            text_color: Color::WHITE.into(),
+            ..button::Style::default()
+        }
+    }
+}
 
 pub struct Container;
 
@@ -86,22 +101,6 @@ impl container::StyleSheet for Container {
             .into(),
             text_color: Color::WHITE.into(),
             ..container::Style::default()
-        }
-    }
-}
-
-pub struct Button;
-
-impl button::StyleSheet for Button {
-    fn style(&self) -> button::Style {
-        button::Style {
-            background: Color {
-                a: 0.99,
-                ..BACKGROUND
-            }
-            .into(),
-            text_color: Color::WHITE.into(),
-            ..button::Style::default()
         }
     }
 }
