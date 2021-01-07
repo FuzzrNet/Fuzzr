@@ -19,6 +19,21 @@ pub struct Toolbar {
     theme_button: button::State,
 }
 
+fn inverse(theme: &Theme) -> Theme {
+    match theme {
+        Theme::Dark => Theme::Light,
+        Theme::Light => Theme::Dark,
+    }
+}
+
+fn conditional_inverse(theme: &Theme, selected: bool) -> Theme {
+    if selected {
+        inverse(theme)
+    } else {
+        *theme
+    }
+}
+
 impl Toolbar {
     pub fn new() -> Toolbar {
         let buttons = vec![
@@ -84,7 +99,10 @@ impl Toolbar {
                                 &mut page_button.button_state,
                                 Text::new(page_button.label_text.clone()).size(16),
                             )
-                            .style(*theme),
+                            .style(conditional_inverse(
+                                theme,
+                                *active_page == page_button.page_type,
+                            )),
                         )
                     } else {
                         Column::new().padding(2).push(
@@ -92,7 +110,10 @@ impl Toolbar {
                                 &mut page_button.button_state,
                                 Text::new(page_button.label_text.clone()).size(16),
                             )
-                            .style(*theme)
+                            .style(conditional_inverse(
+                                theme,
+                                *active_page == page_button.page_type,
+                            ))
                             .on_press(Message::PageChanged(page_button.page_type.clone())),
                         )
                     })
@@ -101,10 +122,7 @@ impl Toolbar {
                 .push(
                     Button::new(theme_button, Text::new("Day/Night").size(16))
                         .style(*theme)
-                        .on_press(Message::ThemeChanged(match *theme {
-                            Theme::Dark => Theme::Light,
-                            Theme::Light => Theme::Dark,
-                        })),
+                        .on_press(Message::ThemeChanged(inverse(theme))),
                 ),
         )
         .padding(10)
