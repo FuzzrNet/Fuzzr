@@ -1,4 +1,4 @@
-use iced::{button, Button, Column, Element, Length, Row, Text};
+use iced::{button, Button, Column, Container, Element, Length, Row, Text};
 
 use crate::message::Message;
 use crate::page::PageType;
@@ -74,42 +74,46 @@ impl Toolbar {
             theme_button,
         } = self;
 
-        buttons
-            .into_iter()
-            .fold(Row::new(), |row, page_button| {
-                row.push(if page_button.is_disabled {
-                    Column::new().padding(2).push(
-                        Button::new(
-                            &mut page_button.button_state,
-                            Text::new(page_button.label_text.clone()).size(16),
+        Container::new(
+            buttons
+                .into_iter()
+                .fold(Row::new(), |row, page_button| {
+                    row.push(if page_button.is_disabled {
+                        Column::new().padding(2).push(
+                            Button::new(
+                                &mut page_button.button_state,
+                                Text::new(page_button.label_text.clone()).size(16),
+                            )
+                            .style(style::Button::Active {
+                                selected: page_button.page_type == *active_page,
+                            }),
                         )
-                        .style(style::Button::Active {
-                            selected: page_button.page_type == *active_page,
-                        }),
-                    )
-                } else {
-                    Column::new().padding(2).push(
-                        Button::new(
-                            &mut page_button.button_state,
-                            Text::new(page_button.label_text.clone()).size(16),
+                    } else {
+                        Column::new().padding(2).push(
+                            Button::new(
+                                &mut page_button.button_state,
+                                Text::new(page_button.label_text.clone()).size(16),
+                            )
+                            .style(style::Button::Active {
+                                selected: page_button.page_type == *active_page,
+                            })
+                            .on_press(Message::PageChanged(page_button.page_type.clone())),
                         )
-                        .style(style::Button::Active {
-                            selected: page_button.page_type == *active_page,
-                        })
-                        .on_press(Message::PageChanged(page_button.page_type.clone())),
-                    )
+                    })
                 })
-            })
-            .push(Column::new().width(Length::Fill)) // spacer column
-            .push(
-                Button::new(theme_button, Text::new("Day/Night").size(16))
-                    .style(style::Button::Active { selected: true })
-                    .on_press(Message::ThemeChanged(match *theme {
-                        Theme::Dark => Theme::Light,
-                        Theme::Light => Theme::Dark,
-                    })),
-            )
-            .into()
+                .push(Column::new().width(Length::Fill)) // spacer column
+                .push(
+                    Button::new(theme_button, Text::new("Day/Night").size(16))
+                        .style(style::Button::Active { selected: true })
+                        .on_press(Message::ThemeChanged(match *theme {
+                            Theme::Dark => Theme::Light,
+                            Theme::Light => Theme::Dark,
+                        })),
+                ),
+        )
+        .padding(10)
+        .style(*theme)
+        .into()
     }
 }
 

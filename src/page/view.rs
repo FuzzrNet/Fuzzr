@@ -4,6 +4,7 @@ use log::error;
 use crate::data::content::ContentItem;
 use crate::message::Message;
 use crate::ui::content_view;
+use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct ViewPage {
@@ -38,7 +39,7 @@ impl ViewPage {
         };
     }
 
-    pub fn view(&mut self) -> Element<Message> {
+    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
         let input = TextInput::new(
             &mut self.input_state,
             "Paste Content ID (CID) here",
@@ -61,6 +62,7 @@ impl ViewPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
+            .style(*theme)
             .into()
     }
 }

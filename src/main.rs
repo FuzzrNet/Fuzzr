@@ -175,12 +175,12 @@ impl Application for Fuzzr {
         } = self;
 
         let page: Element<_> = match current_page {
-            PageType::Dashboard => pages.dash.view(),
-            PageType::Feed => pages.feed.view(),
-            PageType::Publish => pages.publish.view(),
-            PageType::View => pages.view.view(),
-            PageType::Site => pages.site.view(),
-            PageType::Settings => pages.settings.view(),
+            PageType::Dashboard => pages.dash.view(theme),
+            PageType::Feed => pages.feed.view(theme),
+            PageType::Publish => pages.publish.view(theme),
+            PageType::View => pages.view.view(theme),
+            PageType::Site => pages.site.view(theme),
+            PageType::Settings => pages.settings.view(theme),
         };
 
         let content: Element<_> = Column::new()
