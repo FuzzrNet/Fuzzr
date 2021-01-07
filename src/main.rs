@@ -52,7 +52,7 @@ pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
     current_page: PageType,
-    page_buttons: Toolbar,
+    toolbar: Toolbar,
     background_color: Color,
     theme: Theme,
 }
@@ -76,10 +76,10 @@ impl Application for Fuzzr {
             Fuzzr {
                 pages,
                 current_page: PageType::Publish, // Default page
-                page_buttons: Toolbar::new(),
+                toolbar: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
-                theme: Theme::Dark,
+                theme: Theme::default(),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -105,7 +105,7 @@ impl Application for Fuzzr {
         match event {
             Message::PageChanged(page_type) => {
                 self.current_page = page_type.clone();
-                self.page_buttons.active_page = page_type.clone();
+                self.toolbar.active_page = page_type.clone();
                 Command::none()
             }
             Message::IpfsReady(ipfs_client) => {
@@ -148,7 +148,7 @@ impl Application for Fuzzr {
                 }
             }
             Message::ThemeChanged(theme) => {
-                self.theme = theme.clone();
+                self.theme = theme;
                 Command::none()
             }
             _ => Command::none(),
@@ -167,10 +167,10 @@ impl Application for Fuzzr {
 
     fn view(&mut self) -> Element<Message> {
         let Fuzzr {
-            theme,
             current_page,
             pages,
-            page_buttons,
+            theme,
+            toolbar,
             ..
         } = self;
 
@@ -186,7 +186,7 @@ impl Application for Fuzzr {
         let content: Element<_> = Column::new()
             .spacing(20)
             .padding(20)
-            .push(page_buttons.view())
+            .push(toolbar.view(theme))
             .align_items(Align::Center)
             .push(page)
             .into();

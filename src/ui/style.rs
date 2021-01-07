@@ -10,11 +10,11 @@ impl Theme {
     pub const ALL: [Theme; 2] = [Theme::Light, Theme::Dark];
 }
 
-// impl Default for Theme {
-//     fn default() -> Theme {
-//         Theme::Dark
-//     }
-// }
+impl Default for Theme {
+    fn default() -> Theme {
+        Theme::Dark
+    }
+}
 
 impl From<Theme> for Box<dyn container::StyleSheet> {
     fn from(theme: Theme) -> Self {

@@ -17,24 +17,11 @@ pub struct Toolbar {
     buttons: Vec<PageButton>,
     pub active_page: PageType,
     theme_button: button::State,
-    theme: Theme,
 }
 
 impl Toolbar {
     pub fn new() -> Toolbar {
         let buttons = vec![
-            PageButton {
-                label_text: "Publish".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::Publish,
-                is_disabled: false,
-            },
-            PageButton {
-                label_text: "View".to_string(),
-                button_state: button::State::new(),
-                page_type: PageType::View,
-                is_disabled: false,
-            },
             PageButton {
                 label_text: "Dashboard".to_string(),
                 button_state: button::State::new(),
@@ -46,6 +33,18 @@ impl Toolbar {
                 button_state: button::State::new(),
                 page_type: PageType::Feed,
                 is_disabled: true,
+            },
+            PageButton {
+                label_text: "Publish".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::Publish,
+                is_disabled: false,
+            },
+            PageButton {
+                label_text: "View".to_string(),
+                button_state: button::State::new(),
+                page_type: PageType::View,
+                is_disabled: false,
             },
             PageButton {
                 label_text: "Site".to_string(),
@@ -65,16 +64,14 @@ impl Toolbar {
             buttons,
             active_page: PageType::Publish,
             theme_button: button::State::new(),
-            theme: Theme::Dark,
         }
     }
 
-    pub fn view(&mut self) -> Element<Message> {
+    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
         let Toolbar {
             buttons,
             active_page,
             theme_button,
-            theme,
         } = self;
 
         buttons
