@@ -28,8 +28,8 @@ impl From<Theme> for Box<dyn container::StyleSheet> {
 impl From<Theme> for Box<dyn button::StyleSheet> {
     fn from(theme: Theme) -> Self {
         match theme {
-            Theme::Dark => dark::Button.into(),
-            Theme::Light => light::Button.into(),
+            Theme::Dark => Box::new(dark::Button { selected: false }),
+            Theme::Light => Box::new(light::Button { selected: false }),
         }
     }
 }
@@ -38,7 +38,7 @@ mod light {
     use iced::{button, container, Background, Color};
 
     pub struct Button {
-        selected: bool,
+        pub selected: bool,
     }
 
     impl button::StyleSheet for Button {
@@ -114,7 +114,7 @@ mod dark {
     use iced::{button, container, Background, Color};
 
     pub struct Button {
-        selected: bool,
+        pub selected: bool,
     }
 
     impl button::StyleSheet for Button {
