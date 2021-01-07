@@ -15,6 +15,7 @@ pub enum Message {
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     IpfsStoreFile(PathBuf),
     ContentAddedToIpfs(Result<Option<Cid>, Arc<Error>>),
+    ContentDroppedOnWindow(Vec<PathBuf>),
     ViewPageInputChanged(String),
     ViewPageLoadContent,
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),

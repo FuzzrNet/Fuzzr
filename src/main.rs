@@ -23,6 +23,7 @@ use page::view::ViewPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
+use data::fs_ops::walk_dir;
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
 
@@ -114,7 +115,10 @@ impl Application for Fuzzr {
             }
             Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
                 Some(ipfs_client) => {
-                    Command::perform(store_file(path, ipfs_client), Message::ContentAddedToIpfs)
+                    // store_file(path, ipfs_client);
+                    let paths = walk_dir(&path);
+                    // Command::perform(, Message::ContentDroppedOnWindow)
+                    Command::none()
                 }
                 None => Command::none(),
             },
