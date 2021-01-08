@@ -1,4 +1,4 @@
-use iced::{button, container};
+use iced::{button, container, text_input};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Theme {
@@ -37,8 +37,17 @@ impl From<Theme> for Box<dyn button::StyleSheet> {
     }
 }
 
+impl From<Theme> for Box<dyn text_input::StyleSheet> {
+    fn from(theme: Theme) -> Self {
+        match theme {
+            Theme::Dark { selected: _ } => dark::TextInput.into(),
+            Theme::Light { selected: _ } => light::TextInput.into(),
+        }
+    }
+}
+
 mod light {
-    use iced::{button, container, Background, Color};
+    use iced::{button, container, text_input, Background, Color};
 
     pub struct Button {
         pub selected: bool,
@@ -98,10 +107,58 @@ mod light {
             }
         }
     }
+
+    pub struct TextInput;
+
+    impl text_input::StyleSheet for TextInput {
+        fn active(&self) -> text_input::Style {
+            text_input::Style {
+                background: Color {
+                    a: 1.0,
+                    ..Color::WHITE
+                }
+                .into(),
+                border_radius: 1.0,
+                border_width: 1.0,
+                border_color: Color::TRANSPARENT,
+            }
+        }
+
+        fn focused(&self) -> text_input::Style {
+            text_input::Style {
+                border_width: 1.0,
+                border_color: Color::BLACK,
+                ..self.active()
+            }
+        }
+
+        fn hovered(&self) -> text_input::Style {
+            text_input::Style {
+                border_width: 1.0,
+                border_color: Color {
+                    a: 0.5,
+                    ..Color::BLACK
+                },
+                ..self.focused()
+            }
+        }
+
+        fn placeholder_color(&self) -> Color {
+            Color::BLACK
+        }
+
+        fn value_color(&self) -> Color {
+            Color::BLACK
+        }
+
+        fn selection_color(&self) -> Color {
+            Color::WHITE
+        }
+    }
 }
 
 mod dark {
-    use iced::{button, container, Background, Color};
+    use iced::{button, container, text_input, Background, Color};
 
     pub struct Button {
         pub selected: bool,
@@ -159,6 +216,54 @@ mod dark {
                 text_color: Color::WHITE.into(),
                 ..container::Style::default()
             }
+        }
+    }
+
+    pub struct TextInput;
+
+    impl text_input::StyleSheet for TextInput {
+        fn active(&self) -> text_input::Style {
+            text_input::Style {
+                background: Color {
+                    a: 1.0,
+                    ..Color::BLACK
+                }
+                .into(),
+                border_radius: 1.0,
+                border_width: 1.0,
+                border_color: Color::WHITE,
+            }
+        }
+
+        fn focused(&self) -> text_input::Style {
+            text_input::Style {
+                border_width: 1.0,
+                border_color: Color::WHITE,
+                ..self.active()
+            }
+        }
+
+        fn hovered(&self) -> text_input::Style {
+            text_input::Style {
+                border_width: 1.0,
+                border_color: Color {
+                    a: 0.5,
+                    ..Color::WHITE
+                },
+                ..self.focused()
+            }
+        }
+
+        fn placeholder_color(&self) -> Color {
+            Color::WHITE
+        }
+
+        fn value_color(&self) -> Color {
+            Color::WHITE
+        }
+
+        fn selection_color(&self) -> Color {
+            Color::BLACK
         }
     }
 }

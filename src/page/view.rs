@@ -48,6 +48,7 @@ impl ViewPage {
         )
         .padding(15)
         .size(16)
+        .style(*theme)
         .on_submit(Message::ViewPageLoadContent);
 
         let content_image = match &self.content {
