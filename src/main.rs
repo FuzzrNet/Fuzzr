@@ -23,9 +23,11 @@ use page::view::ViewPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
+use data::content::ContentThumb;
 use data::fs_ops::walk_dir;
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
+use data::process_thumbs::{process_thumbs, Thumbs};
 
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
@@ -54,6 +56,7 @@ pub struct Fuzzr {
     current_page: PageType,
     page_buttons: PageSelector,
     background_color: Color,
+    thumbs: Thumbs,
 }
 
 impl Application for Fuzzr {
@@ -78,6 +81,7 @@ impl Application for Fuzzr {
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
+                thumbs: Arc::new(Mutex::new(Vec::new())),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -153,13 +157,18 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        iced_native::subscription::events_with(|event, _status| match event {
-            Event::Window(window_event) => match window_event {
-                FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+        let mut subscriptions = vec![
+            iced_native::subscription::events_with(|event, _status| match event {
+                Event::Window(window_event) => match window_event {
+                    FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+                    _ => None,
+                },
                 _ => None,
-            },
-            _ => None,
-        })
+            }),
+            process_thumbs(Arc::clone(self.thumbs)).map(Message::ContentThumbProcessed),
+        ];
+
+        Subscription::batch(subscriptions)
     }
 
     fn view(&mut self) -> Element<Message> {
