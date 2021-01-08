@@ -21,16 +21,19 @@ pub struct Toolbar {
 
 fn inverse(theme: &Theme) -> Theme {
     match theme {
-        Theme::Dark => Theme::Light,
-        Theme::Light => Theme::Dark,
+        Theme::Dark { selected } => Theme::Light {
+            selected: selected.to_owned(),
+        },
+        Theme::Light { selected } => Theme::Dark {
+            selected: selected.to_owned(),
+        },
     }
 }
 
-fn conditional_inverse(theme: &Theme, selected: bool) -> Theme {
-    if selected {
-        inverse(theme)
-    } else {
-        *theme
+fn selected(theme: &Theme, selected: bool) -> Theme {
+    match theme {
+        Theme::Dark { selected: _ } => Theme::Dark { selected },
+        Theme::Light { selected: _ } => Theme::Light { selected },
     }
 }
 
@@ -107,10 +110,7 @@ impl Toolbar {
                                 &mut page_button.button_state,
                                 Text::new(page_button.label_text.clone()).size(16),
                             )
-                            .style(conditional_inverse(
-                                theme,
-                                *active_page == page_button.page_type,
-                            ))
+                            .style(selected(theme, *active_page == page_button.page_type))
                             .on_press(Message::PageChanged(page_button.page_type.clone())),
                         )
                     })
