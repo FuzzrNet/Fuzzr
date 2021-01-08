@@ -28,8 +28,8 @@ impl From<Theme> for Box<dyn container::StyleSheet> {
 impl From<Theme> for Box<dyn button::StyleSheet> {
     fn from(theme: Theme) -> Self {
         match theme {
-            Theme::Dark => Box::new(dark::Button { selected: false }),
-            Theme::Light => Box::new(light::Button { selected: false }),
+            Theme::Dark => dark::Button.into(),
+            Theme::Light => light::Button.into(),
         }
     }
 }
@@ -37,51 +37,28 @@ impl From<Theme> for Box<dyn button::StyleSheet> {
 mod light {
     use iced::{button, container, Background, Color};
 
-    pub struct Button {
-        pub selected: bool,
-    }
+    pub struct Button;
 
     impl button::StyleSheet for Button {
         fn active(&self) -> button::Style {
-            if self.selected {
-                button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::WHITE,
-                    ..button::Style::default()
-                }
-            } else {
-                button::Style {
-                    border_color: Color::BLACK,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::BLACK,
-                    ..button::Style::default()
-                }
+            button::Style {
+                background: Some(Background::Color(Color::WHITE)),
+                border_color: Color::BLACK,
+                border_radius: 1.0,
+                border_width: 1.0,
+                text_color: Color::BLACK,
+                ..button::Style::default()
             }
         }
 
         fn hovered(&self) -> button::Style {
-            if self.selected {
-                button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::WHITE,
-                    ..button::Style::default()
-                }
-            } else {
-                button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::BLACK,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::WHITE,
-                    ..button::Style::default()
-                }
+            button::Style {
+                background: Some(Background::Color(Color::BLACK)),
+                border_color: Color::BLACK,
+                border_radius: 1.0,
+                border_width: 1.0,
+                text_color: Color::WHITE,
+                ..button::Style::default()
             }
         }
 
@@ -113,52 +90,28 @@ mod light {
 mod dark {
     use iced::{button, container, Background, Color};
 
-    pub struct Button {
-        pub selected: bool,
-    }
+    pub struct Button;
 
     impl button::StyleSheet for Button {
         fn active(&self) -> button::Style {
-            if self.selected {
-                button::Style {
-                    background: Some(Background::Color(Color::WHITE)),
-                    border_color: Color::WHITE,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::BLACK,
-                    ..button::Style::default()
-                }
-            } else {
-                button::Style {
-                    background: Some(Background::Color(Color::BLACK)),
-                    border_color: Color::WHITE,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::WHITE,
-                    ..button::Style::default()
-                }
+            button::Style {
+                background: Some(Background::Color(Color::BLACK)),
+                border_color: Color::WHITE,
+                border_radius: 1.0,
+                border_width: 1.0,
+                text_color: Color::WHITE,
+                ..button::Style::default()
             }
         }
 
         fn hovered(&self) -> button::Style {
-            if self.selected {
-                button::Style {
-                    background: Some(Background::Color(Color::WHITE)),
-                    border_color: Color::WHITE,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::BLACK,
-                    ..button::Style::default()
-                }
-            } else {
-                button::Style {
-                    background: Some(Background::Color(Color::WHITE)),
-                    border_color: Color::WHITE,
-                    border_radius: 1.0,
-                    border_width: 1.0,
-                    text_color: Color::BLACK,
-                    ..button::Style::default()
-                }
+            button::Style {
+                background: Some(Background::Color(Color::WHITE)),
+                border_color: Color::BLACK,
+                border_radius: 1.0,
+                border_width: 1.0,
+                text_color: Color::BLACK,
+                ..button::Style::default()
             }
         }
 
