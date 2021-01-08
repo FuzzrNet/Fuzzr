@@ -1,13 +1,16 @@
 [package]
 name = "fuzzr"
-version = "0.1.0"
+version = "0.0.2"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
 ]
 edition = "2018"
-publish = false
 license = "Unlicense"
+description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
+homepage = "https://fuzzr.net"
+repository = "https://github.com/FuzzrNet/Fuzzr"
+documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
 
 [build]
 incremental = true
@@ -45,7 +48,7 @@ infer = "0.3"
 # IPFS
 ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
 libipld = "0.8"
-# ipld-collections = "0.3.0"
 
+# ipld-collections = "0.3.0"
 [dev-dependencies]
 tempfile = "3.1"
