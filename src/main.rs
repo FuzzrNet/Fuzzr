@@ -21,7 +21,8 @@ use page::site::SitePage;
 use page::view::ViewPage;
 
 use message::Message;
-use ui::page_selector::PageSelector;
+use ui::style::Theme;
+use ui::toolbar::Toolbar;
 
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
@@ -51,8 +52,9 @@ pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
     current_page: PageType,
-    page_buttons: PageSelector,
+    toolbar: Toolbar,
     background_color: Color,
+    theme: Theme,
 }
 
 impl Application for Fuzzr {
@@ -74,9 +76,10 @@ impl Application for Fuzzr {
             Fuzzr {
                 pages,
                 current_page: PageType::Publish, // Default page
-                page_buttons: PageSelector::new(),
+                toolbar: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
+                theme: Theme::default(),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -102,7 +105,7 @@ impl Application for Fuzzr {
         match event {
             Message::PageChanged(page_type) => {
                 self.current_page = page_type.clone();
-                self.page_buttons.active_page = page_type.clone();
+                self.toolbar.active_page = page_type.clone();
                 Command::none()
             }
             Message::IpfsReady(ipfs_client) => {
@@ -144,6 +147,10 @@ impl Application for Fuzzr {
                     None => Command::none(),
                 }
             }
+            Message::ThemeChanged(theme) => {
+                self.theme = theme;
+                Command::none()
+            }
             _ => Command::none(),
         }
     }
@@ -159,19 +166,27 @@ impl Application for Fuzzr {
     }
 
     fn view(&mut self) -> Element<Message> {
-        let page: Element<_> = match self.current_page {
-            PageType::Dashboard => self.pages.dash.view(),
-            PageType::Feed => self.pages.feed.view(),
-            PageType::Publish => self.pages.publish.view(),
-            PageType::View => self.pages.view.view(),
-            PageType::Site => self.pages.site.view(),
-            PageType::Settings => self.pages.settings.view(),
+        let Fuzzr {
+            current_page,
+            pages,
+            theme,
+            toolbar,
+            ..
+        } = self;
+
+        let page: Element<_> = match current_page {
+            PageType::Dashboard => pages.dash.view(theme),
+            PageType::Feed => pages.feed.view(theme),
+            PageType::Publish => pages.publish.view(theme),
+            PageType::View => pages.view.view(theme),
+            PageType::Site => pages.site.view(theme),
+            PageType::Settings => pages.settings.view(theme),
         };
 
         let content: Element<_> = Column::new()
             .spacing(20)
             .padding(20)
-            .push(self.page_buttons.view())
+            .push(toolbar.view(theme))
             .align_items(Align::Center)
             .push(page)
             .into();
@@ -180,6 +195,7 @@ impl Application for Fuzzr {
             .height(Length::Fill)
             .width(Length::Fill)
             .center_y()
+            .style(*theme)
             .into()
     }
 }

@@ -1,6 +1,7 @@
 use iced::{Column, Container, Element, Length, Text};
 
 use crate::message::Message;
+use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
@@ -25,7 +26,7 @@ impl PublishPage {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self, theme: &Theme) -> Element<Message> {
         let drop_zone = match &self.cid {
             Some(cid) => Column::new().push(Text::new(format!(
                 "{}\n\n(Clipboard copy not yet implemented, please check terminal)",
@@ -43,6 +44,7 @@ impl PublishPage {
             .padding(10)
             .center_x()
             .center_y()
+            .style(*theme)
             .into()
     }
 }

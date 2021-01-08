@@ -1,6 +1,7 @@
-use iced::{text_input, Element, Row, Text};
+use iced::{text_input, Container, Element, Length, Row, Text};
 
 use crate::message::Message;
+use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct SettingsPage {
@@ -22,9 +23,15 @@ impl SettingsPage {
         };
     }
 
-    pub fn view(&self) -> Element<Message> {
-        Row::new()
-            .push(Text::new("TODO: Settings page").size(16))
+    pub fn view(&self, theme: &Theme) -> Element<Message> {
+        let settings_container = Row::new().push(Text::new("TODO: Settings page").size(16));
+
+        Container::new(settings_container)
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
+            .style(*theme)
             .into()
     }
 }

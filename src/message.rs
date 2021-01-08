@@ -4,6 +4,7 @@ use ipfs_embed::core::{Cid, Error, Result};
 use crate::data::content::ContentItem;
 use crate::data::ipfs_client::IpfsClient;
 use crate::page;
+use crate::ui::style::Theme;
 
 use std::path::PathBuf;
 
@@ -20,4 +21,5 @@ pub enum Message {
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
     SitePageContentChanged(String),
     SitePagePublishButtonClicked,
+    ThemeChanged(Theme),
 }
