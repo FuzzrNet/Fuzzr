@@ -6,11 +6,21 @@ authors = [
   "David Croisant <kn0wmad@protonmail.com>",
 ]
 edition = "2018"
-license = "Unlicense"
 description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
+documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
+readme = "https://raw.githubusercontent.com/FuzzrNet/Fuzzr/main/README.md"
 homepage = "https://fuzzr.net"
 repository = "https://github.com/FuzzrNet/Fuzzr"
-documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
+license = "Unlicense"
+keywords = ["censorship-resistance", "ipfs", "p2p", "gui", "self-hosted"]
+categories = [
+  "cryptography",
+  "filesystem",
+  "multimedia",
+  "text-editors",
+  "web-programming"
+]
+exclude = ["docs", ".github", ".vscode"]
 
 [build]
 incremental = true
