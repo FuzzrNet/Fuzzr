@@ -1,12 +1,11 @@
 use std::fmt;
 
-use ipfs_embed::core::{BitswapStorage, Error, Result};
+use ipfs_embed::core::{BitswapStorage, Error, Result, Store, StoreParams};
 use ipfs_embed::db::StorageService;
 use ipfs_embed::net::{NetworkConfig, NetworkService};
 use ipfs_embed::Ipfs;
 use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
-use libipld::store::{Store, StoreParams};
 use libipld::{Cid, IpldCodec};
 
 use async_std::sync::{Arc, Mutex};
