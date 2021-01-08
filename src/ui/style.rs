@@ -120,7 +120,7 @@ mod light {
                 .into(),
                 border_radius: 1.0,
                 border_width: 1.0,
-                border_color: Color::TRANSPARENT,
+                border_color: Color::BLACK,
             }
         }
 
@@ -136,7 +136,7 @@ mod light {
             text_input::Style {
                 border_width: 1.0,
                 border_color: Color {
-                    a: 0.5,
+                    a: 1.0,
                     ..Color::BLACK
                 },
                 ..self.focused()
@@ -247,7 +247,7 @@ mod dark {
             text_input::Style {
                 border_width: 1.0,
                 border_color: Color {
-                    a: 0.5,
+                    a: 1.0,
                     ..Color::WHITE
                 },
                 ..self.focused()
