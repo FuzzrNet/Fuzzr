@@ -8,7 +8,6 @@ authors = [
 edition = "2018"
 description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
 documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
-readme = "https://raw.githubusercontent.com/FuzzrNet/Fuzzr/main/README.md"
 homepage = "https://fuzzr.net"
 repository = "https://github.com/FuzzrNet/Fuzzr"
 license = "Unlicense"
