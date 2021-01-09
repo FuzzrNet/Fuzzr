@@ -11,7 +11,7 @@ documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
 homepage = "https://fuzzr.net"
 repository = "https://github.com/FuzzrNet/Fuzzr"
 license = "Unlicense"
-keywords = ["censorship-resistance", "ipfs", "p2p", "gui", "self-hosted"]
+keywords = ["ipfs", "p2p", "gui", "self-hosted"]
 categories = [
   "cryptography",
   "filesystem",
