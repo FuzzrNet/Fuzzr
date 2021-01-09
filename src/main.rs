@@ -105,13 +105,12 @@ impl Application for Fuzzr {
         match event {
             Message::PageChanged(page_type) => {
                 self.current_page = page_type.clone();
-                self.toolbar.active_page = page_type.clone();
+                self.toolbar.active_page = page_type;
                 Command::none()
             }
             Message::IpfsReady(ipfs_client) => {
-                match ipfs_client {
-                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
-                    Err(_) => {}
+                if let Ok(client) = ipfs_client {
+                    self.ipfs_client = Some(Arc::new(Mutex::new(client)))
                 }
                 Command::none()
             }
@@ -157,10 +156,7 @@ impl Application for Fuzzr {
 
     fn subscription(&self) -> Subscription<Message> {
         iced_native::subscription::events_with(|event, _status| match event {
-            Event::Window(window_event) => match window_event {
-                FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
-                _ => None,
-            },
+            Event::Window(FileDropped(path)) => Some(Message::FileDroppedOnWindow(path)),
             _ => None,
         })
     }

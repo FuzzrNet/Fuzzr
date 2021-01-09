@@ -23,12 +23,9 @@ impl SitePage {
     }
 
     pub fn update(&mut self, msg: Message) {
-        match msg {
-            Message::SitePageContentChanged(value) => {
-                self.input_value = value;
-            }
-            _ => {}
-        };
+        if let Message::SitePageContentChanged(value) = msg {
+            self.input_value = value;
+        }
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {

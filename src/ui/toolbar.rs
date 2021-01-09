@@ -94,7 +94,7 @@ impl Toolbar {
 
         Container::new(
             buttons
-                .into_iter()
+                .iter_mut()
                 .fold(Row::new(), |row, page_button| {
                     row.push(if page_button.is_disabled {
                         Column::new().padding(2).push(
