@@ -1,4 +1,5 @@
 use std::fmt;
+use std::time::Instant;
 
 use ipfs_embed::core::{BitswapStorage, Error, Result, Store, StoreParams};
 use ipfs_embed::db::StorageService;
@@ -10,8 +11,10 @@ use libipld::{Cid, IpldCodec};
 
 use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
+use log::info;
 
 use crate::data::content::ContentItemBlock;
+use crate::data::ipfs_bootstrap;
 
 pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
 
@@ -37,6 +40,8 @@ pub struct IpfsClient {
 
 impl IpfsClient {
     pub async fn new() -> Result<IpfsClient, Arc<Error>> {
+        let start = Instant::now();
+
         let sled_config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => {
                 sled::Config::new().path(project_dirs.data_local_dir().to_owned())
@@ -55,10 +60,28 @@ impl IpfsClient {
 
         let bitswap_storage = BitswapStorage::new(storage.clone());
 
-        let net_config = NetworkConfig::new();
+        let bootstrap_list = vec![
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmNnooDu7bfjPFoTZYxMNLWUQJyrVwtbZg5gBMjTezGAJN",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmQCU2EcMqAqQPR2i9bChDtGNJchTbq5TbXJJ16u19uLTa",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmbLHAnMoJPWSCR5Zhtx6BHJX9KiKNN6tpvbUcqanj75Nb",
+            "/dnsaddr/bootstrap.libp2p.io/p2p/QmcZf59bWwK5XFi76CZX8cbJ4BhTzzA3gU1ZjYZcYW3dwt",
+            "/ip4/104.131.131.82/tcp/4001/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
+            "/ip4/104.131.131.82/udp/4001/quic/p2p/QmaCpDMGvV2BGHeYERUEnRQAwe3N8SzbUtfsmvsqQLuvuJ",
+        ];
+
+        let boot_nodes = ipfs_bootstrap::get_boot_nodes(bootstrap_list);
+
+        info!("Parsed {} bootstrap nodes", boot_nodes.len());
+
+        let net_config = NetworkConfig {
+            boot_nodes,
+            ..NetworkConfig::new()
+        };
         let network = Arc::new(NetworkService::new(net_config, bitswap_storage).await?);
 
         let ipfs = Ipfs::new(Arc::clone(&storage), Arc::clone(&network));
+
+        info!("IPFS started in {:.2?}", start.elapsed());
 
         Ok(IpfsClient {
             ipfs,
@@ -68,7 +91,7 @@ impl IpfsClient {
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
-        let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, block)?;
+        let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake2b256, block)?;
         self.ipfs.insert(&ipld_block).await?;
         let cid = *ipld_block.cid();
 

@@ -60,4 +60,6 @@ infer = "0.3"
 # IPFS
 ipfs-embed = "0.10"
 libipld = "0.8"
+libp2p = "0.32.2"
+parity-multiaddr = "0.10.0"
 # ipld-collections = "0.3.0"
