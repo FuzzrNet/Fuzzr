@@ -59,6 +59,6 @@ sled = "0.34"
 image = "0.23"
 infer = "0.3"
 # IPFS
-ipfs-embed = "0.9"
-libipld = "0.9"
+ipfs-embed = "0.10"
+libipld = "0.8"
 # ipld-collections = "0.3.0"
