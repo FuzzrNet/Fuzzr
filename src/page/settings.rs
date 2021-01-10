@@ -9,6 +9,12 @@ pub struct SettingsPage {
     input_value: String,
 }
 
+impl Default for SettingsPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SettingsPage {
     pub fn new() -> SettingsPage {
         SettingsPage {
@@ -17,11 +23,7 @@ impl SettingsPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        match msg {
-            _ => {}
-        };
-    }
+    pub fn update(&mut self, _msg: Message) {}
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         let settings_container = Row::new().push(Text::new("TODO: Settings page").size(16));

@@ -13,6 +13,12 @@ pub struct DashPage {
     // items: Vec<ContentItem>,
 }
 
+impl Default for DashPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DashPage {
     pub fn new() -> DashPage {
         DashPage {
@@ -20,11 +26,7 @@ impl DashPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        match msg {
-            _ => {}
-        }
-    }
+    pub fn update(&mut self, _msg: Message) {}
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         // let DashPage { .. } = self;
