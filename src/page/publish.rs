@@ -8,21 +8,20 @@ pub struct PublishPage {
     cid: Option<String>,
 }
 
+impl Default for PublishPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage { cid: None }
     }
 
     pub fn update(&mut self, msg: Message) {
-        match msg {
-            Message::ContentAddedToIpfs(cid) => match cid {
-                Ok(cid) => match cid {
-                    Some(cid) => self.cid = Some(cid.to_string()),
-                    None => {}
-                },
-                Err(_) => {}
-            },
-            _ => {}
+        if let Message::ContentAddedToIpfs(Ok(Some(cid))) = msg {
+            self.cid = Some(cid.to_string())
         }
     }
 

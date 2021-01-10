@@ -13,6 +13,12 @@ pub struct SitePage {
     publish_page_button_state: button::State,
 }
 
+impl Default for SitePage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SitePage {
     pub fn new() -> SitePage {
         SitePage {
@@ -23,12 +29,9 @@ impl SitePage {
     }
 
     pub fn update(&mut self, msg: Message) {
-        match msg {
-            Message::SitePageContentChanged(value) => {
-                self.input_value = value;
-            }
-            _ => {}
-        };
+        if let Message::SitePageContentChanged(value) = msg {
+            self.input_value = value;
+        }
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
