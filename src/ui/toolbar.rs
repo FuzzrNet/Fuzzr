@@ -37,6 +37,12 @@ fn selected(theme: &Theme, selected: bool) -> Theme {
     }
 }
 
+impl Default for Toolbar {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Toolbar {
     pub fn new() -> Toolbar {
         let buttons = vec![

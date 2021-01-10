@@ -13,6 +13,12 @@ pub struct DashPage {
     // items: Vec<ContentItem>,
 }
 
+impl Default for DashPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl DashPage {
     pub fn new() -> DashPage {
         DashPage {

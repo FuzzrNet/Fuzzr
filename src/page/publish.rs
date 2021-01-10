@@ -8,6 +8,12 @@ pub struct PublishPage {
     cid: Option<String>,
 }
 
+impl Default for PublishPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage { cid: None }

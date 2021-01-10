@@ -13,6 +13,12 @@ pub struct SitePage {
     publish_page_button_state: button::State,
 }
 
+impl Default for SitePage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SitePage {
     pub fn new() -> SitePage {
         SitePage {

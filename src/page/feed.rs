@@ -11,6 +11,12 @@ pub struct FeedPage {
     scroll: scrollable::State,
 }
 
+impl Default for FeedPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FeedPage {
     pub fn new() -> FeedPage {
         FeedPage {

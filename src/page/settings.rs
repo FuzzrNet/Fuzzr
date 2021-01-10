@@ -9,6 +9,12 @@ pub struct SettingsPage {
     input_value: String,
 }
 
+impl Default for SettingsPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SettingsPage {
     pub fn new() -> SettingsPage {
         SettingsPage {
