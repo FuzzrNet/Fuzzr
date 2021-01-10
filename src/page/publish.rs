@@ -14,15 +14,8 @@ impl PublishPage {
     }
 
     pub fn update(&mut self, msg: Message) {
-        match msg {
-            Message::ContentAddedToIpfs(cid) => match cid {
-                Ok(cid) => match cid {
-                    Some(cid) => self.cid = Some(cid.to_string()),
-                    None => {}
-                },
-                Err(_) => {}
-            },
-            _ => {}
+        if let Message::ContentAddedToIpfs(Ok(Some(cid))) = msg {
+            self.cid = Some(cid.to_string())
         }
     }
 

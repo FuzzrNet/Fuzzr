@@ -17,11 +17,7 @@ impl SettingsPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        match msg {
-            _ => {}
-        };
-    }
+    pub fn update(&mut self, _msg: Message) {}
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         let settings_container = Row::new().push(Text::new("TODO: Settings page").size(16));

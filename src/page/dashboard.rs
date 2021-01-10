@@ -20,11 +20,7 @@ impl DashPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        match msg {
-            _ => {}
-        }
-    }
+    pub fn update(&mut self, _msg: Message) {}
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         // let DashPage { .. } = self;
