@@ -6,26 +6,20 @@ use iced_native::{window::Event::FileDropped, Event};
 use async_std::sync::{Arc, Mutex};
 use log::{error, info};
 
-mod data;
-mod message;
-mod page;
-mod ui;
-
-use page::PageType;
-
-use page::dashboard::DashPage;
-use page::feed::FeedPage;
-use page::publish::PublishPage;
-use page::settings::SettingsPage;
-use page::site::SitePage;
-use page::view::ViewPage;
-
-use message::Message;
-use ui::style::Theme;
-use ui::toolbar::Toolbar;
-
-use data::ipfs_client::{IpfsClient, IpfsClientRef};
-use data::ipfs_ops::{load_file, store_file};
+use fuzzr::{
+    data::ipfs_client::{IpfsClient, IpfsClientRef},
+    data::ipfs_ops::{load_file, store_file},
+    message::Message,
+    page::dashboard::DashPage,
+    page::feed::FeedPage,
+    page::publish::PublishPage,
+    page::settings::SettingsPage,
+    page::site::SitePage,
+    page::view::ViewPage,
+    page::PageType,
+    ui::style::Theme,
+    ui::toolbar::Toolbar,
+};
 
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
@@ -59,7 +53,7 @@ pub struct Fuzzr {
 
 impl Application for Fuzzr {
     type Executor = iced::executor::Default;
-    type Message = message::Message;
+    type Message = fuzzr::message::Message;
     type Flags = ();
 
     fn new(_flags: ()) -> (Fuzzr, Command<Message>) {
