@@ -43,6 +43,7 @@ async-std = "1.8"
 # UI
 iced = { version = "0.2", features = [
   "wgpu",
+  "glow",
   "default_system_font",
   "image",
   "async-std"
@@ -57,12 +58,17 @@ infer = "0.3"
 # IPFS
 ipfs-embed = "0.10"
 libipld = "0.8"
-# ipld-collections = "0.3.0"
 
+# ipld-collections = "0.3.0"
 [dev-dependencies]
 tempfile = "3.1"
 criterion = "0.3"
 
-[[bench]]
-name = "ipfs"
-harness = false
+[[bin]]
+name = "fuzzr"
+test = true
+bench = false
+#
+# [[bench]]
+# name = "ipfs"
+# harness = false
