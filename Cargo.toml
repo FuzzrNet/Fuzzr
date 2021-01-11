@@ -42,9 +42,9 @@ directories-next = "2.0"
 async-std = "1.8"
 # UI
 iced = { version = "0.2", features = [
-  "wgpu",
+  # "wgpu",
   "glow",
-  "default_system_font",
+  "glow_default_system_font",
   "image",
   "async-std"
 ] }
