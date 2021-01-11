@@ -1,31 +1,171 @@
-use iced::{button, container, text_input};
+use iced::{button, container, text_input, Background, Color};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Theme {
-    Light { selected: bool },
-    Dark { selected: bool },
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ThemeConfig {
+    pub selected: bool,
+    pub background: Color,
+    pub foreground: Color,
 }
 
-impl Theme {
-    pub const ALL: [Theme; 2] = [
-        Theme::Light { selected: false },
-        Theme::Dark { selected: false },
-    ];
-
-    // let custom_theme = (foreground, background);
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum Theme {
+    Light(ThemeConfig),
+    Dark(ThemeConfig),
+    Custom(ThemeConfig),
 }
 
 impl Default for Theme {
     fn default() -> Theme {
-        Theme::Dark { selected: false }
+        Theme::Dark(ThemeConfig {
+            selected: false,
+            background: Color::BLACK,
+            foreground: Color::WHITE,
+        })
+    }
+}
+
+pub struct Button {
+    pub selected: bool,
+    pub background: Color,
+    pub foreground: Color,
+}
+
+impl button::StyleSheet for Button {
+    fn active(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(if self.selected {
+                self.foreground
+            } else {
+                self.background
+            })),
+            border_color: self.foreground,
+            border_radius: 1.0,
+            border_width: 1.0,
+            text_color: if self.selected {
+                self.background
+            } else {
+                self.foreground
+            },
+            ..button::Style::default()
+        }
+    }
+
+    fn hovered(&self) -> button::Style {
+        button::Style {
+            background: Some(Background::Color(self.foreground)),
+            border_color: self.foreground,
+            border_radius: 1.0,
+            border_width: 1.0,
+            text_color: self.background,
+            ..button::Style::default()
+        }
+    }
+
+    fn disabled(&self) -> button::Style {
+        button::Style {
+            text_color: self.foreground,
+            ..button::Style::default()
+        }
+    }
+}
+
+pub struct Container {
+    background: Color,
+    foreground: Color,
+}
+
+impl container::StyleSheet for Container {
+    fn style(&self) -> container::Style {
+        container::Style {
+            background: Color {
+                a: 1.0,
+                ..self.background
+            }
+            .into(),
+            text_color: self.foreground.into(),
+            ..container::Style::default()
+        }
+    }
+}
+
+pub struct ThemedTextInput {
+    pub background: Color,
+    pub foreground: Color,
+}
+
+impl text_input::StyleSheet for ThemedTextInput {
+    fn active(&self) -> text_input::Style {
+        text_input::Style {
+            background: Color {
+                a: 1.0,
+                ..self.background
+            }
+            .into(),
+            border_radius: 1.0,
+            border_width: 1.0,
+            border_color: self.foreground,
+        }
+    }
+
+    fn focused(&self) -> text_input::Style {
+        text_input::Style {
+            border_width: 1.0,
+            border_color: self.foreground,
+            ..self.active()
+        }
+    }
+
+    fn hovered(&self) -> text_input::Style {
+        text_input::Style {
+            border_width: 1.0,
+            border_color: Color {
+                a: 1.0,
+                ..self.foreground
+            },
+            ..self.focused()
+        }
+    }
+
+    fn placeholder_color(&self) -> Color {
+        self.foreground
+    }
+
+    fn value_color(&self) -> Color {
+        self.foreground
+    }
+
+    fn selection_color(&self) -> Color {
+        self.background
     }
 }
 
 impl From<Theme> for Box<dyn container::StyleSheet> {
     fn from(theme: Theme) -> Self {
         match theme {
-            Theme::Dark { selected: _ } => dark::Container.into(),
-            Theme::Light { selected: _ } => light::Container.into(),
+            Theme::Dark(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(Container {
+                background,
+                foreground,
+            }),
+            Theme::Light(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(Container {
+                background,
+                foreground,
+            }),
+            Theme::Custom(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(Container {
+                background,
+                foreground,
+            }),
         }
     }
 }
@@ -33,8 +173,33 @@ impl From<Theme> for Box<dyn container::StyleSheet> {
 impl From<Theme> for Box<dyn button::StyleSheet> {
     fn from(theme: Theme) -> Self {
         match theme {
-            Theme::Dark { selected } => Box::new(dark::Button { selected }),
-            Theme::Light { selected } => Box::new(light::Button { selected }),
+            Theme::Dark(ThemeConfig {
+                selected,
+                background,
+                foreground,
+            }) => Box::new(Button {
+                background,
+                foreground,
+                selected,
+            }),
+            Theme::Light(ThemeConfig {
+                selected,
+                background,
+                foreground,
+            }) => Box::new(Button {
+                background,
+                foreground,
+                selected,
+            }),
+            Theme::Custom(ThemeConfig {
+                selected,
+                background,
+                foreground,
+            }) => Box::new(Button {
+                background,
+                foreground,
+                selected,
+            }),
         }
     }
 }
@@ -42,230 +207,32 @@ impl From<Theme> for Box<dyn button::StyleSheet> {
 impl From<Theme> for Box<dyn text_input::StyleSheet> {
     fn from(theme: Theme) -> Self {
         match theme {
-            Theme::Dark { selected: _ } => dark::TextInput.into(),
-            Theme::Light { selected: _ } => light::TextInput.into(),
-        }
-    }
-}
-
-mod light {
-    use iced::{button, container, text_input, Background, Color};
-
-    pub struct Button {
-        pub selected: bool,
-    }
-
-    impl button::StyleSheet for Button {
-        fn active(&self) -> button::Style {
-            button::Style {
-                background: Some(Background::Color(if self.selected {
-                    Color::BLACK
-                } else {
-                    Color::WHITE
-                })),
-                border_color: Color::BLACK,
-                border_radius: 1.0,
-                border_width: 1.0,
-                text_color: if self.selected {
-                    Color::WHITE
-                } else {
-                    Color::BLACK
-                },
-                ..button::Style::default()
-            }
-        }
-
-        fn hovered(&self) -> button::Style {
-            button::Style {
-                background: Some(Background::Color(Color::BLACK)),
-                border_color: Color::BLACK,
-                border_radius: 1.0,
-                border_width: 1.0,
-                text_color: Color::WHITE,
-                ..button::Style::default()
-            }
-        }
-
-        fn disabled(&self) -> button::Style {
-            button::Style {
-                text_color: Color::BLACK,
-                ..button::Style::default()
-            }
-        }
-    }
-
-    pub struct Container;
-
-    impl container::StyleSheet for Container {
-        fn style(&self) -> container::Style {
-            container::Style {
-                background: Color {
-                    a: 1.0,
-                    ..Color::WHITE
-                }
-                .into(),
-                text_color: Color::BLACK.into(),
-                ..container::Style::default()
-            }
-        }
-    }
-
-    pub struct TextInput;
-
-    impl text_input::StyleSheet for TextInput {
-        fn active(&self) -> text_input::Style {
-            text_input::Style {
-                background: Color {
-                    a: 1.0,
-                    ..Color::WHITE
-                }
-                .into(),
-                border_radius: 1.0,
-                border_width: 1.0,
-                border_color: Color::BLACK,
-            }
-        }
-
-        fn focused(&self) -> text_input::Style {
-            text_input::Style {
-                border_width: 1.0,
-                border_color: Color::BLACK,
-                ..self.active()
-            }
-        }
-
-        fn hovered(&self) -> text_input::Style {
-            text_input::Style {
-                border_width: 1.0,
-                border_color: Color {
-                    a: 1.0,
-                    ..Color::BLACK
-                },
-                ..self.focused()
-            }
-        }
-
-        fn placeholder_color(&self) -> Color {
-            Color::BLACK
-        }
-
-        fn value_color(&self) -> Color {
-            Color::BLACK
-        }
-
-        fn selection_color(&self) -> Color {
-            Color::WHITE
-        }
-    }
-}
-
-mod dark {
-    use iced::{button, container, text_input, Background, Color};
-
-    pub struct Button {
-        pub selected: bool,
-    }
-
-    impl button::StyleSheet for Button {
-        fn active(&self) -> button::Style {
-            button::Style {
-                background: Some(Background::Color(if self.selected {
-                    Color::WHITE
-                } else {
-                    Color::BLACK
-                })),
-                border_color: Color::WHITE,
-                border_radius: 1.0,
-                border_width: 1.0,
-                text_color: if self.selected {
-                    Color::BLACK
-                } else {
-                    Color::WHITE
-                },
-                ..button::Style::default()
-            }
-        }
-
-        fn hovered(&self) -> button::Style {
-            button::Style {
-                background: Some(Background::Color(Color::WHITE)),
-                border_color: Color::WHITE,
-                border_radius: 1.0,
-                border_width: 1.0,
-                text_color: Color::BLACK,
-                ..button::Style::default()
-            }
-        }
-
-        fn disabled(&self) -> button::Style {
-            button::Style {
-                text_color: Color::WHITE,
-                ..button::Style::default()
-            }
-        }
-    }
-
-    pub struct Container;
-
-    impl container::StyleSheet for Container {
-        fn style(&self) -> container::Style {
-            container::Style {
-                background: Color {
-                    a: 1.0,
-                    ..Color::BLACK
-                }
-                .into(),
-                text_color: Color::WHITE.into(),
-                ..container::Style::default()
-            }
-        }
-    }
-
-    pub struct TextInput;
-
-    impl text_input::StyleSheet for TextInput {
-        fn active(&self) -> text_input::Style {
-            text_input::Style {
-                background: Color {
-                    a: 1.0,
-                    ..Color::BLACK
-                }
-                .into(),
-                border_radius: 1.0,
-                border_width: 1.0,
-                border_color: Color::WHITE,
-            }
-        }
-
-        fn focused(&self) -> text_input::Style {
-            text_input::Style {
-                border_width: 1.0,
-                border_color: Color::WHITE,
-                ..self.active()
-            }
-        }
-
-        fn hovered(&self) -> text_input::Style {
-            text_input::Style {
-                border_width: 1.0,
-                border_color: Color {
-                    a: 1.0,
-                    ..Color::WHITE
-                },
-                ..self.focused()
-            }
-        }
-
-        fn placeholder_color(&self) -> Color {
-            Color::WHITE
-        }
-
-        fn value_color(&self) -> Color {
-            Color::WHITE
-        }
-
-        fn selection_color(&self) -> Color {
-            Color::BLACK
+            // TODO: Do we need boxes?
+            // TODO: Can we de-duplicate?
+            Theme::Dark(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(ThemedTextInput {
+                background,
+                foreground,
+            }),
+            Theme::Light(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(ThemedTextInput {
+                background,
+                foreground,
+            }),
+            Theme::Custom(ThemeConfig {
+                selected: _,
+                background,
+                foreground,
+            }) => Box::new(ThemedTextInput {
+                background,
+                foreground,
+            }),
         }
     }
 }

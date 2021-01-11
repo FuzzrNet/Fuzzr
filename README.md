@@ -71,5 +71,3 @@ See also this section on Enabling Fast Compiles for your system:
 <https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional>
 
 Then run: `rustup override set nightly` for nightly builds for just this project.
-
-sign test
