@@ -74,7 +74,7 @@ impl Toolbar {
                 label_text: "Settings".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Settings,
-                is_disabled: true,
+                is_disabled: false,
             },
         ];
 

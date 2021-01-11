@@ -11,6 +11,8 @@ impl Theme {
         Theme::Light { selected: false },
         Theme::Dark { selected: false },
     ];
+
+    // let custom_theme = (foreground, background);
 }
 
 impl Default for Theme {
