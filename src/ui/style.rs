@@ -9,8 +9,8 @@ pub struct ThemeConfig {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Theme {
-    Light(ThemeConfig),
     Dark(ThemeConfig),
+    Light(ThemeConfig),
     Custom(ThemeConfig),
 }
 

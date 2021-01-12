@@ -1,5 +1,5 @@
 use iced::{
-    Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
+    Align, Application, Column, Command, Container, Element, Length, Settings, Subscription,
 };
 use iced_native::{window::Event::FileDropped, Event};
 
@@ -47,7 +47,6 @@ pub struct Fuzzr {
     pages: Pages, // All pages in the app
     current_page: PageType,
     toolbar: Toolbar,
-    background_color: Color,
     theme: Theme,
 }
 
@@ -71,16 +70,11 @@ impl Application for Fuzzr {
                 pages,
                 current_page: PageType::Publish, // Default page
                 toolbar: Toolbar::new(),
-                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
                 theme: Theme::default(),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
-    }
-
-    fn background_color(&self) -> Color {
-        self.background_color
     }
 
     fn title(&self) -> String {
@@ -141,6 +135,7 @@ impl Application for Fuzzr {
                 }
             }
             Message::ThemeChanged(theme) => {
+                println!("New theme is {:?}", theme);
                 self.theme = theme;
                 Command::none()
             }
@@ -172,7 +167,7 @@ impl Application for Fuzzr {
             PageType::Site => pages.site.view(theme),
             PageType::Settings => pages.settings.view(theme),
         };
-
+        println!("Current theme in fuzzr view method is {:?}", theme);
         let content: Element<_> = Column::new()
             .spacing(20)
             .padding(20)

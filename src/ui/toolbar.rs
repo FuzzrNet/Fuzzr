@@ -23,13 +23,13 @@ fn inverse(theme: &Theme) -> Theme {
     match theme {
         Theme::Dark(ThemeConfig { selected, .. }) => Theme::Light(ThemeConfig {
             selected: selected.to_owned(),
-            background: Color::BLACK,
-            foreground: Color::WHITE,
+            background: Color::WHITE,
+            foreground: Color::BLACK,
         }),
         Theme::Light(ThemeConfig { selected, .. }) => Theme::Dark(ThemeConfig {
             selected: selected.to_owned(),
-            background: Color::WHITE,
-            foreground: Color::BLACK,
+            background: Color::BLACK,
+            foreground: Color::WHITE,
         }),
         Theme::Custom(ThemeConfig {
             selected,
@@ -135,6 +135,8 @@ impl Toolbar {
             active_page,
             theme_button,
         } = self;
+
+        println!("Current theme in toolbar view method is {:?}", theme);
 
         Container::new(
             buttons
