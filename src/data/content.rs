@@ -45,8 +45,12 @@ pub struct ContentItemBlock {
 
 #[derive(Clone, Debug, Hash)]
 pub struct ContentThumb {
-    pub path: Option<PathBuf>,
-    pub cid: Option<Cid>,
-    pub thumb: Option<Box<[u8]>>,
-    pub content: Option<ContentItem>,
+    pub cid: Cid,
+    pub thumb: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Hash)]
+pub struct PathThumb {
+    pub path: PathBuf,
+    pub thumb: Vec<u8>,
 }
