@@ -46,11 +46,12 @@ pub struct ContentItemBlock {
 #[derive(Clone, Debug, Hash)]
 pub struct ContentThumb {
     pub cid: Cid,
-    pub thumb: Vec<u8>,
+    pub image: Vec<u8>,
 }
 
 #[derive(Clone, Debug, Hash)]
 pub struct PathThumb {
     pub path: PathBuf,
     pub image: Vec<u8>,
+    pub metadata: ImageMetadata,
 }

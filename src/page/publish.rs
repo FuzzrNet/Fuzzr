@@ -1,6 +1,9 @@
-use iced::{image, Column, Command, Container, Element, Image, Length, Text};
+use iced::{
+    image, scrollable, Align, Column, Command, Container, Element, Image, Length, Row, Scrollable,
+    Text,
+};
 
-use log::{error, info};
+use log::{debug, error, info};
 use std::collections::btree_map::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
@@ -16,25 +19,29 @@ async fn lock_insert(
     elapsed: Duration,
 ) {
     let mut publish_thumbs = publish_thumbs.lock().unwrap();
-
+    debug!(
+        "Path:{:?}\tImage metadata: {:?}",
+        &thumb.path, &thumb.metadata
+    );
+    publish_thumbs.insert(thumb.path.clone(), thumb);
     info!(
         "thumbnailed {} items after {:.2?}",
         publish_thumbs.len(),
         elapsed
     );
-
-    publish_thumbs.insert(thumb.path.clone(), thumb);
 }
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
     // cid: Option<String>,
+    scroll: scrollable::State,
     publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
 }
 
 impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
+            scroll: scrollable::State::new(),
             publish_thumbs: Arc::new(Mutex::new(BTreeMap::new())),
         }
     }
@@ -66,20 +73,29 @@ impl PublishPage {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&mut self) -> Element<Message> {
         let publish_thumbs = self.publish_thumbs.lock().unwrap();
 
-        let drop_zone: Column<_> = if publish_thumbs.len() > 0 {
+        let drop_zone: Element<_> = if publish_thumbs.len() > 0 {
             publish_thumbs
                 .iter()
-                .fold(Column::new(), |col, (path, thumb)| {
-                    col.push(Image::new(image::Handle::from_memory(thumb.image.clone())))
-                })
+                .fold(
+                    Scrollable::new(&mut self.scroll)
+                        .width(Length::Fill)
+                        .align_items(Align::Center)
+                        .spacing(10),
+                    |col, (path, thumb)| {
+                        col.push(Image::new(image::Handle::from_memory(thumb.image.clone())))
+                    },
+                )
+                .into()
         } else {
-            Column::new().push(Text::new("Start adding content by dropping an image here"))
+            Column::new()
+                .push(Text::new("Start adding content by dropping an image here"))
+                .into()
         };
 
-        let publish_container = Column::new().push(drop_zone);
+        let publish_container = Row::new().push(drop_zone);
 
         Container::new(publish_container)
             .width(Length::Fill)

@@ -3,12 +3,17 @@
 // Boilerplate
 use iced::Subscription;
 use iced_futures::futures;
-use log::debug;
+use log::{debug, error};
 use std::time::{Duration, Instant};
 
 // Task dependencies
-use crate::data::content::PathThumb;
+use crate::data::content::{ImageMetadata, PathThumb};
+use async_std::fs;
+use async_std::future;
+use async_std::prelude::*;
+use async_std::task;
 use image::io::Reader as ImageReader;
+use image::GenericImageView;
 use par_stream::ParStreamExt;
 use std::hash::Hash;
 use std::path::PathBuf;
@@ -43,6 +48,43 @@ pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     Subscription::from_recipe(ProcessThumbs { paths, start })
 }
 
+async fn get_size_bytes(path: &PathBuf) -> u64 {
+    let file_metadata = fs::metadata(&path).await.unwrap();
+    let size_bytes = file_metadata.len();
+
+    size_bytes
+}
+
+async fn get_mime_type(path: &PathBuf) -> String {
+    let path = path.clone();
+    task::spawn_blocking(move || {
+        infer::get_from_path(path)
+            .unwrap()
+            .unwrap()
+            .mime_type()
+            .to_string()
+    })
+    .await
+}
+
+async fn resize_image(path: &PathBuf) -> Option<(Vec<u8>, (u32, u32))> {
+    let path = path.clone();
+    task::spawn_blocking(move || match ImageReader::open(&path).unwrap().decode() {
+        Ok(img) => Some((
+            img.thumbnail(256, 256).into_bgra8().into_raw(),
+            img.dimensions(),
+        )),
+        Err(err) => {
+            error!(
+                "Error decoding image at path: {:?}\nError was: {}",
+                &path, err
+            );
+            None
+        }
+    })
+    .await
+}
+
 // Task implementation
 impl<H, I> iced_native::subscription::Recipe<H, I> for ProcessThumbs
 where
@@ -60,25 +102,43 @@ where
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let start = self.start.clone();
-        Box::pin(
-            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
+        Box::pin(futures::stream::iter(self.paths).par_then_unordered(
+            None,
+            move |path| async move {
                 debug!("Processing {:.2?}", &start.elapsed());
 
-                let result = match ImageReader::open(&path).unwrap().decode() {
-                    Ok(img) => {
-                        let image = img.thumbnail(256, 256).into_bgra8().to_vec();
-                        debug!("Thumbnailed {:.2?}", &start.elapsed());
-                        Progress::Finished(PathThumb { path, image }, start.elapsed())
-                    }
-                    Err(err) => {
-                        let error = format!("Error decoding image at {:?}: {}", &path, err);
-                        debug!("Errored {:.2?}", &start.elapsed());
-                        Progress::Error(error)
-                    }
-                };
+                let ((size_bytes, mime_type), image_result) = get_size_bytes(&path)
+                    .join(get_mime_type(&path))
+                    .join(resize_image(&path))
+                    .await;
 
-                async move { result }
-            }),
-        )
+                if let Some((image, (width_px, height_px))) = image_result {
+                    let metadata = ImageMetadata {
+                        size_bytes,
+                        mime_type,
+                        width_px,
+                        height_px,
+                    };
+
+                    Progress::Finished(
+                        PathThumb {
+                            path,
+                            image,
+                            metadata,
+                        },
+                        start.elapsed(),
+                    )
+                } else {
+                    let error = format!(
+                        "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
+                        &start.elapsed(),
+                        &path,
+                        mime_type,
+                        size_bytes
+                    );
+                    Progress::Error(error)
+                }
+            },
+        ))
     }
 }
