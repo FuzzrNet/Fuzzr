@@ -1,4 +1,4 @@
-use iced::{scrollable, Column, Element, Length, Text};
+use iced::{scrollable, Column, Command, Element, Length, Text};
 use iced_native::Container;
 
 use crate::data::content::ContentItem;
@@ -18,10 +18,10 @@ impl FeedPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            _ => {}
-        };
+            _ => Command::none(),
+        }
     }
 
     pub fn view(&self) -> Element<Message> {

@@ -69,7 +69,7 @@ impl PublishPage {
     pub fn view(&self) -> Element<Message> {
         let publish_thumbs = self.publish_thumbs.lock().unwrap();
 
-        let drop_zone: Column<_> = if publish_thumbs.len() == 0 {
+        let drop_zone: Column<_> = if publish_thumbs.len() > 0 {
             publish_thumbs
                 .iter()
                 .fold(Column::new(), |col, (path, thumb)| {

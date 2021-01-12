@@ -1,6 +1,6 @@
 use iced::{
-    Align, Column, Container, Element, HorizontalAlignment, Length, /* ProgressBar, */ Row,
-    Text,
+    Align, Column, Command, Container, Element, HorizontalAlignment, Length,
+    /* ProgressBar, */ Row, Text,
 };
 // use iced_native::ProgressBar;
 
@@ -21,9 +21,9 @@ impl DashPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            _ => {}
+            _ => Command::none(),
         }
     }
 

@@ -1,4 +1,4 @@
-use iced::{text_input, Element, Row, Text};
+use iced::{text_input, Command, Element, Row, Text};
 
 use crate::message::Message;
 
@@ -16,10 +16,10 @@ impl SettingsPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            _ => {}
-        };
+            _ => Command::none(),
+        }
     }
 
     pub fn view(&self) -> Element<Message> {

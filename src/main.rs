@@ -97,68 +97,72 @@ impl Application for Fuzzr {
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
-        // Update all pages with all messages.
-        self.pages.dash.update(event.clone());
-        self.pages.feed.update(event.clone());
-        self.pages.publish.update(event.clone());
-        self.pages.view.update(event.clone());
-        self.pages.site.update(event.clone());
-        self.pages.settings.update(event.clone());
-
-        match event {
-            Message::PageChanged(page_type) => {
-                self.current_page = page_type.clone();
-                self.page_buttons.active_page = page_type.clone();
-                Command::none()
-            }
-            Message::IpfsReady(ipfs_client) => {
-                match ipfs_client {
-                    Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
-                    Err(_) => {}
+        Command::batch(vec![
+            // Update all pages with all messages and batch any resulting commands.
+            self.pages.dash.update(event.clone()),
+            self.pages.feed.update(event.clone()),
+            self.pages.publish.update(event.clone()),
+            self.pages.view.update(event.clone()),
+            self.pages.site.update(event.clone()),
+            self.pages.settings.update(event.clone()),
+            // Global message update handling
+            match event {
+                Message::PageChanged(page_type) => {
+                    self.current_page = page_type.clone();
+                    self.page_buttons.active_page = page_type.clone();
+                    Command::none()
                 }
-                Command::none()
-            }
-            Message::FileDroppedOnWindow(path) => {
-                let paths = walk_dir(&path);
-                let mut publish_thumbs_paths = self.publish_thumbs_paths.lock().unwrap();
-                publish_thumbs_paths.extend(paths);
-                Command::none()
-            }
-            // store_file(path, ipfs_client);
-            // Command::perform(, Message::ContentDroppedOnWindow)
-            // Command::perform(
-            //     process_paths(Arc::clone(&self.thumbs)),
-            //     Message::ContentThumbProcessed,
-            // )
-            // Command::none()
-            Message::ContentAddedToIpfs(cid) => {
-                match cid {
-                    Ok(maybe_cid) => match maybe_cid {
-                        Some(cid) => {
-                            info!("Content successfully added to IPFS! Cid: {}", cid);
+                Message::IpfsReady(ipfs_client) => {
+                    match ipfs_client {
+                        Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
+                        Err(_) => {}
+                    }
+                    Command::none()
+                }
+                Message::FileDroppedOnWindow(path) => {
+                    let paths = walk_dir(&path);
+                    let mut publish_thumbs_paths = self.publish_thumbs_paths.lock().unwrap();
+                    publish_thumbs_paths.extend(paths);
+                    Command::none()
+                }
+                // store_file(path, ipfs_client);
+                // Command::perform(, Message::ContentDroppedOnWindow)
+                // Command::perform(
+                //     process_paths(Arc::clone(&self.thumbs)),
+                //     Message::ContentThumbProcessed,
+                // )
+                // Command::none()
+                Message::ContentAddedToIpfs(cid) => {
+                    match cid {
+                        Ok(maybe_cid) => {
+                            match maybe_cid {
+                                Some(cid) => {
+                                    info!("Content successfully added to IPFS! Cid: {}", cid);
+                                }
+                                None => {
+                                    error!("No CID was returned when attempting to store content in IPFS.");
+                                }
+                            }
                         }
-                        None => {
-                            error!("No CID was returned when attempting to store content in IPFS.");
+                        Err(err) => {
+                            error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
                         }
-                    },
-                    Err(err) => {
-                        error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
+                    }
+                    Command::none()
+                }
+                Message::ViewPageLoadContent => {
+                    let cid_string = self.pages.view.input_value.clone();
+                    match self.ipfs_client.clone() {
+                        Some(ipfs_client) => Command::perform(
+                            load_file(cid_string, ipfs_client),
+                            Message::ViewPageContentLoaded,
+                        ),
+                        None => Command::none(),
                     }
                 }
-                Command::none()
-            }
-            Message::ViewPageLoadContent => {
-                let cid_string = self.pages.view.input_value.clone();
-                match self.ipfs_client.clone() {
-                    Some(ipfs_client) => Command::perform(
-                        load_file(cid_string, ipfs_client),
-                        Message::ViewPageContentLoaded,
-                    ),
-                    None => Command::none(),
-                }
-            }
-            _ => Command::none(),
-        }
+                _ => Command::none(),
+            },
+        ])
     }
 
     fn subscription(&self) -> Subscription<Message> {
