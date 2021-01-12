@@ -108,38 +108,42 @@ where
             futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
                 debug!("Processing {:.2?}", &start.elapsed());
 
-                let size_bytes = get_size_bytes(&path);
-                let mime_type = get_mime_type(&path);
-                let image_result = resize_image(&path);
+                let path = path.to_owned();
 
-                let result = if let Some((image, (width_px, height_px))) = image_result {
-                    let metadata = ImageMetadata {
-                        size_bytes,
-                        mime_type,
-                        width_px,
-                        height_px,
-                    };
+                let result = task::spawn_blocking(move || {
+                    let size_bytes = get_size_bytes(&path);
+                    let mime_type = get_mime_type(&path);
+                    let image_result = resize_image(&path);
 
-                    Progress::Finished(
-                        PathThumb {
-                            path,
-                            image,
-                            metadata,
-                        },
-                        start.elapsed(),
-                    )
-                } else {
-                    let error = format!(
-                        "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
-                        &start.elapsed(),
-                        &path,
-                        mime_type,
-                        size_bytes
-                    );
-                    Progress::Error(error)
-                };
+                    if let Some((image, (width_px, height_px))) = image_result {
+                        let metadata = ImageMetadata {
+                            size_bytes,
+                            mime_type,
+                            width_px,
+                            height_px,
+                        };
 
-                async move { result }
+                        Progress::Finished(
+                            PathThumb {
+                                path,
+                                image,
+                                metadata,
+                            },
+                            start.elapsed(),
+                        )
+                    } else {
+                        let error = format!(
+                            "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
+                            &start.elapsed(),
+                            &path,
+                            mime_type,
+                            size_bytes
+                        );
+                        Progress::Error(error)
+                    }
+                });
+
+                async move { result.await }
             }),
         )
     }
