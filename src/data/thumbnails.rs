@@ -79,7 +79,7 @@ type Result = PathThumb;
 
 // What is needed to create this task?
 pub struct ProcessThumbs {
-    tasks: Vec<Progress>,
+    paths: Vec<PathBuf>,
 }
 
 // What is the result output type?
@@ -98,13 +98,14 @@ struct Perf {
 #[derive(Debug, Clone, Hash)]
 pub enum Progress {
     Ready(PathBuf),
-    // Processed {
-    //     // processed: Size,
-    //     // elapsed: Duration,
-    // },
-    Finished(Vec<PathThumb>),
-    // Errored(String),
+    Finished(PathThumb),
+    Error(String),
 }
+// Processed {
+//     // processed: Size,
+//     // elapsed: Duration,
+// },
+// Errored(String),
 // Reading(Size),
 // Loaded(Duration),
 // Processed {
@@ -130,32 +131,32 @@ pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     //     }
     // });
 
-    let tasks = paths
-        .iter()
-        .map(|path| Progress::Ready(path.clone()))
-        .collect();
+    // let tasks = paths
+    //     .iter()
+    //     .map(|path| Progress::Ready(path.clone()))
+    //     .collect();
 
-    Subscription::from_recipe(ProcessThumbs { tasks })
+    Subscription::from_recipe(ProcessThumbs { paths })
 }
 
-fn process_image_from_path(path: PathBuf) -> Option<PathThumb> {
-    match ImageReader::open(&path).unwrap().decode() {
-        Ok(img) => {
-            // let started = Instant::now();
-            let thumb = img.thumbnail(256, 256).into_bgra8().to_vec();
-            // let elapsed = started.elapsed();
-            // Some((
-            Some(PathThumb { path, thumb })
+// fn process_image_from_path(path: PathBuf) -> Result<PathThumb> {
+//     match ImageReader::open(&path).unwrap().decode() {
+//         Ok(img) => {
+//             // let started = Instant::now();
+//             let thumb = img.thumbnail(256, 256).into_bgra8().to_vec();
+//             // let elapsed = started.elapsed();
+//             // Some((
+//             Ok(PathThumb { path, thumb })
 
-            //     State::Progressed,
-            // ))
-        }
-        Err(err) => {
-            error!("Error decoding image at {:?}: {}", &path, err);
-            None // Swallow error
-        }
-    }
-}
+//             //     State::Progressed,
+//             // ))
+//         }
+//         Err(err) => {
+//             error!("Error decoding image at {:?}: {}", &path, err);
+//             None // Swallow error
+//         }
+//     }
+// }
 
 // Task implementation
 impl<H, I> iced_native::subscription::Recipe<H, I> for ProcessThumbs
@@ -166,7 +167,7 @@ where
 
     fn hash(&self, state: &mut H) {
         std::any::TypeId::of::<Self>().hash(state);
-        self.tasks.hash(state);
+        self.paths.hash(state);
     }
 
     fn stream(
@@ -177,8 +178,8 @@ where
         //     .paths
         //     .into_par_stream()
         Box::pin(
-            futures::stream::iter(self.tasks).par_then_unordered(None, move |value| {
-                let mut thumbs: Vec<PathThumb> = Vec::new();
+            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
+                // let mut thumbs: Vec<PathThumb> = Vec::new();
 
                 // match lhs {
                 //     Progress::Ready(path) => {
@@ -189,16 +190,32 @@ where
                 //     Progress::Finished(finished_thumbs) => thumbs.extend(finished_thumbs),
                 // };
 
-                match value {
-                    Progress::Ready(path) => {
-                        if let Some(thumb) = process_image_from_path(path) {
-                            thumbs.push(thumb);
+                // match value {
+                //     Progress::Ready(path) => {
+                //         if let Some(thumb) = process_image_from_path(path) {
+                //             thumbs.push(thumb);
+                //         }
+                //     }
+                //     Progress::Finished(finished_thumbs) => thumbs.extend(finished_thumbs),
+                // };
+
+                async move {
+                    match ImageReader::open(&path).unwrap().decode() {
+                        Ok(img) => {
+                            // let started = Instant::now();
+                            let thumb = img.thumbnail(256, 256).into_bgra8().to_vec();
+                            // let elapsed = started.elapsed();
+                            // Some((
+                            Progress::Finished(PathThumb { path, thumb })
+                            //     State::Progressed,
+                            // ))
+                        }
+                        Err(err) => {
+                            Progress::Error(format!("Error decoding image at {:?}: {}", &path, err))
+                            // None // Swallow error
                         }
                     }
-                    Progress::Finished(finished_thumbs) => thumbs.extend(finished_thumbs),
-                };
-
-                async move { Progress::Finished(thumbs) }
+                }
             }),
         )
         // .collect::<Vec<Progress>>();

@@ -137,9 +137,12 @@ impl Application for Fuzzr {
             // Command::none()
             Message::ContentThumbProgress(progress) => {
                 match progress {
-                    thumbnails::Progress::Finished(results) => {
-                        info!("processed results with length: {}", results.len());
-                        info!("processed results with length: {}", results[0].thumb.len());
+                    thumbnails::Progress::Finished(result) => {
+                        // info!("processed results with length: {}", results.len());
+                        info!("processed results with length: {}", result.thumb.len());
+                    }
+                    thumbnails::Progress::Error(error) => {
+                        error!("{}", error);
                     }
                     _ => {}
                 }
