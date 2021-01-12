@@ -12,6 +12,7 @@ use std::path::PathBuf;
 pub enum Message {
     PageChanged(page::PageType),
     FileDroppedOnWindow(std::path::PathBuf),
+    WindowResized { width: u32, height: u32 },
     // IPFS
     IpfsReady(Result<IpfsClient, Arc<Error>>),
     IpfsStoreFile(PathBuf),

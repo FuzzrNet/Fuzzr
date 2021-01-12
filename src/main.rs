@@ -1,7 +1,11 @@
 use iced::{
-    Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
+    window, Align, Application, Color, Column, Command, Container, Element, Length, Settings,
+    Subscription,
 };
-use iced_native::{window::Event::FileDropped, Event};
+use iced_native::{
+    window::Event::{FileDropped, Resized},
+    Event,
+};
 
 use async_std::sync::{Arc, Mutex};
 use log::{error, info};
@@ -37,7 +41,13 @@ pub fn main() -> iced::Result {
 
     pretty_env_logger::init();
 
-    Fuzzr::run(Settings::default())
+    Fuzzr::run(Settings {
+        window: window::Settings {
+            size: (800, 600),
+            ..window::Settings::default()
+        },
+        ..Settings::default()
+    })
 }
 
 #[derive(Clone, Debug)]
@@ -170,6 +180,7 @@ impl Application for Fuzzr {
             vec![iced_native::subscription::events_with(
                 |event, _status| match event {
                     Event::Window(window_event) => match window_event {
+                        Resized { width, height } => Some(Message::WindowResized { width, height }),
                         FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
                         _ => None,
                     },

@@ -5,7 +5,9 @@ use iced::{
 
 use log::{debug, error, info};
 use std::collections::btree_map::BTreeMap;
+use std::iter;
 use std::path::PathBuf;
+use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
@@ -14,16 +16,16 @@ use crate::data::thumbnails;
 use crate::message::Message;
 
 async fn lock_insert(
-    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
+    publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
     thumb: PathThumb,
     elapsed: Duration,
 ) {
     let mut publish_thumbs = publish_thumbs.lock().unwrap();
     debug!(
-        "Path:{:?}\tImage metadata: {:?}",
+        "Path:{:?}\nImage metadata: {:?}",
         &thumb.path, &thumb.metadata
     );
-    publish_thumbs.insert(thumb.path.clone(), thumb);
+    publish_thumbs.push(thumb);
     info!(
         "thumbnailed {} items after {:.2?}",
         publish_thumbs.len(),
@@ -35,24 +37,31 @@ async fn lock_insert(
 pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
-    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
+    publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
+    thumb_capacity: usize,
+    window_width: u16,
 }
 
 impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
-            publish_thumbs: Arc::new(Mutex::new(BTreeMap::new())),
+            publish_thumbs: Arc::new(Mutex::new(Vec::new())),
+            thumb_capacity: 0,
+            window_width: 800,
         }
     }
 
     pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::ContentThumbProgress(progress) => match progress {
-                thumbnails::Progress::Finished(thumb, elapsed) => Command::perform(
-                    lock_insert(Arc::clone(&self.publish_thumbs), thumb, elapsed),
-                    Message::ContentReadyToPublish,
-                ),
+                thumbnails::Progress::Finished(thumb, elapsed) => {
+                    self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
+                    Command::perform(
+                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, elapsed),
+                        Message::ContentReadyToPublish,
+                    )
+                }
                 thumbnails::Progress::Error(error) => {
                     error!("{}", error);
                     Command::none()
@@ -62,6 +71,10 @@ impl PublishPage {
                     Command::none()
                 }
             },
+            Message::WindowResized { width, height: _ } => {
+                self.window_width = width as u16;
+                Command::none()
+            }
             // Message::ContentAddedToIpfs(cid) => match cid {
             //     Ok(cid) => match cid {
             //         Some(cid) => self.cid = Some(cid.to_string()),
@@ -76,33 +89,70 @@ impl PublishPage {
     pub fn view(&mut self) -> Element<Message> {
         let publish_thumbs = self.publish_thumbs.lock().unwrap();
 
-        let drop_zone: Element<_> = if publish_thumbs.len() > 0 {
-            publish_thumbs
-                .iter()
-                .fold(
-                    Scrollable::new(&mut self.scroll)
+        if publish_thumbs.len() > 0 {
+            let col_width = Length::Units(256);
+            let col_count = (self.window_width / (256 + 10 + 10)) as usize;
+
+            let mut image_grid: Vec<Vec<usize>> = vec![vec![]; col_count];
+            let mut heights: Vec<u16> = vec![0; col_count];
+
+            for (i, thumb) in publish_thumbs.iter().enumerate() {
+                let height_min = heights.iter().min().unwrap();
+                let height_index = &heights.iter().position(|h| h == height_min).unwrap();
+                image_grid[*height_index].push(i);
+                heights.push(thumb.metadata.height_px as u16);
+            }
+
+            let container_cols: Vec<Element<Message>> = image_grid
+                .into_iter()
+                .map(|image_column| {
+                    let col: Element<Message> = Column::with_children(
+                        image_column
+                            .iter()
+                            .map(|i| {
+                                Image::new(image::Handle::from_memory(
+                                    publish_thumbs[*i].image.to_vec(),
+                                ))
+                                .into()
+                            })
+                            .collect(),
+                    )
+                    .width(col_width)
+                    .into();
+                    let el: Element<Message> = Container::new::<Element<Message>>(col)
                         .width(Length::Fill)
-                        .align_items(Align::Center)
-                        .spacing(10),
-                    |col, (path, thumb)| {
-                        col.push(Image::new(image::Handle::from_memory(thumb.image.to_vec())))
-                    },
-                )
-                .into()
-        } else {
-            Column::new()
-                .push(Text::new("Start adding content by dropping an image here"))
-                .into()
-        };
+                        .height(Length::Fill)
+                        // .style(*theme)
+                        .into();
+                    el
+                })
+                .collect();
 
-        let publish_container = Row::new().push(drop_zone);
+            let row = Row::with_children(container_cols);
 
-        Container::new(publish_container)
+            Container::new(
+                Scrollable::new(&mut self.scroll)
+                    .push(row)
+                    .width(Length::Fill)
+                    .align_items(Align::Center)
+                    .spacing(10),
+            )
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)
             .center_x()
             .center_y()
             .into()
+        } else {
+            Container::new(
+                Column::new().push(Text::new("Start adding content by dropping an image here")),
+            )
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
+            .center_y()
+            .into()
+        }
     }
 }

@@ -49,25 +49,6 @@ pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     Subscription::from_recipe(ProcessThumbs { paths, start })
 }
 
-fn get_size_bytes(path: &PathBuf) -> u64 {
-    let file_metadata = fs::metadata(&path).unwrap();
-    let size_bytes = file_metadata.len();
-
-    size_bytes
-}
-
-fn get_mime_type(path: &PathBuf) -> String {
-    let path = path.clone();
-    // task::spawn_blocking(move || {
-    infer::get_from_path(path)
-        .unwrap()
-        .unwrap()
-        .mime_type()
-        .to_string()
-    // })
-    // .await
-}
-
 fn resize_image(path: &PathBuf) -> Option<(DynamicImage, (u32, u32))> {
     let path = path.clone();
     // task::spawn_blocking(move ||
@@ -107,21 +88,22 @@ where
             futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
                 debug!("Processing {:.2?}", &start.elapsed());
 
-                let size_bytes = get_size_bytes(&path);
-                let mime_type = get_mime_type(&path);
                 let image_result = resize_image(&path);
 
                 let result = if let Some((decoded_image, (width_px, height_px))) = image_result {
+                    let mut output = Box::new(vec![]);
+                    let mut encoder = JpegEncoder::new(&mut output);
+                    encoder.encode_image(&decoded_image).unwrap();
+
+                    let size_bytes = output.len() as u64;
+                    let mime_type = "image/jpeg".to_string();
+
                     let metadata = ImageMetadata {
                         size_bytes,
                         mime_type,
                         width_px,
                         height_px,
                     };
-
-                    let mut output = Box::new(vec![]);
-                    let mut encoder = JpegEncoder::new(&mut output);
-                    encoder.encode_image(&decoded_image).unwrap();
 
                     let image = output.into_boxed_slice();
 
@@ -135,11 +117,9 @@ where
                     )
                 } else {
                     let error = format!(
-                        "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
+                        "Error decoding image after {:.2?}, at: {:?}",
                         &start.elapsed(),
                         &path,
-                        mime_type,
-                        size_bytes
                     );
                     Progress::Error(error)
                 };
