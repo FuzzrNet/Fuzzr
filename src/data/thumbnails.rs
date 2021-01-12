@@ -12,10 +12,10 @@ use crate::data::content::{ImageMetadata, PathThumb};
 // use async_std::prelude::*;
 // use async_std::task;
 use image::codecs::jpeg::JpegEncoder;
+use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
 use par_stream::ParStreamExt;
-use std::fs;
 use std::hash::Hash;
 use std::path::PathBuf;
 
@@ -42,6 +42,8 @@ pub enum Progress {
     Error(String),
 }
 
+const THUMB_SIZE: f32 = 256.0;
+
 // Utility function
 pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     let start = Instant::now();
@@ -49,11 +51,19 @@ pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     Subscription::from_recipe(ProcessThumbs { paths, start })
 }
 
-fn resize_image(path: &PathBuf) -> Option<(DynamicImage, (u32, u32))> {
+fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
     let path = path.clone();
     // task::spawn_blocking(move ||
     match ImageReader::open(&path).unwrap().decode() {
-        Ok(img) => Some((img.thumbnail(256, 256), img.dimensions())),
+        Ok(img) => {
+            let (width, height) = img.dimensions();
+            let aspect_ratio = height as f32 / width as f32;
+            let width = THUMB_SIZE;
+            let height = THUMB_SIZE * aspect_ratio;
+            let width = width as u32;
+            let height = height.round() as u32;
+            Some((img.thumbnail_exact(width, height), width, height))
+        }
         Err(err) => {
             error!(
                 "Error decoding image at path: {:?}\nError was: {}",
@@ -90,7 +100,7 @@ where
 
                 let image_result = resize_image(&path);
 
-                let result = if let Some((decoded_image, (width_px, height_px))) = image_result {
+                let result = if let Some((decoded_image, width_px, height_px)) = image_result {
                     let mut output = Box::new(vec![]);
                     let mut encoder = JpegEncoder::new(&mut output);
                     encoder.encode_image(&decoded_image).unwrap();

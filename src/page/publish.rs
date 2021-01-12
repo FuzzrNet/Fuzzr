@@ -90,6 +90,7 @@ impl PublishPage {
         let publish_thumbs = self.publish_thumbs.lock().unwrap();
 
         if publish_thumbs.len() > 0 {
+            // Thumbnail column distribution algorithm
             let col_width = Length::Units(256);
             let col_count = (self.window_width / (256 + 10 + 10)) as usize;
 
@@ -102,9 +103,6 @@ impl PublishPage {
                 image_grid[*height_index].push(i);
                 heights[*height_index] = heights[*height_index] + thumb.metadata.height_px as u16;
             }
-
-            println!("image_grid: {:?}", image_grid);
-            println!("heights: {:?}", heights);
 
             let container_cols: Vec<Element<Message>> = image_grid
                 .into_iter()
