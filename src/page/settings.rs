@@ -51,7 +51,7 @@ impl SettingsPage {
                             TextInput::new(
                                 &mut self.background_input,
                                 "Enter Background Color (RGB Hex, i.e, #00000F)",
-                                &mut self.background_color,
+                                &self.background_color,
                                 Message::BackgroundChanged,
                             )
                             .size(16)
@@ -66,7 +66,7 @@ impl SettingsPage {
                             TextInput::new(
                                 &mut self.foreground_input,
                                 "Enter Foreground Color (RGB Hex, i.e, #F100FF)",
-                                &mut self.foreground_color,
+                                &self.foreground_color,
                                 Message::ForegroundChanged,
                             )
                             .size(16)
