@@ -85,7 +85,7 @@ impl PublishPage {
                         .align_items(Align::Center)
                         .spacing(10),
                     |col, (path, thumb)| {
-                        col.push(Image::new(image::Handle::from_memory(thumb.image.clone())))
+                        col.push(Image::new(image::Handle::from_memory(thumb.image.to_vec())))
                     },
                 )
                 .into()

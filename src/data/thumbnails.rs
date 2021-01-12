@@ -8,11 +8,12 @@ use std::time::{Duration, Instant};
 
 // Task dependencies
 use crate::data::content::{ImageMetadata, PathThumb};
-use async_std::future;
-use async_std::prelude::*;
-use async_std::task;
+// use async_std::future;
+// use async_std::prelude::*;
+// use async_std::task;
+use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
-use image::GenericImageView;
+use image::{DynamicImage, GenericImageView};
 use par_stream::ParStreamExt;
 use std::fs;
 use std::hash::Hash;
@@ -67,14 +68,11 @@ fn get_mime_type(path: &PathBuf) -> String {
     // .await
 }
 
-fn resize_image(path: &PathBuf) -> Option<(Vec<u8>, (u32, u32))> {
+fn resize_image(path: &PathBuf) -> Option<(DynamicImage, (u32, u32))> {
     let path = path.clone();
     // task::spawn_blocking(move ||
     match ImageReader::open(&path).unwrap().decode() {
-        Ok(img) => Some((
-            img.thumbnail(256, 256).into_bgra8().into_raw(),
-            img.dimensions(),
-        )),
+        Ok(img) => Some((img.thumbnail(256, 256), img.dimensions())),
         Err(err) => {
             error!(
                 "Error decoding image at path: {:?}\nError was: {}",
@@ -104,46 +102,49 @@ where
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let start = self.start.clone();
+
         Box::pin(
             futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
                 debug!("Processing {:.2?}", &start.elapsed());
 
-                let path = path.to_owned();
+                let size_bytes = get_size_bytes(&path);
+                let mime_type = get_mime_type(&path);
+                let image_result = resize_image(&path);
 
-                let result = task::spawn_blocking(move || {
-                    let size_bytes = get_size_bytes(&path);
-                    let mime_type = get_mime_type(&path);
-                    let image_result = resize_image(&path);
+                let result = if let Some((decoded_image, (width_px, height_px))) = image_result {
+                    let metadata = ImageMetadata {
+                        size_bytes,
+                        mime_type,
+                        width_px,
+                        height_px,
+                    };
 
-                    if let Some((image, (width_px, height_px))) = image_result {
-                        let metadata = ImageMetadata {
-                            size_bytes,
-                            mime_type,
-                            width_px,
-                            height_px,
-                        };
+                    let mut output = Box::new(vec![]);
+                    let mut encoder = JpegEncoder::new(&mut output);
+                    encoder.encode_image(&decoded_image).unwrap();
 
-                        Progress::Finished(
-                            PathThumb {
-                                path,
-                                image,
-                                metadata,
-                            },
-                            start.elapsed(),
-                        )
-                    } else {
-                        let error = format!(
-                            "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
-                            &start.elapsed(),
-                            &path,
-                            mime_type,
-                            size_bytes
-                        );
-                        Progress::Error(error)
-                    }
-                });
+                    let image = output.into_boxed_slice();
 
-                async move { result.await }
+                    Progress::Finished(
+                        PathThumb {
+                            path,
+                            image,
+                            metadata,
+                        },
+                        start.elapsed(),
+                    )
+                } else {
+                    let error = format!(
+                        "Error decoding image after {:.2?}, at: {:?}\nType: {}\tSize: {} bytes",
+                        &start.elapsed(),
+                        &path,
+                        mime_type,
+                        size_bytes
+                    );
+                    Progress::Error(error)
+                };
+
+                async move { result }
             }),
         )
     }

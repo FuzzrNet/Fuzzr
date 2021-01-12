@@ -43,15 +43,15 @@ pub struct ContentItemBlock {
     pub size_bytes: Bytes, // Content size, not total block size
 }
 
-#[derive(Clone, Debug, Hash)]
-pub struct ContentThumb {
-    pub cid: Cid,
-    pub image: Vec<u8>,
-}
+// #[derive(Clone, Debug, Hash)]
+// pub struct ContentThumb {
+//     pub cid: Cid,
+//     pub image: Vec<u8>,
+// }
 
 #[derive(Clone, Debug, Hash)]
 pub struct PathThumb {
     pub path: PathBuf,
-    pub image: Vec<u8>,
+    pub image: Box<[u8]>,
     pub metadata: ImageMetadata,
 }
