@@ -139,7 +139,9 @@ impl Application for Fuzzr {
                 match progress {
                     thumbnails::Progress::Finished(result) => {
                         // info!("processed results with length: {}", result.len());
-                        info!("processed results with length: {}", result[0].thumb.len());
+                        if let Some(thumb) = result {
+                            info!("processed results with length: {}", thumb.image.len());
+                        }
                     }
                     thumbnails::Progress::Error(error) => {
                         error!("{}", error);

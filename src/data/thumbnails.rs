@@ -34,7 +34,7 @@ pub struct ProcessThumbs {
 #[derive(Debug, Clone, Hash)]
 pub enum Progress {
     Ready(PathBuf),
-    Finished(Vec<PathThumb>),
+    Finished(Option<PathThumb>),
     Error(String),
 }
 
@@ -52,10 +52,10 @@ fn process_image_from_path(path: PathBuf) -> Option<PathThumb> {
     match ImageReader::open(&path).unwrap().decode() {
         Ok(img) => {
             // let started = Instant::now();
-            let thumb = img.thumbnail(256, 256).into_bgra8().to_vec();
+            let image = img.thumbnail(256, 256).into_bgra8().to_vec();
             // let elapsed = started.elapsed();
             // Some((
-            Some(PathThumb { path, thumb })
+            Some(PathThumb { path, image })
 
             //     State::Progressed,
             // ))
@@ -85,21 +85,18 @@ where
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         Box::pin(
             futures::stream::iter(self.tasks).par_then_unordered(None, move |task| {
-                let mut thumbs: Vec<PathThumb> = Vec::new();
+                let mut thumb = None;
 
                 match task {
                     Progress::Ready(path) => {
-                        if let Some(thumb) = process_image_from_path(path) {
-                            thumbs.push(thumb);
-                        }
+                        thumb = process_image_from_path(path);
                     }
-                    Progress::Error(err) => {
-                        println!("i'm going through a black capricorn day: {}", err);
+                    _ => {
+                        println!("unexpected");
                     }
-                    Progress::Finished(finished_thumbs) => thumbs.extend(finished_thumbs),
                 };
 
-                async move { Progress::Finished(thumbs) }
+                async move { Progress::Finished(thumb) }
             }),
         )
     }

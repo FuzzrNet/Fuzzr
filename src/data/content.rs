@@ -52,5 +52,5 @@ pub struct ContentThumb {
 #[derive(Clone, Debug, Hash)]
 pub struct PathThumb {
     pub path: PathBuf,
-    pub thumb: Vec<u8>,
+    pub image: Vec<u8>,
 }
