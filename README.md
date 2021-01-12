@@ -52,7 +52,19 @@ For more, see our [Contributions document](CONTRIBUTING.md)
 
 ## Building
 
+### Dependencies
+
 To run the project, all you need to do is [install Rust](https://rustup.rs), check out the code using git, and run `cargo run` in the project directory. It's usually pretty straightforward, but if there are any issues, please reach out via Discord.
+
+#### Ubuntu (20.04+)
+
+You will need some dependancies installed _before you build_:
+
+```bash
+sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev lld clang
+```
+
+### Optimizations
 
 It's sometimes useful to use the nightly Rust toolchain for improvements in incremental builds and runtime speed. Nightly-only code must also have stable equivalents in feature conditional compilation attribute blocks, like so: `#[cfg(feature="nightly"...)]`
 
@@ -71,3 +83,19 @@ See also this section on Enabling Fast Compiles for your system:
 <https://bevyengine.org/learn/book/getting-started/setup/#enable-fast-compiles-optional>
 
 Then run: `rustup override set nightly` for nightly builds for just this project.
+
+### Build & Run
+
+Once all Dependancies are satisfied, in the Fuzzr working directory (or sub directories) run:
+
+```bash
+cargo build -release
+```
+
+This will build the bin in `<fuzzr-working-dir>/target/release`. To run:
+
+```bash
+cargo run -release
+# OR
+./target/release/fuzzr
+```

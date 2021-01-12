@@ -13,6 +13,12 @@ pub struct ViewPage {
     content: Option<ContentItem>,
 }
 
+impl Default for ViewPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ViewPage {
     pub fn new() -> ViewPage {
         ViewPage {

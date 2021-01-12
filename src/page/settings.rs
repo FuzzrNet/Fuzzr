@@ -11,6 +11,12 @@ pub struct SettingsPage {
     foreground_color: String,
 }
 
+impl Default for SettingsPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SettingsPage {
     pub fn new() -> SettingsPage {
         SettingsPage {
@@ -44,7 +50,7 @@ impl SettingsPage {
                         Row::new().push(
                             TextInput::new(
                                 &mut self.background_input,
-                                "Enter Background Color (RGB Hex, i.e, #FF00FF)",
+                                "Enter Background Color (RGB Hex, i.e, #00000F)",
                                 &mut self.background_color,
                                 Message::BackgroundChanged,
                             )
@@ -59,7 +65,7 @@ impl SettingsPage {
                         Row::new().push(
                             TextInput::new(
                                 &mut self.foreground_input,
-                                "Enter Foreground Color (RGB Hex, i.e, #FF00FF)",
+                                "Enter Foreground Color (RGB Hex, i.e, #F100FF)",
                                 &mut self.foreground_color,
                                 Message::ForegroundChanged,
                             )

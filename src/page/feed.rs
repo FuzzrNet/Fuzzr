@@ -11,6 +11,12 @@ pub struct FeedPage {
     scroll: scrollable::State,
 }
 
+impl Default for FeedPage {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl FeedPage {
     pub fn new() -> FeedPage {
         FeedPage {
@@ -19,11 +25,7 @@ impl FeedPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        match msg {
-            _ => {}
-        };
-    }
+    pub fn update(&mut self, _msg: Message) {}
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         let feed_container = Column::new().push(Text::new("TODO: Feed page").size(18));
