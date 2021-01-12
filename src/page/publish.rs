@@ -100,8 +100,11 @@ impl PublishPage {
                 let height_min = heights.iter().min().unwrap();
                 let height_index = &heights.iter().position(|h| h == height_min).unwrap();
                 image_grid[*height_index].push(i);
-                heights.push(thumb.metadata.height_px as u16);
+                heights[*height_index] = heights[*height_index] + thumb.metadata.height_px as u16;
             }
+
+            println!("image_grid: {:?}", image_grid);
+            println!("heights: {:?}", heights);
 
             let container_cols: Vec<Element<Message>> = image_grid
                 .into_iter()
