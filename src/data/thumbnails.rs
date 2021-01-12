@@ -8,13 +8,13 @@ use std::time::{Duration, Instant};
 
 // Task dependencies
 use crate::data::content::{ImageMetadata, PathThumb};
-use async_std::fs;
 use async_std::future;
 use async_std::prelude::*;
 use async_std::task;
 use image::io::Reader as ImageReader;
 use image::GenericImageView;
 use par_stream::ParStreamExt;
+use std::fs;
 use std::hash::Hash;
 use std::path::PathBuf;
 
@@ -48,28 +48,29 @@ pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
     Subscription::from_recipe(ProcessThumbs { paths, start })
 }
 
-async fn get_size_bytes(path: &PathBuf) -> u64 {
-    let file_metadata = fs::metadata(&path).await.unwrap();
+fn get_size_bytes(path: &PathBuf) -> u64 {
+    let file_metadata = fs::metadata(&path).unwrap();
     let size_bytes = file_metadata.len();
 
     size_bytes
 }
 
-async fn get_mime_type(path: &PathBuf) -> String {
+fn get_mime_type(path: &PathBuf) -> String {
     let path = path.clone();
-    task::spawn_blocking(move || {
-        infer::get_from_path(path)
-            .unwrap()
-            .unwrap()
-            .mime_type()
-            .to_string()
-    })
-    .await
+    // task::spawn_blocking(move || {
+    infer::get_from_path(path)
+        .unwrap()
+        .unwrap()
+        .mime_type()
+        .to_string()
+    // })
+    // .await
 }
 
-async fn resize_image(path: &PathBuf) -> Option<(Vec<u8>, (u32, u32))> {
+fn resize_image(path: &PathBuf) -> Option<(Vec<u8>, (u32, u32))> {
     let path = path.clone();
-    task::spawn_blocking(move || match ImageReader::open(&path).unwrap().decode() {
+    // task::spawn_blocking(move ||
+    match ImageReader::open(&path).unwrap().decode() {
         Ok(img) => Some((
             img.thumbnail(256, 256).into_bgra8().into_raw(),
             img.dimensions(),
@@ -81,8 +82,9 @@ async fn resize_image(path: &PathBuf) -> Option<(Vec<u8>, (u32, u32))> {
             );
             None
         }
-    })
-    .await
+    }
+    // })
+    // .await
 }
 
 // Task implementation
@@ -102,17 +104,15 @@ where
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let start = self.start.clone();
-        Box::pin(futures::stream::iter(self.paths).par_then_unordered(
-            None,
-            move |path| async move {
+        Box::pin(
+            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
                 debug!("Processing {:.2?}", &start.elapsed());
 
-                let ((size_bytes, mime_type), image_result) = get_size_bytes(&path)
-                    .join(get_mime_type(&path))
-                    .join(resize_image(&path))
-                    .await;
+                let size_bytes = get_size_bytes(&path);
+                let mime_type = get_mime_type(&path);
+                let image_result = resize_image(&path);
 
-                if let Some((image, (width_px, height_px))) = image_result {
+                let result = if let Some((image, (width_px, height_px))) = image_result {
                     let metadata = ImageMetadata {
                         size_bytes,
                         mime_type,
@@ -137,8 +137,10 @@ where
                         size_bytes
                     );
                     Progress::Error(error)
-                }
-            },
-        ))
+                };
+
+                async move { result }
+            }),
+        )
     }
 }
