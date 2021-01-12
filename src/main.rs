@@ -8,6 +8,7 @@ use log::{error, info};
 use std::collections::btree_map::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc as SyncArc, Mutex as SyncMutex};
+use std::time::Duration;
 
 mod data;
 mod message;
@@ -31,6 +32,20 @@ use data::fs_ops::walk_dir;
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
 use data::thumbnails;
+
+async fn lock_insert(
+    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
+    thumb: PathThumb,
+    elapsed: Duration,
+) {
+    let mut publish_thumbs = publish_thumbs.lock().await;
+    info!(
+        "thumbnailed {} items after {:.2?}",
+        publish_thumbs.len(),
+        elapsed
+    );
+    publish_thumbs.insert(thumb.path.clone(), thumb);
+}
 
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
@@ -135,21 +150,20 @@ impl Application for Fuzzr {
             //     Message::ContentThumbProcessed,
             // )
             // Command::none()
-            Message::ContentThumbProgress(progress) => {
-                match progress {
-                    thumbnails::Progress::Finished(thumb) => {
-                        // info!("processed results with length: {}", result.len());
-                        info!("processed results with length: {}", thumb.image.len());
-                    }
-                    thumbnails::Progress::Error(error) => {
-                        error!("{}", error);
-                    }
-                    thumbnails::Progress::Ready(unprocessed) => {
-                        error!("Unprocessed {:?}", unprocessed);
-                    }
+            Message::ContentThumbProgress(progress) => match progress {
+                thumbnails::Progress::Finished(thumb, elapsed) => Command::perform(
+                    lock_insert(Arc::clone(&self.publish_thumbs), thumb, elapsed),
+                    Message::ContentReadyToPublish,
+                ),
+                thumbnails::Progress::Error(error) => {
+                    error!("{}", error);
+                    Command::none()
                 }
-                Command::none()
-            }
+                thumbnails::Progress::Ready(unprocessed) => {
+                    error!("Unprocessed {:?}", unprocessed);
+                    Command::none()
+                }
+            },
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
                     Ok(maybe_cid) => match maybe_cid {

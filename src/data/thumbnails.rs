@@ -3,7 +3,8 @@
 // Boilerplate
 use iced::Subscription;
 use iced_futures::futures;
-// use std::time::{Duration, Instant};
+use log::debug;
+use std::time::{Duration, Instant};
 
 // Task dependencies
 use crate::data::content::PathThumb;
@@ -14,15 +15,13 @@ use std::path::PathBuf;
 
 // What is needed to create this task?
 pub struct ProcessThumbs {
+    start: Instant,
     paths: Vec<PathBuf>,
 }
-
-// What is the result output type?
 
 // Size in bytes (max value: 18.45 exabytes)
 // type Size = u64;
 
-// TODO: For performance tracking
 // #[derive(Debug, Clone)]
 // struct Perf {
 //     bytes: Size,
@@ -33,13 +32,15 @@ pub struct ProcessThumbs {
 #[derive(Debug, Clone, Hash)]
 pub enum Progress {
     Ready(PathBuf),
-    Finished(PathThumb),
+    Finished(PathThumb, Duration),
     Error(String),
 }
 
 // Utility function
 pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
-    Subscription::from_recipe(ProcessThumbs { paths })
+    let start = Instant::now();
+    debug!("Processing {} paths", paths.len());
+    Subscription::from_recipe(ProcessThumbs { paths, start })
 }
 
 // Task implementation
@@ -58,15 +59,20 @@ where
         self: Box<Self>,
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
+        let start = self.start.clone();
         Box::pin(
-            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
+            futures::stream::iter(self.paths).par_then_unordered(16, move |path| {
+                debug!("Processing {:.2?}", &start.elapsed());
+
                 let result = match ImageReader::open(&path).unwrap().decode() {
                     Ok(img) => {
                         let image = img.thumbnail(256, 256).into_bgra8().to_vec();
-                        Progress::Finished(PathThumb { path, image })
+                        debug!("Thumbnailed {:.2?}", &start.elapsed());
+                        Progress::Finished(PathThumb { path, image }, start.elapsed())
                     }
                     Err(err) => {
                         let error = format!("Error decoding image at {:?}: {}", &path, err);
+                        debug!("Errored {:.2?}", &start.elapsed());
                         Progress::Error(error)
                     }
                 };
