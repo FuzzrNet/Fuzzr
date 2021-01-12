@@ -5,7 +5,6 @@ use iced_native::{window::Event::FileDropped, Event};
 
 use async_std::sync::{Arc, Mutex};
 use log::{error, info};
-use std::collections::btree_map::BTreeMap;
 use std::path::PathBuf;
 use std::sync::{Arc as SyncArc, Mutex as SyncMutex};
 
@@ -26,7 +25,6 @@ use page::view::ViewPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::content::PathThumb;
 use data::fs_ops::walk_dir;
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
@@ -60,7 +58,6 @@ pub struct Fuzzr {
     page_buttons: PageSelector,
     background_color: Color,
     publish_thumbs_paths: SyncArc<SyncMutex<Vec<PathBuf>>>,
-    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
 }
 
 impl Application for Fuzzr {
@@ -86,7 +83,6 @@ impl Application for Fuzzr {
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
                 publish_thumbs_paths: SyncArc::new(SyncMutex::new(Vec::new())),
-                publish_thumbs: Arc::new(Mutex::new(BTreeMap::new())),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -135,21 +131,6 @@ impl Application for Fuzzr {
             //     Message::ContentThumbProcessed,
             // )
             // Command::none()
-            Message::ContentThumbProgress(progress) => {
-                match progress {
-                    thumbnails::Progress::Finished(thumb) => {
-                        // info!("processed results with length: {}", result.len());
-                        info!("processed results with length: {}", thumb.image.len());
-                    }
-                    thumbnails::Progress::Error(error) => {
-                        error!("{}", error);
-                    }
-                    thumbnails::Progress::Ready(unprocessed) => {
-                        error!("Unprocessed {:?}", unprocessed);
-                    }
-                }
-                Command::none()
-            }
             Message::ContentAddedToIpfs(cid) => {
                 match cid {
                     Ok(maybe_cid) => match maybe_cid {

@@ -19,6 +19,7 @@ pub enum Message {
     ContentDroppedOnWindow(Vec<PathBuf>),
     // ContentThumbProcessed(Result<(), Arc<Error>>),
     ContentThumbProgress(thumbnails::Progress),
+    ContentReadyToPublish(()),
     ViewPageInputChanged(String),
     ViewPageLoadContent,
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
