@@ -11,11 +11,12 @@ use crate::data::content::{ImageMetadata, PathThumb};
 // use async_std::future;
 // use async_std::prelude::*;
 // use async_std::task;
+use async_std::task;
+use futures::StreamExt;
 use image::codecs::jpeg::JpegEncoder;
-use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
-use par_stream::ParStreamExt;
+// use par_stream::ParStreamExt;
 use std::hash::Hash;
 use std::path::PathBuf;
 
@@ -94,48 +95,81 @@ where
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let start = self.start.clone();
 
-        Box::pin(
-            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
-                debug!("Processing {:.2?}", &start.elapsed());
+        let mut stream = futures::stream::iter(self.paths);
 
-                let image_result = resize_image(&path);
+        let num_workers = num_cpus::get();
 
-                let result = if let Some((decoded_image, width_px, height_px)) = image_result {
-                    let mut output = Box::new(vec![]);
-                    let mut encoder = JpegEncoder::new(&mut output);
-                    encoder.encode_image(&decoded_image).unwrap();
+        let (map_tx, map_rx) = async_std::channel::unbounded();
+        let (output_tx, output_rx) = async_std::channel::unbounded();
 
-                    let size_bytes = output.len() as u64;
-                    let mime_type = "image/jpeg".to_string();
+        let map_fut = async move {
+            while let Some(path) = stream.next().await {
+                let fut = task::spawn_blocking(move || {
+                    let image_result = resize_image(&path);
 
-                    let metadata = ImageMetadata {
-                        size_bytes,
-                        mime_type,
-                        width_px,
-                        height_px,
+                    let result = if let Some((decoded_image, width_px, height_px)) = image_result {
+                        let mut output = Box::new(vec![]);
+                        let mut encoder = JpegEncoder::new(&mut output);
+                        encoder.encode_image(&decoded_image).unwrap();
+
+                        let size_bytes = output.len() as u64;
+                        let mime_type = "image/jpeg".to_string();
+
+                        let metadata = ImageMetadata {
+                            size_bytes,
+                            mime_type,
+                            width_px,
+                            height_px,
+                        };
+
+                        let image = output.into_boxed_slice();
+
+                        debug!("Processing {:.2?}", &start.elapsed());
+
+                        Progress::Finished(
+                            PathThumb {
+                                path,
+                                image,
+                                metadata,
+                            },
+                            start.elapsed(),
+                        )
+                    } else {
+                        let error = format!(
+                            "Error decoding image after {:.2?}, at: {:?}",
+                            &start.elapsed(),
+                            &path,
+                        );
+                        Progress::Error(error)
                     };
 
-                    let image = output.into_boxed_slice();
+                    result
+                });
 
-                    Progress::Finished(
-                        PathThumb {
-                            path,
-                            image,
-                            metadata,
-                        },
-                        start.elapsed(),
-                    )
-                } else {
-                    let error = format!(
-                        "Error decoding image after {:.2?}, at: {:?}",
-                        &start.elapsed(),
-                        &path,
-                    );
-                    Progress::Error(error)
+                map_tx.send(fut).await.unwrap();
+            }
+        };
+
+        let worker_futs: Vec<_> = (0..num_workers)
+            .map(|_| {
+                let map_rx = map_rx.clone();
+                let output_tx = output_tx.clone();
+
+                let worker_fut = async move {
+                    while let Ok(fut) = map_rx.recv().await {
+                        let output = fut.await;
+                        output_tx.send(output).await.unwrap();
+                    }
                 };
+                let worker_fut = async_std::task::spawn(worker_fut);
+                worker_fut
+            })
+            .collect();
 
-                async move { result }
-            }),
-        )
+        let par_then_fut = futures::future::join(map_fut, futures::future::join_all(worker_futs));
+
+        async_std::task::spawn(par_then_fut);
+
+        output_rx.boxed()
     }
 }
