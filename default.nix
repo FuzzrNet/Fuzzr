@@ -13,7 +13,7 @@
 let
   rustOverlay = import "${nixpkgsMozilla}/rust-overlay.nix";
   rust = (pkgs.latest.rustChannels.nightly.rust.override {
-    targets = [ "x86_64-unknown-linux-musl" ];
+    targets = [ "x86_64-unknown-linux-gnu" "x86_64-apple-darwin" ]; # nix-build --argstr system x86_64-darwin
   });
   cargo2nixOverlay = import "${cargo2nix}/overlay";
 
@@ -21,8 +21,6 @@ let
     inherit system;
     overlays = [ cargo2nixOverlay rustOverlay ];
   };
-
-  # target = "x86_64-unknown-linux-musl";
 
   rustPkgs = pkgs.rustBuilder.makePackageSet' {
     rustChannel = "1.49.0";
