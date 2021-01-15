@@ -21,5 +21,10 @@ pub enum Message {
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
     SitePageContentChanged(String),
     SitePagePublishButtonClicked,
+    // UI / Settings
+    BackgroundChanged(String),
+    ForegroundChanged(String),
+    LoadCustomBackground,
+    LoadCustomForeground,
     ThemeChanged(Theme),
 }

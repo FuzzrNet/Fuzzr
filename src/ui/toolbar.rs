@@ -1,8 +1,8 @@
-use iced::{button, Button, Column, Container, Element, Length, Row, Text};
+use iced::{button, Button, Color, Column, Container, Element, Length, Row, Text};
 
 use crate::message::Message;
 use crate::page::PageType;
-use crate::ui::style::Theme;
+use crate::ui::style::{Theme, ThemeConfig};
 
 #[derive(Debug, Clone)]
 pub struct PageButton {
@@ -21,19 +21,57 @@ pub struct Toolbar {
 
 fn inverse(theme: &Theme) -> Theme {
     match theme {
-        Theme::Dark { selected } => Theme::Light {
+        Theme::Dark(ThemeConfig { selected, .. }) => Theme::Light(ThemeConfig {
             selected: selected.to_owned(),
-        },
-        Theme::Light { selected } => Theme::Dark {
+            background: Color::BLACK,
+            foreground: Color::WHITE,
+        }),
+        Theme::Light(ThemeConfig { selected, .. }) => Theme::Dark(ThemeConfig {
             selected: selected.to_owned(),
-        },
+            background: Color::WHITE,
+            foreground: Color::BLACK,
+        }),
+        Theme::Custom(ThemeConfig {
+            selected,
+            background,
+            foreground,
+        }) => Theme::Custom(ThemeConfig {
+            selected: selected.to_owned(),
+            background: foreground.to_owned(),
+            foreground: background.to_owned(),
+        }),
     }
 }
 
 fn selected(theme: &Theme, selected: bool) -> Theme {
     match theme {
-        Theme::Dark { selected: _ } => Theme::Dark { selected },
-        Theme::Light { selected: _ } => Theme::Light { selected },
+        Theme::Dark(ThemeConfig {
+            selected: _,
+            background,
+            foreground,
+        }) => Theme::Dark(ThemeConfig {
+            selected: selected.to_owned(),
+            background: background.to_owned(),
+            foreground: foreground.to_owned(),
+        }),
+        Theme::Light(ThemeConfig {
+            selected: _,
+            background,
+            foreground,
+        }) => Theme::Light(ThemeConfig {
+            selected: selected.to_owned(),
+            background: background.to_owned(),
+            foreground: foreground.to_owned(),
+        }),
+        Theme::Custom(ThemeConfig {
+            selected,
+            background,
+            foreground,
+        }) => Theme::Custom(ThemeConfig {
+            selected: selected.to_owned(),
+            background: foreground.to_owned(),
+            foreground: background.to_owned(),
+        }),
     }
 }
 
@@ -80,7 +118,7 @@ impl Toolbar {
                 label_text: "Settings".to_string(),
                 button_state: button::State::new(),
                 page_type: PageType::Settings,
-                is_disabled: true,
+                is_disabled: false,
             },
         ];
 
