@@ -5,9 +5,9 @@
     rev = "8c007b60731c07dd7a052cce508de3bb1ae849b4";
   }
 , cargo2nix ? builtins.fetchGit {
-    url = https://github.com/tenx-tech/cargo2nix;
-    ref = "master";
-    rev = "433cd5b53d91a9577e7bfaa910df6b8eb8528bbc";
+    url = https://github.com/positron-solutions/cargo2nix;
+    ref = "dont-output-nulls-from-jq";
+    rev = "a47a344b865c399a773e257e1ef1fc052c27ee86";
   }
 }:
 let
