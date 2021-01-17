@@ -92,7 +92,7 @@ impl PublishPage {
         if publish_thumbs.len() > 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(256);
-            let col_count = (self.window_width / (256 + 10 + 10)) as usize;
+            let col_count = (self.window_width / (256 + 2 + 2)) as usize;
 
             let mut image_grid: Vec<Vec<usize>> = vec![vec![]; col_count];
             let mut heights: Vec<u16> = vec![0; col_count];
@@ -136,7 +136,7 @@ impl PublishPage {
                     .push(row)
                     .width(Length::Fill)
                     .align_items(Align::Center)
-                    .spacing(10),
+                    .spacing(2),
             )
             .width(Length::Fill)
             .height(Length::Fill)
