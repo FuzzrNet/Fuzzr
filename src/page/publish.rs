@@ -38,7 +38,7 @@ pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
     publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
-    thumb_capacity: usize,
+    // thumb_capacity: usize,
     window_width: u16,
 }
 
@@ -47,7 +47,7 @@ impl PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
             publish_thumbs: Arc::new(Mutex::new(Vec::new())),
-            thumb_capacity: 0,
+            // thumb_capacity: 0,
             window_width: 800,
         }
     }
@@ -55,19 +55,31 @@ impl PublishPage {
     pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::ContentThumbProgress(progress) => match progress {
-                thumbnails::Progress::Finished(thumb, elapsed) => {
-                    self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
+                thumbnails::Progress::Updated {
+                    time_elapsed,
+                    total_paths,
+                    thumb,
+                } => {
+                    // self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
                     Command::perform(
-                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, elapsed),
+                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, time_elapsed),
                         Message::ContentReadyToPublish,
                     )
                 }
-                thumbnails::Progress::Error(error) => {
-                    error!("{}", error);
-                    Command::none()
-                }
-                thumbnails::Progress::Ready(unprocessed) => {
-                    error!("Unprocessed {:?}", unprocessed);
+                thumbnails::Progress::Finished {
+                    error,
+                    time_elapsed,
+                } => {
+                    if let Some(error) = error {
+                        error!("{}", error);
+                    } else {
+                        let publish_thumbs = self.publish_thumbs.lock().unwrap();
+                        info!(
+                            "Successfully finished processing {} thumbnails in {:.2?}.",
+                            publish_thumbs.len(),
+                            time_elapsed
+                        )
+                    }
                     Command::none()
                 }
             },

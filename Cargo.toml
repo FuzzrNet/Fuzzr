@@ -31,7 +31,7 @@ log = "0.4"
 anyhow = "1.0"
 # System
 async-std = "1.8"
-par-stream = { version = "0.2.1" }
+par-stream = "0.2"
 directories-next = "2.0"
 num_cpus = "1.13"
 # UI
