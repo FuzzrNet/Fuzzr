@@ -30,8 +30,7 @@ pretty_env_logger = "0.4"
 log = "0.4"
 anyhow = "1.0"
 # System
-async-std = "1.8"
-par-stream = "0.2"
+async-std = "1.9"
 directories-next = "2.0"
 num_cpus = "1.13"
 # UI

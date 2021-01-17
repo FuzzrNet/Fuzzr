@@ -9,6 +9,7 @@ use async_std::channel::{Receiver, Sender};
 use async_std::sync::{Arc, Mutex};
 use async_std::task::{Context, Poll};
 use derivative::Derivative;
+use futures::future::BoxFuture;
 use futures::stream::{self, FusedStream, Stream, StreamExt, TryStream, TryStreamExt};
 use futures::FutureExt;
 use iced::Subscription;
@@ -17,7 +18,6 @@ use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
 use log::{debug, error, info};
-use par_stream::ParStreamExt;
 use std::future::Future;
 use std::hash::Hash;
 use std::path::PathBuf;
@@ -57,7 +57,7 @@ pub enum Progress {
 pub enum State {
     Updated {
         time_started: Instant,
-        thumb_rx: Receiver<Option<PathThumb>>,
+        thumb_rx: Pin<Box<Receiver<Option<PathThumb>>>>,
     },
     Finished,
 }
@@ -115,74 +115,85 @@ where
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
         let total_paths = self.paths.len();
-        let path_stream = Arc::new(Mutex::new(futures::stream::iter(self.paths)));
+        let path_stream = Arc::new(Mutex::new(Box::new(futures::stream::iter(self.paths))));
         let num_workers = num_cpus::get();
         let time_started = self.time_started.clone();
 
-        let (map_tx, map_rx) = async_std::channel::unbounded();
-        let (thumb_tx, thumb_rx) = async_std::channel::unbounded();
+        let thumb_rx = Box::pin({
+            let (map_tx, map_rx) = async_std::channel::unbounded();
+            let (thumb_tx, thumb_rx) = async_std::channel::unbounded();
 
-        let map_fut = async move {
-            let path_stream = &mut path_stream.lock().await;
-            while let Some(path) = path_stream.next().await {
-                let fut = async_std::task::spawn_blocking(move || {
-                    let image_result = resize_image(&path);
+            let map_fut = async move {
+                let path_stream = &mut path_stream.lock().await;
+                while let Some(path) = path_stream.next().await {
+                    let fut = async_std::task::spawn_blocking(move || {
+                        if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
+                            let mut output = Box::new(vec![]);
+                            let mut encoder = JpegEncoder::new(&mut output);
+                            encoder.encode_image(&decoded_image).unwrap();
 
-                    if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
-                        let mut output = Box::new(vec![]);
-                        let mut encoder = JpegEncoder::new(&mut output);
-                        encoder.encode_image(&decoded_image).unwrap();
+                            let size_bytes = output.len() as u64;
+                            let mime_type = "image/jpeg".to_string();
 
-                        let size_bytes = output.len() as u64;
-                        let mime_type = "image/jpeg".to_string();
+                            let metadata = ImageMetadata {
+                                size_bytes,
+                                mime_type,
+                                width_px,
+                                height_px,
+                            };
 
-                        let metadata = ImageMetadata {
-                            size_bytes,
-                            mime_type,
-                            width_px,
-                            height_px,
-                        };
+                            let image = output.into_boxed_slice();
 
-                        let image = output.into_boxed_slice();
+                            debug!("Processing {:.2?}", &time_started.elapsed());
 
-                        debug!("Processing {:.2?}", &time_started.elapsed());
+                            Some(PathThumb {
+                                path: path.clone(),
+                                image,
+                                metadata,
+                            })
+                        } else {
+                            None
+                        }
+                    });
 
-                        Some(PathThumb {
-                            path: path.clone(),
-                            image,
-                            metadata,
-                        })
-                    } else {
-                        None
-                    }
-                });
+                    map_tx.send(fut).await.unwrap();
+                }
+            };
 
-                map_tx.send(fut).await.unwrap();
-            }
-        };
+            let worker_futs: Vec<_> = (0..num_workers)
+                .map(move |_| {
+                    let map_rx = map_rx.clone();
+                    let thumb_tx = thumb_tx.clone();
 
-        let worker_futs: Vec<_> = (0..num_workers)
-            .map(|_| {
-                let map_rx = map_rx.clone();
-                let thumb_tx = thumb_tx.clone();
+                    let worker_fut = async move {
+                        while let Ok(fut) = map_rx.recv().await {
+                            let output = fut.await;
+                            // println!("issue {:?}", output);
 
-                let worker_fut = async move {
-                    while let Ok(fut) = map_rx.recv().await {
-                        let output = fut.await;
-                        println!("issue {:?}", output);
-                        thumb_tx.send(output).await.unwrap();
-                    }
-                };
-                let worker_fut = async_std::task::spawn(worker_fut);
-                worker_fut
-            })
-            .collect();
+                            println!("is closed: {}", thumb_tx.is_closed());
+                            println!("is empty: {}", thumb_tx.is_empty());
+                            println!("is full: {}", thumb_tx.is_full());
 
-        let par_then_fut = futures::future::join(map_fut, futures::future::join_all(worker_futs));
+                            match thumb_tx.send(output).await {
+                                Ok(v) => println!("success {:?}", v),
+                                Err(e) => println!("halp err {:?}", e),
+                            };
+                        }
+                    };
+                    let worker_fut = async_std::task::spawn(worker_fut);
+                    worker_fut
+                })
+                .collect();
 
-        async_std::task::spawn(par_then_fut);
+            let par_then_fut =
+                futures::future::join(map_fut, futures::future::join_all(worker_futs));
 
-        futures::stream::unfold(
+            async_std::task::spawn(par_then_fut); // ???
+
+            thumb_rx
+        });
+
+        Box::pin(futures::stream::unfold(
             State::Updated {
                 time_started: self.time_started,
                 thumb_rx,
@@ -226,7 +237,7 @@ where
                         Err(err) => Some((
                             Progress::Finished {
                                 time_elapsed: time_started.elapsed(),
-                                error: None,
+                                error: Some(err.to_string()),
                             },
                             State::Finished,
                         )),
@@ -241,7 +252,6 @@ where
                     }
                 }
             },
-        )
-        .boxed()
+        ))
     }
 }

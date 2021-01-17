@@ -190,7 +190,6 @@ impl Application for Fuzzr {
 
         let publish_thumbs_paths = &mut self.publish_thumbs_paths.lock().unwrap();
         if !publish_thumbs_paths.is_empty() {
-            println!("HERE: {:?}", &publish_thumbs_paths);
             subscriptions.push(
                 thumbnails::process_paths(publish_thumbs_paths.to_vec())
                     .map(Message::ContentThumbProgress),

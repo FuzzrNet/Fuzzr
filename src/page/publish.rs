@@ -71,7 +71,7 @@ impl PublishPage {
                     time_elapsed,
                 } => {
                     if let Some(error) = error {
-                        error!("{}", error);
+                        error!("Error while processing thumbnails: {}", error);
                     } else {
                         let publish_thumbs = self.publish_thumbs.lock().unwrap();
                         info!(
