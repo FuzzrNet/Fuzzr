@@ -129,13 +129,13 @@ where
         let total_paths = self.paths.len();
         let time_started = self.time_started.clone();
 
-        let (sender, mut receiver) = tokio::sync::broadcast::channel(rayon::current_num_threads());
+        let (sender, mut receiver) = tokio::sync::mpsc::channel(rayon::current_num_threads());
         // let sender = Arc::new(sender);
         // let sender = Arc::new(sender);
-        let sender2 = sender.clone();
+        // let sender2 = sender.clone();
         rayon::spawn(move || {
             // let sender = Arc::clone(&sender);
-            // let sender = sender2.clone();
+            let sender2 = sender.clone();
 
             paths.for_each(|path| {
                 if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
@@ -159,14 +159,13 @@ where
 
                     // let sender = Arc::clone(&sender);
 
-                    sender2
-                        .send(PathThumb {
-                            path: path.clone(),
-                            image,
-                            metadata,
-                        })
-                        .unwrap();
-                    receiver.recv();
+                    sender2.blocking_send(PathThumb {
+                        path: path.clone(),
+                        image,
+                        metadata,
+                    });
+                    // .unwrap();
+                    // receiver.recv();
                 }
             });
         });
@@ -289,7 +288,7 @@ where
             },
             move |state| {
                 // let sender = Arc::clone(&sender);
-                let mut receiver = sender.subscribe();
+                // let mut receiver = sender.subscribe();
                 // move || {
                 async move {
                     match state {
@@ -297,7 +296,7 @@ where
                             time_started,
                             // thumb_rx,
                         } => match receiver.recv().await {
-                            Ok(thumb) => {
+                            Some(thumb) => {
                                 // if let Some(thumb) = next_val {
                                 debug!("Processing {:.2?}", &time_started.elapsed());
 
@@ -327,7 +326,7 @@ where
                                 //     ))
                                 // }
                             }
-                            Err(_) => Some((
+                            None => Some((
                                 Progress::Finished {
                                     time_elapsed: time_started.elapsed(),
                                     error: None,
