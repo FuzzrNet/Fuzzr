@@ -30,15 +30,18 @@ pretty_env_logger = "0.4"
 log = "0.4"
 anyhow = "1.0"
 # System
-async-std = "1.9"
+# async-std = "=1.8.0"
+tokio = { version = "1.0", features = ["full"] }
+parallel-stream = "2.1"
 directories-next = "2.0"
 num_cpus = "1.13"
+rayon = "1.5"
 # UI
 iced = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06", features = [
   "wgpu",
   "default_system_font",
   "image",
-  "async-std"
+  "tokio"
 ] }
 iced_native = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
 iced_futures = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
@@ -50,6 +53,7 @@ sled = "0.34"
 image = "0.23"
 infer = "0.3"
 walkdir = "2.3"
+tokio-test = "0.4.0"
 # Todo
 # ipld-collections = "0.3.0"
 # reqwest = "0.10"

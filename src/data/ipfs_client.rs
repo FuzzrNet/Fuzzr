@@ -9,8 +9,9 @@ use libipld::multihash::Code;
 use libipld::store::{Store, StoreParams};
 use libipld::{Cid, IpldCodec};
 
-use async_std::sync::{Arc, Mutex};
 use directories_next::ProjectDirs;
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 use crate::data::content::ContentItemBlock;
 

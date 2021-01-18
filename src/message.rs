@@ -1,5 +1,5 @@
-use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
+use std::sync::Arc;
 
 use crate::data::content::ContentItem;
 use crate::data::ipfs_client::IpfsClient;

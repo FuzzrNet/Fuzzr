@@ -7,10 +7,11 @@ use iced_native::{
     Event,
 };
 
-use async_std::sync::{Arc, Mutex};
 use log::{error, info};
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::sync::{Arc as SyncArc, Mutex as SyncMutex};
+use tokio::sync::Mutex;
 
 mod data;
 mod message;

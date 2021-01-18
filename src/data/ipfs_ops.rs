@@ -1,10 +1,10 @@
-use async_std::fs;
-use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
 use log::{error, info};
 use std::path::PathBuf;
 use std::str::FromStr;
+use std::sync::Arc;
 use std::time::Instant;
+use tokio::fs;
 
 use crate::data::content::{
     ContentItem, ContentItemBlock, ImageContent, ImageMetadata, TextContent, TextMetadata,
@@ -104,8 +104,9 @@ mod tests {
     use super::*;
     use crate::data::ipfs_client::IpfsClient;
 
-    use async_std::{sync::Mutex, task::block_on};
     use tempfile::tempdir;
+    use tokio::sync::Mutex;
+    use tokio_test::block_on;
 
     use std::{error::Error, fs::File};
     use std::{io::Write, path::Path};

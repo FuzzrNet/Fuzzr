@@ -5,24 +5,35 @@ use crate::data::content::{ImageMetadata, PathThumb};
 // use async_std::future;
 // use async_std::prelude::*;
 // use async_std::task;
-use async_std::channel::{Receiver, Sender};
-use async_std::sync::{Arc, Mutex};
-use async_std::task::{Context, Poll};
+// use async_std::channel::{Receiver, Sender};
+// use async_std::stream::StreamExt;
+// use async_std::task::{Context, Poll};
 use derivative::Derivative;
 use futures::future::BoxFuture;
-use futures::stream::{self, FusedStream, Stream, StreamExt, TryStream, TryStreamExt};
-use futures::FutureExt;
+// use futures::stream::{self, FusedStream, Stream, StreamExt, TryStream, TryStreamExt};
+use futures::{FutureExt, SinkExt};
 use iced::Subscription;
 use iced_futures::futures;
 use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
 use log::{debug, error, info};
+use parallel_stream::prelude::*;
+use std::borrow::Borrow;
 use std::future::Future;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::pin::Pin;
+use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
+
+use rayon::iter::ParallelBridge;
+use rayon::prelude::ParallelIterator;
+use rayon::prelude::*;
+
+// use async_std::prelude::*;
+// use async_std::stream;
+use std::sync::mpsc::channel;
 
 // Size in bytes (max value: 18.45 exabytes)
 // type Size = u64;
@@ -57,7 +68,7 @@ pub enum Progress {
 pub enum State {
     Updated {
         time_started: Instant,
-        thumb_rx: Pin<Box<Receiver<Option<PathThumb>>>>,
+        // thumb_rx: Arc<Mutex<rayon::iter::ParallelIterator<Option<PathThumb>>>>,
     },
     Finished,
 }
@@ -114,98 +125,180 @@ where
         self: Box<Self>,
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
+        let paths = self.paths.clone().into_iter();
         let total_paths = self.paths.len();
-        let path_stream = Arc::new(Mutex::new(Box::new(futures::stream::iter(self.paths))));
-        let num_workers = num_cpus::get();
         let time_started = self.time_started.clone();
 
-        let thumb_rx = Box::pin({
-            let (map_tx, map_rx) = async_std::channel::unbounded();
-            let (thumb_tx, thumb_rx) = async_std::channel::unbounded();
+        let (sender, mut receiver) = tokio::sync::broadcast::channel(rayon::current_num_threads());
+        // let sender = Arc::new(sender);
+        // let sender = Arc::new(sender);
+        let sender2 = sender.clone();
+        rayon::spawn(move || {
+            // let sender = Arc::clone(&sender);
+            // let sender = sender2.clone();
 
-            let map_fut = async move {
-                let path_stream = &mut path_stream.lock().await;
-                while let Some(path) = path_stream.next().await {
-                    let fut = async_std::task::spawn_blocking(move || {
-                        if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
-                            let mut output = Box::new(vec![]);
-                            let mut encoder = JpegEncoder::new(&mut output);
-                            encoder.encode_image(&decoded_image).unwrap();
+            paths.for_each(|path| {
+                if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
+                    let mut output = Box::new(vec![]);
+                    let mut encoder = JpegEncoder::new(&mut output);
+                    encoder.encode_image(&decoded_image).unwrap();
 
-                            let size_bytes = output.len() as u64;
-                            let mime_type = "image/jpeg".to_string();
+                    let size_bytes = output.len() as u64;
+                    let mime_type = "image/jpeg".to_string();
 
-                            let metadata = ImageMetadata {
-                                size_bytes,
-                                mime_type,
-                                width_px,
-                                height_px,
-                            };
-
-                            let image = output.into_boxed_slice();
-
-                            debug!("Processing {:.2?}", &time_started.elapsed());
-
-                            Some(PathThumb {
-                                path: path.clone(),
-                                image,
-                                metadata,
-                            })
-                        } else {
-                            None
-                        }
-                    });
-
-                    map_tx.send(fut).await.unwrap();
-                }
-            };
-
-            let worker_futs: Vec<_> = (0..num_workers)
-                .map(move |_| {
-                    let map_rx = map_rx.clone();
-                    let thumb_tx = thumb_tx.clone();
-
-                    let worker_fut = async move {
-                        while let Ok(fut) = map_rx.recv().await {
-                            let output = fut.await;
-                            // println!("issue {:?}", output);
-
-                            println!("is closed: {}", thumb_tx.is_closed());
-                            println!("is empty: {}", thumb_tx.is_empty());
-                            println!("is full: {}", thumb_tx.is_full());
-
-                            match thumb_tx.send(output).await {
-                                Ok(v) => println!("success {:?}", v),
-                                Err(e) => println!("halp err {:?}", e),
-                            };
-                        }
+                    let metadata = ImageMetadata {
+                        size_bytes,
+                        mime_type,
+                        width_px,
+                        height_px,
                     };
-                    let worker_fut = async_std::task::spawn(worker_fut);
-                    worker_fut
-                })
-                .collect();
 
-            let par_then_fut =
-                futures::future::join(map_fut, futures::future::join_all(worker_futs));
+                    let image = output.into_boxed_slice();
 
-            async_std::task::spawn(par_then_fut); // ???
+                    debug!("Processing {:.2?}", &time_started.elapsed());
 
-            thumb_rx
+                    // let sender = Arc::clone(&sender);
+
+                    sender2
+                        .send(PathThumb {
+                            path: path.clone(),
+                            image,
+                            metadata,
+                        })
+                        .unwrap();
+                    receiver.recv();
+                }
+            });
         });
+
+        // let mut iter = receiver.iter();
+
+        // let num_workers = num_cpus::get();
+
+        // let mut thumb_rx = Arc::new(Mutex::new(paths.into_par_stream().map(move |path| {
+        //     let time_started = self.time_started.clone();
+
+        //     async move {
+        //         if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
+        //             let mut output = Box::new(vec![]);
+        //             let mut encoder = JpegEncoder::new(&mut output);
+        //             encoder.encode_image(&decoded_image).unwrap();
+
+        //             let size_bytes = output.len() as u64;
+        //             let mime_type = "image/jpeg".to_string();
+
+        //             let metadata = ImageMetadata {
+        //                 size_bytes,
+        //                 mime_type,
+        //                 width_px,
+        //                 height_px,
+        //             };
+
+        //             let image = output.into_boxed_slice();
+
+        //             debug!("Processing {:.2?}", &time_started.elapsed());
+
+        //             Some(PathThumb {
+        //                 path: path.clone(),
+        //                 image,
+        //                 metadata,
+        //             })
+        //         } else {
+        //             None
+        //         }
+        //     }
+        // })));
+
+        // let thumb_rx = Box::pin({
+        //     let (map_tx, map_rx) = async_std::channel::unbounded();
+        //     let (thumb_tx, thumb_rx) = async_std::channel::unbounded();
+
+        //     let map_fut = async move {
+        //         while let Some(path) = path_stream.next().await {
+        //             let fut = async_std::task::spawn_blocking(move || {
+        //                 if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
+        //                     let mut output = Box::new(vec![]);
+        //                     let mut encoder = JpegEncoder::new(&mut output);
+        //                     encoder.encode_image(&decoded_image).unwrap();
+
+        //                     let size_bytes = output.len() as u64;
+        //                     let mime_type = "image/jpeg".to_string();
+
+        //                     let metadata = ImageMetadata {
+        //                         size_bytes,
+        //                         mime_type,
+        //                         width_px,
+        //                         height_px,
+        //                     };
+
+        //                     let image = output.into_boxed_slice();
+
+        //                     debug!("Processing {:.2?}", &time_started.elapsed());
+
+        //                     Some(PathThumb {
+        //                         path: path.clone(),
+        //                         image,
+        //                         metadata,
+        //                     })
+        //                 } else {
+        //                     None
+        //                 }
+        //             });
+
+        //             map_tx.send(fut).await.unwrap();
+        //         }
+        //     };
+
+        //     let worker_futs: Vec<_> = (0..num_workers)
+        //         .map(move |_| {
+        //             let map_rx = map_rx.clone();
+        //             let thumb_tx = thumb_tx.clone();
+
+        //             let worker_fut = async move {
+        //                 while let Ok(fut) = map_rx.recv().await {
+        //                     let output = fut.await;
+        //                     // println!("issue {:?}", output);
+
+        //                     println!("is closed: {}", thumb_tx.is_closed());
+        //                     println!("is empty: {}", thumb_tx.is_empty());
+        //                     println!("is full: {}", thumb_tx.is_full());
+
+        //                     match thumb_tx.send(output).await {
+        //                         Ok(v) => println!("success {:?}", v),
+        //                         Err(e) => println!("halp err {:?}", e),
+        //                     };
+        //                 }
+        //             };
+        //             let worker_fut = async_std::task::spawn(worker_fut);
+        //             worker_fut
+        //         })
+        //         .collect();
+
+        //     let par_then_fut =
+        //         futures::future::join(map_fut, futures::future::join_all(worker_futs));
+
+        //     async_std::task::spawn(par_then_fut); // ???
+
+        //     thumb_rx
+        // });
 
         Box::pin(futures::stream::unfold(
             State::Updated {
-                time_started: self.time_started,
-                thumb_rx,
+                time_started,
+                // thumb_rx,
             },
-            move |state| async move {
-                match state {
-                    State::Updated {
-                        time_started,
-                        thumb_rx,
-                    } => match thumb_rx.recv().await {
-                        Ok(next_val) => {
-                            if let Some(thumb) = next_val {
+            move |state| {
+                // let sender = Arc::clone(&sender);
+                let mut receiver = sender.subscribe();
+                // move || {
+                async move {
+                    match state {
+                        State::Updated {
+                            time_started,
+                            // thumb_rx,
+                        } => match receiver.recv().await {
+                            Ok(thumb) => {
+                                // if let Some(thumb) = next_val {
                                 debug!("Processing {:.2?}", &time_started.elapsed());
 
                                 Some((
@@ -216,41 +309,43 @@ where
                                     },
                                     State::Updated {
                                         time_started,
-                                        thumb_rx,
+                                        // thumb_rx,
                                     },
                                 ))
-                            } else {
-                                let error = format!(
-                                    "Error decoding image after {:.2?}",
-                                    &time_started.elapsed(),
-                                );
+                                // } else {
+                                //     let error = format!(
+                                //         "Error decoding image after {:.2?}",
+                                //         &time_started.elapsed(),
+                                //     );
 
-                                Some((
-                                    Progress::Finished {
-                                        time_elapsed: time_started.elapsed(),
-                                        error: Some(error),
-                                    },
-                                    State::Finished,
-                                ))
+                                //     Some((
+                                //         Progress::Finished {
+                                //             time_elapsed: time_started.elapsed(),
+                                //             error: Some(error),
+                                //         },
+                                //         State::Finished,
+                                //     ))
+                                // }
                             }
-                        }
-                        Err(err) => Some((
-                            Progress::Finished {
-                                time_elapsed: time_started.elapsed(),
-                                error: Some(err.to_string()),
-                            },
-                            State::Finished,
-                        )),
-                    },
-                    State::Finished => {
-                        // We do not let the stream die, as it would start a
-                        // new download repeatedly if the user is not careful
-                        // in case of errors.
-                        let _: () = iced::futures::future::pending().await;
+                            Err(_) => Some((
+                                Progress::Finished {
+                                    time_elapsed: time_started.elapsed(),
+                                    error: None,
+                                },
+                                State::Finished,
+                            )),
+                        },
+                        State::Finished => {
+                            // We do not let the stream die, as it would start a
+                            // new download repeatedly if the user is not careful
+                            // in case of errors.
+                            // let _: () = iced::futures::future::pending().await;
 
-                        None
+                            None
+                        }
                     }
                 }
+                // }
             },
         ))
     }
