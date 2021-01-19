@@ -10,30 +10,37 @@ use crate::data::content::{ImageMetadata, PathThumb};
 // use async_std::task::{Context, Poll};
 use derivative::Derivative;
 use futures::future::BoxFuture;
-// use futures::stream::{self, FusedStream, Stream, StreamExt, TryStream, TryStreamExt};
-use futures::{FutureExt, SinkExt};
+// use futures::stream::{
+//     self, FusedStream, IntoStream, Scan, Stream, StreamExt, TryStream, TryStreamExt,
+// };
+use futures::prelude::*;
+// use futures::{FutureExt, SinkExt};
+// use iced::futures::stream::Scan;
 use iced::Subscription;
 use iced_futures::futures;
+// use iced_futures::futures::{Stream, StreamExt};
 use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
 use log::{debug, error, info};
-use parallel_stream::prelude::*;
+// use parallel_stream::prelude::*;
+use crossbeam_deque::{Injector, Steal, Worker};
 use std::borrow::Borrow;
 use std::future::Future;
 use std::hash::Hash;
 use std::path::PathBuf;
 use std::pin::Pin;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
+use tokio::sync::mpsc;
+use tokio::sync::Mutex;
 
-use rayon::iter::ParallelBridge;
-use rayon::prelude::ParallelIterator;
-use rayon::prelude::*;
+// use rayon::iter::ParallelBridge;
+// use rayon::prelude::ParallelIterator;
+// use rayon::prelude::*;
 
 // use async_std::prelude::*;
 // use async_std::stream;
-use std::sync::mpsc::channel;
 
 // Size in bytes (max value: 18.45 exabytes)
 // type Size = u64;
@@ -68,7 +75,7 @@ pub enum Progress {
 pub enum State {
     Updated {
         time_started: Instant,
-        // thumb_rx: Arc<Mutex<rayon::iter::ParallelIterator<Option<PathThumb>>>>,
+        // receiver: Arc<Mutex<mpsc::Receiver<PathThumb>>>,
     },
     Finished,
 }
@@ -125,50 +132,203 @@ where
         self: Box<Self>,
         _input: futures::stream::BoxStream<'static, I>,
     ) -> futures::stream::BoxStream<'static, Self::Output> {
-        let paths = self.paths.clone().into_iter();
+        // let paths = self.paths.clone().into_iter();
         let total_paths = self.paths.len();
-        let time_started = self.time_started.clone();
+        let time_started_local = self.time_started.clone();
+        let num_workers = num_cpus::get();
 
-        let (sender, mut receiver) = tokio::sync::mpsc::channel(rayon::current_num_threads());
+        let deque = Injector::new();
+
+        // self.paths.iter().for_each(|p| {
+        //     q.push(p);
+        // });
+
+        // let subscription_stream = stream::FuturesUnordered::new();
+        let thumb_rx_stream = stream::iter(self.paths).map(move |path| {
+            let (thumb_tx, thumb_rx) = tokio::sync::oneshot::channel();
+            deque.push((path, thumb_tx));
+            (
+                State::Updated {
+                    time_started: time_started_local.clone(),
+                },
+                thumb_rx,
+            )
+        });
+
+        let mut worker_handles: Vec<tokio::task::JoinHandle<Progress>> = vec![];
+
+        let (worker_sender, mut worker_receiver) =
+            tokio::sync::mpsc::channel::<PathThumb>(num_workers);
+        // let receiver = Arc::new(tokio::sync::Mutex::new(receiver));
+
+        let worker_handles = (0..num_workers).map(|_| {
+            tokio::task::spawn_blocking(|| {
+                while let p = deque.steal() {
+                    match p {
+                        Steal::Success((path, thumb_tx)) => {
+                            if let Some((decoded_image, width_px, height_px)) = resize_image(&path)
+                            {
+                                let mut output = Box::new(vec![]);
+                                let mut encoder = JpegEncoder::new(&mut output);
+                                encoder.encode_image(&decoded_image).unwrap();
+
+                                let size_bytes = output.len() as u64;
+                                let mime_type = "image/jpeg".to_string();
+
+                                let metadata = ImageMetadata {
+                                    size_bytes,
+                                    mime_type,
+                                    width_px,
+                                    height_px,
+                                };
+
+                                let image = output.into_boxed_slice();
+
+                                thumb_tx
+                                    .send(PathThumb {
+                                        path: path.clone(),
+                                        image,
+                                        metadata,
+                                    })
+                                    // .await;
+                                    .unwrap();
+
+                                debug!("Processing {:.2?}", &time_started_local.elapsed());
+                            }
+                        }
+                        Steal::Empty => {}
+                    }
+                }
+            })
+        });
+
+        // let mapper_handle = async move {
+        //     match worker_receiver.recv().await {
+        //         Some(item) => {
+        //             subscription_stream.push(item);
+        //         }
+        //         None => {}
+        //     }
+        // };
+
+        let result = /*thumb_rx_stream.scan(
+            State::Updated {
+                time_started: time_started_local,
+            },*/
+            thumb_rx_stream.then(|(state, thumb_rx)| async {
+                // let receiver = Arc::clone(&receiver);
+                // let mut receiver = sender.subscribe();
+                // move || {
+                    // tokio::spawn(async move {
+                    // match state {
+                        /*State::Updated {
+                            time_started,
+                            // thumb_rx,
+                            // } => match thumb_rx.lock().await.recv().await {
+                        } =>*/
+                        match thumb_rx.await {
+                            //receiver.recv().await {
+                            Ok(thumb) => {
+                                let time_started = self.time_started.clone();
+                                let time_elapsed = &time_started.elapsed();
+
+                                debug!("Processing {:.2?}", &time_elapsed);
+
+                                // Some(
+                                    Progress::Updated {
+                                        time_elapsed: *time_elapsed,
+                                        total_paths,
+                                        thumb,
+                                    }
+                                    // state
+                                    // State::Updated {
+                                    //     time_started,
+                                    //     // thumb_rx,
+                                    // },
+                                // )
+                                // } else {
+                                //     let error = format!(
+                                //         "Error decoding image after {:.2?}",
+                                //         &time_started.elapsed(),
+                                //     );
+
+                                //     Some((
+                                //         Progress::Finished {
+                                //             time_elapsed: time_started.elapsed(),
+                                //             error: Some(error),
+                                //         },
+                                //         State::Finished,
+                                //     ))
+                                // }
+                            }
+                            Err(_) => // Some(
+                                Progress::Finished {
+                                    time_elapsed: self.time_started.elapsed(),
+                                    error: None,
+                                }
+                                // State::Finished,
+                            //),
+                        }
+                        // State::Finished => {
+                            // We do not let the stream die, as it would start a
+                            // new download repeatedly if the user is not careful
+                            // in case of errors.
+                            // let _: () = iced::futures::future::pending().await;
+
+                            // None
+                        // }
+                    // }
+                // })
+                // }
+            },
+        );
+
+        tokio::task::spawn(futures::future::join_all(worker_handles));
+
+        Box::pin(result)
+
         // let sender = Arc::new(sender);
         // let sender = Arc::new(sender);
         // let sender2 = sender.clone();
-        rayon::spawn(move || {
-            // let sender = Arc::clone(&sender);
-            let sender2 = sender.clone();
+        // rayon::spawn(move || {
+        // let sender = Arc::clone(&sender);
+        // let sender2 = sender.clone();
 
-            paths.for_each(|path| {
-                if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
-                    let mut output = Box::new(vec![]);
-                    let mut encoder = JpegEncoder::new(&mut output);
-                    encoder.encode_image(&decoded_image).unwrap();
+        // paths.for_each(|path| {
+        //     if let Some((decoded_image, width_px, height_px)) = resize_image(&path) {
+        //         let mut output = Box::new(vec![]);
+        //         let mut encoder = JpegEncoder::new(&mut output);
+        //         encoder.encode_image(&decoded_image).unwrap();
 
-                    let size_bytes = output.len() as u64;
-                    let mime_type = "image/jpeg".to_string();
+        //         let size_bytes = output.len() as u64;
+        //         let mime_type = "image/jpeg".to_string();
 
-                    let metadata = ImageMetadata {
-                        size_bytes,
-                        mime_type,
-                        width_px,
-                        height_px,
-                    };
+        //         let metadata = ImageMetadata {
+        //             size_bytes,
+        //             mime_type,
+        //             width_px,
+        //             height_px,
+        //         };
 
-                    let image = output.into_boxed_slice();
+        //         let image = output.into_boxed_slice();
 
-                    debug!("Processing {:.2?}", &time_started.elapsed());
+        //         debug!("Processing {:.2?}", &time_started.elapsed());
 
-                    // let sender = Arc::clone(&sender);
+        //         // let sender = Arc::clone(&sender);
 
-                    sender2.blocking_send(PathThumb {
-                        path: path.clone(),
-                        image,
-                        metadata,
-                    });
-                    // .unwrap();
-                    // receiver.recv();
-                }
-            });
-        });
+        //         sender
+        //             .send(PathThumb {
+        //                 path: path.clone(),
+        //                 image,
+        //                 metadata,
+        //             })
+        //             .await
+        //             .unwrap();
+        //         // .unwrap();
+        //         // receiver.recv();
+        //     }
+        // });
+        // });
 
         // let mut iter = receiver.iter();
 
@@ -281,71 +441,68 @@ where
         //     thumb_rx
         // });
 
-        Box::pin(futures::stream::unfold(
-            State::Updated {
-                time_started,
-                // thumb_rx,
-            },
-            move |state| {
-                // let sender = Arc::clone(&sender);
-                // let mut receiver = sender.subscribe();
-                // move || {
-                async move {
-                    match state {
-                        State::Updated {
-                            time_started,
-                            // thumb_rx,
-                        } => match receiver.recv().await {
-                            Some(thumb) => {
-                                // if let Some(thumb) = next_val {
-                                debug!("Processing {:.2?}", &time_started.elapsed());
+        // Box::pin(
+        //     subscription_stream.scan(State::Updated { time_started }, move |state| {
+        //         // let receiver = Arc::clone(&receiver);
+        //         // let mut receiver = sender.subscribe();
+        //         // move || {
+        //         async move {
+        //             match state {
+        //                 State::Updated {
+        //                     time_started,
+        //                     // thumb_rx,
+        //                     // } => match thumb_rx.lock().await.recv().await {
+        //                 } => match receiver.recv().await {
+        //                     Some(thumb) => {
+        //                         // if let Some(thumb) = next_val {
+        //                         debug!("Processing {:.2?}", &time_started.elapsed());
 
-                                Some((
-                                    Progress::Updated {
-                                        time_elapsed: time_started.elapsed(),
-                                        total_paths: total_paths.clone(),
-                                        thumb,
-                                    },
-                                    State::Updated {
-                                        time_started,
-                                        // thumb_rx,
-                                    },
-                                ))
-                                // } else {
-                                //     let error = format!(
-                                //         "Error decoding image after {:.2?}",
-                                //         &time_started.elapsed(),
-                                //     );
+        //                         Some((
+        //                             Progress::Updated {
+        //                                 time_elapsed: time_started.elapsed(),
+        //                                 total_paths: total_paths.clone(),
+        //                                 thumb: thumb.clone(),
+        //                             },
+        //                             State::Updated {
+        //                                 time_started,
+        //                                 // thumb_rx,
+        //                             },
+        //                         ))
+        //                         // } else {
+        //                         //     let error = format!(
+        //                         //         "Error decoding image after {:.2?}",
+        //                         //         &time_started.elapsed(),
+        //                         //     );
 
-                                //     Some((
-                                //         Progress::Finished {
-                                //             time_elapsed: time_started.elapsed(),
-                                //             error: Some(error),
-                                //         },
-                                //         State::Finished,
-                                //     ))
-                                // }
-                            }
-                            None => Some((
-                                Progress::Finished {
-                                    time_elapsed: time_started.elapsed(),
-                                    error: None,
-                                },
-                                State::Finished,
-                            )),
-                        },
-                        State::Finished => {
-                            // We do not let the stream die, as it would start a
-                            // new download repeatedly if the user is not careful
-                            // in case of errors.
-                            // let _: () = iced::futures::future::pending().await;
+        //                         //     Some((
+        //                         //         Progress::Finished {
+        //                         //             time_elapsed: time_started.elapsed(),
+        //                         //             error: Some(error),
+        //                         //         },
+        //                         //         State::Finished,
+        //                         //     ))
+        //                         // }
+        //                     }
+        //                     None => Some((
+        //                         Progress::Finished {
+        //                             time_elapsed: time_started.elapsed(),
+        //                             error: None,
+        //                         },
+        //                         State::Finished,
+        //                     )),
+        //                 },
+        //                 State::Finished => {
+        //                     // We do not let the stream die, as it would start a
+        //                     // new download repeatedly if the user is not careful
+        //                     // in case of errors.
+        //                     // let _: () = iced::futures::future::pending().await;
 
-                            None
-                        }
-                    }
-                }
-                // }
-            },
-        ))
+        //                     None
+        //                 }
+        //             }
+        //         }
+        //         // }
+        //     }),
+        // )
     }
 }
