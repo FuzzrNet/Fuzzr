@@ -24,7 +24,8 @@ use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
 use log::{debug, error, info};
 // use parallel_stream::prelude::*;
-use crossbeam_deque::{Injector, Steal, Worker};
+use crossbeam_deque::{Injector, Steal, Stealer, Worker};
+use crossbeam_utils::atomic::AtomicCell;
 use std::borrow::Borrow;
 use std::future::Future;
 use std::hash::Hash;
@@ -75,6 +76,7 @@ pub enum Progress {
 pub enum State {
     Updated {
         time_started: Instant,
+        total_paths: usize,
         // receiver: Arc<Mutex<mpsc::Receiver<PathThumb>>>,
     },
     Finished,
@@ -115,6 +117,24 @@ fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
     }
 }
 
+fn find_task<T>(local: &Worker<T>, global: &Injector<T>, stealers: &[Stealer<T>]) -> Option<T> {
+    // Pop a task from the local queue, if not empty.
+    local.pop().or_else(|| {
+        // Otherwise, we need to look for a task elsewhere.
+        std::iter::repeat_with(|| {
+            // Try stealing a batch of tasks from the global queue.
+            global
+                .steal_batch_and_pop(local)
+                // Or try stealing a task from one of the other threads.
+                .or_else(|| stealers.iter().map(|s| s.steal()).collect())
+        })
+        // Loop while no task was stolen and any steal operation needs to be retried.
+        .find(|s| !s.is_retry())
+        // Extract the stolen task, if there is one.
+        .and_then(|s| s.success())
+    })
+}
+
 // Task implementation
 impl<H, I> iced_native::subscription::Recipe<H, I> for ProcessThumbs
 where
@@ -145,32 +165,41 @@ where
 
         // let subscription_stream = stream::FuturesUnordered::new();
         let thumb_rx_stream = stream::iter(self.paths).map(move |path| {
-            let (thumb_tx, thumb_rx) = tokio::sync::oneshot::channel();
-            deque.push((path, thumb_tx));
-            (
-                State::Updated {
-                    time_started: time_started_local.clone(),
-                },
-                thumb_rx,
-            )
+            let (thumb_tx, thumb_rx) = tokio::sync::oneshot::channel::<PathThumb>();
+            deque.push((path.clone(), thumb_tx));
+
+            (time_started_local, total_paths, thumb_rx)
         });
 
-        let mut worker_handles: Vec<tokio::task::JoinHandle<Progress>> = vec![];
+        // let mut worker_handles: Vec<tokio::task::JoinHandle<Progress>> = vec![];
 
-        let (worker_sender, mut worker_receiver) =
-            tokio::sync::mpsc::channel::<PathThumb>(num_workers);
+        // let (worker_sender, mut worker_receiver) =
+        //     tokio::sync::mpsc::channel::<PathThumb>(num_workers);
         // let receiver = Arc::new(tokio::sync::Mutex::new(receiver));
 
-        let worker_handles = (0..num_workers).map(|_| {
-            tokio::task::spawn_blocking(|| {
-                while let p = deque.steal() {
-                    match p {
+        let thumbs_processed = Arc::new(AtomicCell::new(0usize));
+
+        let stealers = (0..num_workers).map(|_| {
+            let w: Worker<(PathBuf, tokio::sync::oneshot::Sender<PathThumb>)> = Worker::new_lifo();
+            w.stealer()
+        });
+
+        let worker_handles = stealers.map(|s| {
+            let thumbs_processed = Arc::clone(&thumbs_processed);
+            println!("hello 1");
+            tokio::task::spawn_blocking(move || {
+                let mut running = true;
+
+                println!("hello 4");
+                while running {
+                    match s.steal() {
                         Steal::Success((path, thumb_tx)) => {
                             if let Some((decoded_image, width_px, height_px)) = resize_image(&path)
                             {
                                 let mut output = Box::new(vec![]);
                                 let mut encoder = JpegEncoder::new(&mut output);
                                 encoder.encode_image(&decoded_image).unwrap();
+                                println!("hello 5");
 
                                 let size_bytes = output.len() as u64;
                                 let mime_type = "image/jpeg".to_string();
@@ -183,6 +212,7 @@ where
                                 };
 
                                 let image = output.into_boxed_slice();
+                                println!("hello 6");
 
                                 thumb_tx
                                     .send(PathThumb {
@@ -193,10 +223,20 @@ where
                                     // .await;
                                     .unwrap();
 
+                                &thumbs_processed.fetch_add(1);
+
                                 debug!("Processing {:.2?}", &time_started_local.elapsed());
                             }
                         }
-                        Steal::Empty => {}
+                        Steal::Empty => {
+                            if &thumbs_processed.load() == &total_paths {
+                                running = false;
+                            }
+                            // println!("hello empty {}", &thumbs_processed.load());
+                        }
+                        Steal::Retry => {
+                            println!("retry");
+                        }
                     }
                 }
             })
@@ -210,76 +250,35 @@ where
         //         None => {}
         //     }
         // };
+        println!("hello 2");
 
         let result = /*thumb_rx_stream.scan(
             State::Updated {
                 time_started: time_started_local,
             },*/
-            thumb_rx_stream.then(|(state, thumb_rx)| async {
-                // let receiver = Arc::clone(&receiver);
-                // let mut receiver = sender.subscribe();
-                // move || {
-                    // tokio::spawn(async move {
-                    // match state {
-                        /*State::Updated {
-                            time_started,
-                            // thumb_rx,
-                            // } => match thumb_rx.lock().await.recv().await {
-                        } =>*/
+            thumb_rx_stream.then(|(time_started, total_paths, thumb_rx)| async move {
+                println!("hello 3");
+
                         match thumb_rx.await {
                             //receiver.recv().await {
                             Ok(thumb) => {
-                                let time_started = self.time_started.clone();
                                 let time_elapsed = &time_started.elapsed();
 
                                 debug!("Processing {:.2?}", &time_elapsed);
 
-                                // Some(
                                     Progress::Updated {
                                         time_elapsed: *time_elapsed,
                                         total_paths,
                                         thumb,
                                     }
-                                    // state
-                                    // State::Updated {
-                                    //     time_started,
-                                    //     // thumb_rx,
-                                    // },
-                                // )
-                                // } else {
-                                //     let error = format!(
-                                //         "Error decoding image after {:.2?}",
-                                //         &time_started.elapsed(),
-                                //     );
 
-                                //     Some((
-                                //         Progress::Finished {
-                                //             time_elapsed: time_started.elapsed(),
-                                //             error: Some(error),
-                                //         },
-                                //         State::Finished,
-                                //     ))
-                                // }
                             }
                             Err(_) => // Some(
                                 Progress::Finished {
-                                    time_elapsed: self.time_started.elapsed(),
+                                    time_elapsed: time_started.elapsed(),
                                     error: None,
                                 }
-                                // State::Finished,
-                            //),
                         }
-                        // State::Finished => {
-                            // We do not let the stream die, as it would start a
-                            // new download repeatedly if the user is not careful
-                            // in case of errors.
-                            // let _: () = iced::futures::future::pending().await;
-
-                            // None
-                        // }
-                    // }
-                // })
-                // }
             },
         );
 

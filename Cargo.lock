@@ -192,12 +192,15 @@ dependencies = [
 
 [[package]]
 name = "async-global-executor"
-version = "1.4.3"
+version = "2.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "73079b49cd26b8fd5a15f68fc7707fc78698dc2a3d61430f2a7a9430230dfa04"
+checksum = "9586ec52317f36de58453159d48351bc244bc24ced3effc1fce22f3d48664af6"
 dependencies = [
+ "async-channel",
  "async-executor",
  "async-io",
+ "async-mutex",
+ "blocking",
  "futures-lite",
  "num_cpus",
  "once_cell",
@@ -259,16 +262,15 @@ dependencies = [
 
 [[package]]
 name = "async-std"
-version = "1.8.0"
+version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f9f84f1280a2b436a2c77c2582602732b6c2f4321d5494d6e799e6c367859a8"
+checksum = "d9f06685bad74e0570f5213741bea82158279a4103d988e57bfada11ad230341"
 dependencies = [
  "async-channel",
  "async-global-executor",
  "async-io",
- "async-mutex",
+ "async-lock",
  "async-process",
- "blocking",
  "crossbeam-utils",
  "futures-channel",
  "futures-core",
@@ -1518,6 +1520,7 @@ version = "0.0.2"
 dependencies = [
  "anyhow",
  "crossbeam-deque",
+ "crossbeam-utils",
  "derivative",
  "directories-next",
  "iced",
@@ -1536,7 +1539,7 @@ dependencies = [
  "serde_json",
  "sled",
  "tempfile",
- "tokio 1.0.2",
+ "tokio",
  "tokio-test",
  "walkdir",
 ]
@@ -1888,7 +1891,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.2.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1901,23 +1904,23 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.3.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 
 [[package]]
 name = "iced_futures"
 version = "0.2.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "futures",
  "log",
- "tokio 0.3.6",
+ "tokio",
  "wasm-bindgen-futures",
 ]
 
 [[package]]
 name = "iced_graphics"
 version = "0.1.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "bytemuck",
  "font-kit",
@@ -1931,7 +1934,7 @@ dependencies = [
 [[package]]
 name = "iced_native"
 version = "0.3.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -1943,7 +1946,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.2.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "iced_core",
 ]
@@ -1951,7 +1954,7 @@ dependencies = [
 [[package]]
 name = "iced_web"
 version = "0.3.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "dodrio",
  "iced_core",
@@ -1967,7 +1970,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.3.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "bytemuck",
  "futures",
@@ -1985,7 +1988,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.2.0"
-source = "git+https://github.com/hecrj/iced.git?rev=f8aef03456ecc185098b6305a8cd0e22f5297d06#f8aef03456ecc185098b6305a8cd0e22f5297d06"
+source = "git+https://github.com/hecrj/iced.git?rev=9da0a3de54e8e7161d4a3405633bc574ce43eb2d#9da0a3de54e8e7161d4a3405633bc574ce43eb2d"
 dependencies = [
  "iced_futures",
  "iced_graphics",
@@ -3915,18 +3918,18 @@ checksum = "388a1df253eca08550bef6c72392cfe7c30914bf41df5269b68cbd6ff8f570a3"
 
 [[package]]
 name = "serde"
-version = "1.0.119"
+version = "1.0.120"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9bdd36f49e35b61d49efd8aa7fc068fd295961fd2286d0b2ee9a4c7a14e99cc3"
+checksum = "166b2349061381baf54a58e4b13c89369feb0ef2eaa57198899e2312aac30aab"
 dependencies = [
  "serde_derive",
 ]
 
 [[package]]
 name = "serde_derive"
-version = "1.0.119"
+version = "1.0.120"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "552954ce79a059ddd5fd68c271592374bd15cab2274970380c000118aeffe1cd"
+checksum = "0ca2a8cb5805ce9e3b95435e3765b7b553cecc762d938d409434338386cb5775"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4304,19 +4307,6 @@ checksum = "cda74da7e1a664f795bb1f8a87ec406fb89a02522cf6e50620d016add6dbbf5c"
 
 [[package]]
 name = "tokio"
-version = "0.3.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "720ba21c25078711bf456d607987d95bce90f7c3bea5abe1db587862e7a1e87c"
-dependencies = [
- "autocfg",
- "futures-core",
- "num_cpus",
- "pin-project-lite",
- "slab",
-]
-
-[[package]]
-name = "tokio"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0ca04cec6ff2474c638057b65798f60ac183e5e79d3448bb7163d36a39cff6ec"
@@ -4354,7 +4344,7 @@ checksum = "76066865172052eb8796c686f0b441a93df8b08d40a950b062ffb9a426f00edd"
 dependencies = [
  "futures-core",
  "pin-project-lite",
- "tokio 1.0.2",
+ "tokio",
 ]
 
 [[package]]
@@ -4366,7 +4356,7 @@ dependencies = [
  "async-stream",
  "bytes 1.0.1",
  "futures-core",
- "tokio 1.0.2",
+ "tokio",
  "tokio-stream",
 ]
 

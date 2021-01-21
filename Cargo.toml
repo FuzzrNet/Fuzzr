@@ -33,19 +33,20 @@ anyhow = "1.0"
 # async-std = "=1.8.0"
 tokio = { version = "1.0", features = ["full"] }
 crossbeam-deque = "0.8"
+crossbeam-utils = "0.8"
 # parallel-stream = "2.1"
 directories-next = "2.0"
 num_cpus = "1.13"
 rayon = "1.5"
 # UI
-iced = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06", features = [
+iced = { git = "https://github.com/hecrj/iced.git", rev = "9da0a3de54e8e7161d4a3405633bc574ce43eb2d", features = [
   "wgpu",
   "default_system_font",
   "image",
   "tokio"
 ] }
-iced_native = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
-iced_futures = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
+iced_native = { git = "https://github.com/hecrj/iced.git", rev = "9da0a3de54e8e7161d4a3405633bc574ce43eb2d" }
+iced_futures = { git = "https://github.com/hecrj/iced.git", rev = "9da0a3de54e8e7161d4a3405633bc574ce43eb2d" }
 # IPFS
 ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
 libipld = "0.8"
