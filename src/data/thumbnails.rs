@@ -117,7 +117,14 @@ fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
     }
 }
 
-fn find_task<T>(local: &Worker<T>, global: &Injector<T>, stealers: &[Stealer<T>]) -> Option<T> {
+type Task = (PathBuf, tokio::sync::oneshot::Sender<PathThumb>);
+type StealerWorker = (Stealer<Task>, Worker<Task>);
+
+fn find_task<Task>(
+    local: &Worker<Task>,
+    global: Arc<Injector<Task>>,
+    stealers: Arc<Vec<StealerWorker>>,
+) -> Option<Task> {
     // Pop a task from the local queue, if not empty.
     local.pop().or_else(|| {
         // Otherwise, we need to look for a task elsewhere.
@@ -126,7 +133,7 @@ fn find_task<T>(local: &Worker<T>, global: &Injector<T>, stealers: &[Stealer<T>]
             global
                 .steal_batch_and_pop(local)
                 // Or try stealing a task from one of the other threads.
-                .or_else(|| stealers.iter().map(|s| s.steal()).collect())
+                .or_else(|| stealers.iter().map(|(s, w)| s.steal()).collect())
         })
         // Loop while no task was stolen and any steal operation needs to be retried.
         .find(|s| !s.is_retry())
@@ -157,16 +164,18 @@ where
         let time_started_local = self.time_started.clone();
         let num_workers = num_cpus::get();
 
-        let deque = Injector::new();
+        let deque = Arc::new(Injector::new());
 
         // self.paths.iter().for_each(|p| {
         //     q.push(p);
         // });
+        let deque2 = Arc::clone(&deque);
 
         // let subscription_stream = stream::FuturesUnordered::new();
         let thumb_rx_stream = stream::iter(self.paths).map(move |path| {
             let (thumb_tx, thumb_rx) = tokio::sync::oneshot::channel::<PathThumb>();
-            deque.push((path.clone(), thumb_tx));
+            deque2.push((path.clone(), thumb_tx));
+            println!("push path");
 
             (time_started_local, total_paths, thumb_rx)
         });
@@ -179,21 +188,42 @@ where
 
         let thumbs_processed = Arc::new(AtomicCell::new(0usize));
 
-        let stealers = (0..num_workers).map(|_| {
-            let w: Worker<(PathBuf, tokio::sync::oneshot::Sender<PathThumb>)> = Worker::new_lifo();
-            w.stealer()
-        });
+        let mut stealers: Vec<StealerWorker> = vec![];
 
-        let worker_handles = stealers.map(|s| {
+        for _ in 0..num_workers {
+            let w: Worker<Task> = Worker::new_fifo();
+            stealers.push((w.stealer(), w));
+        }
+
+        let stealers = Arc::new(stealers);
+
+        // let stealers: &[(Stealer<Task>, Worker<Task>); num_workers] = (0..num_workers)
+        //     .map(|_| {
+        //         let w: Worker<Task> = Worker::new_fifo();
+        //         (w.stealer(), w)
+        //     })
+        //     .into_iter()
+        //     .collect()
+        //     .as_slice();
+
+        // let stealers_slice: &[Stealer<Task>] =
+        //     stealers.into_iter().map(|(s, _)| s).collect().as_slice();
+
+        let stealers2 = Arc::clone(&stealers);
+        let worker_handles = stealers2.iter().map(|(s, w)| {
             let thumbs_processed = Arc::clone(&thumbs_processed);
+            let deque = Arc::clone(&deque);
+            let stealers = Arc::clone(&stealers);
             println!("hello 1");
             tokio::task::spawn_blocking(move || {
                 let mut running = true;
 
                 println!("hello 4");
-                while running {
-                    match s.steal() {
-                        Steal::Success((path, thumb_tx)) => {
+                while let task = find_task(&w, Arc::clone(&deque), stealers) {
+                    // match s.steal() {
+                    match task {
+                        // Steal::Success((path, thumb_tx)) => {
+                        Some((path, thumb_tx)) => {
                             if let Some((decoded_image, width_px, height_px)) = resize_image(&path)
                             {
                                 let mut output = Box::new(vec![]);
@@ -228,15 +258,21 @@ where
                                 debug!("Processing {:.2?}", &time_started_local.elapsed());
                             }
                         }
-                        Steal::Empty => {
+                        None => {
                             if &thumbs_processed.load() == &total_paths {
+                                println!("hello empty {}", &thumbs_processed.load());
                                 running = false;
                             }
-                            // println!("hello empty {}", &thumbs_processed.load());
-                        }
-                        Steal::Retry => {
-                            println!("retry");
-                        }
+                        } // Steal::Empty => {
+                          //     if &thumbs_processed.load() == &total_paths {
+                          //         println!("hello empty {}", &thumbs_processed.load());
+                          //         running = false;
+                          //     }
+                          //     &deque.steal_batch_and_pop(&w);
+                          // }
+                          // Steal::Retry => {
+                          //     println!("retry");
+                          // }
                     }
                 }
             })
