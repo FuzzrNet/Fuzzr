@@ -8,6 +8,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::data::content::PathThumb;
+use crate::data::fs_ops::THUMB_SIZE;
 use crate::message::Message;
 use crate::ui::style::Theme;
 
@@ -80,8 +81,14 @@ impl PublishPage {
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
         if self.publish_thumbs.len() > 0 {
             // Thumbnail column distribution algorithm
-            let col_width = Length::Units(256);
-            let col_count = (self.window_width / (256 + 10 + 10)) as usize;
+            let col_width = Length::Units(THUMB_SIZE as u16);
+            let col_count = (self.window_width / (THUMB_SIZE as u16 + 2)) as usize;
+            let row_spacing = f32::round(
+                (self.window_width as f32 - (col_count as f32 * THUMB_SIZE))
+                    / (col_count as f32 - 1.0),
+            ) as u16;
+
+            println!("row spacing: {}", row_spacing);
 
             let mut image_grid: Vec<Vec<usize>> = vec![vec![]; col_count];
             let mut heights: Vec<u16> = vec![0; col_count];
@@ -109,12 +116,12 @@ impl PublishPage {
                             })
                             .collect(),
                     )
+                    .spacing(row_spacing)
                     .width(col_width)
                     .into();
                     let el: Element<Message> = Container::new::<Element<Message>>(col)
                         .width(Length::Fill)
                         .height(Length::Fill)
-                        // .style(*theme)
                         .into();
                     el
                 })
@@ -125,15 +132,12 @@ impl PublishPage {
             Container::new(
                 Scrollable::new(&mut self.scroll)
                     .push(row)
-                    .width(Length::Fill)
-                    .align_items(Align::Center)
-                    .spacing(2),
+                    .width(Length::Shrink)
+                    .align_items(Align::Center),
             )
             .width(Length::Fill)
             .height(Length::Fill)
-            .padding(10)
             .center_x()
-            .center_y()
             .style(*theme)
             .into()
         } else {
@@ -144,7 +148,6 @@ impl PublishPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
-            .center_y()
             .into()
         }
     }

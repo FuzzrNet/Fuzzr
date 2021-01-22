@@ -213,8 +213,6 @@ impl Application for Fuzzr {
         };
 
         let content: Element<_> = Column::new()
-            .spacing(20)
-            .padding(20)
             .push(toolbar.view(theme))
             .align_items(Align::Center)
             .push(page)
