@@ -6,18 +6,23 @@ use iced::{
 
 // use crate::data::initialize;
 use crate::message::Message;
+use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct DashPage {
     // items: Vec<ContentItem>,
-// night_mode: button::State,
+}
+
+impl Default for DashPage {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl DashPage {
     pub fn new() -> DashPage {
         DashPage {
             // items: vec![],
-            // night_mode: button::State::new(),
         }
     }
 
@@ -27,7 +32,7 @@ impl DashPage {
         }
     }
 
-    pub fn view(&self) -> Element<Message> {
+    pub fn view(&self, theme: &Theme) -> Element<Message> {
         // let DashPage { .. } = self;
 
         let user_stats = Column::new()
@@ -67,6 +72,7 @@ impl DashPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
+            .style(*theme)
             .into()
     }
 }

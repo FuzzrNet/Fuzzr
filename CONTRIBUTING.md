@@ -6,7 +6,7 @@ It's separate in case we need to add more clarification items as they come up. A
 
 # Contributing
 
-Contributions take a variety of forms, not just writing code. We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts. _Contributions welcome._
+Contributions take a variety of forms, not just writing code. We love to hear feedback and ideas. Feel free to leave some issues, or go through our current issues and PRs, and give us your thoughts.
 
 ## Communication
 
@@ -22,9 +22,15 @@ Contributing should be easy, and the only hard installation pre-requisites neede
 
 We try to work within a monorepo for code that we maintain that is relevant to a single set of related tools and compiled binaries.
 
-Simply fork this repository, make your changes, and we'll 
+Simply fork this repository, make your changes, submit a PR, and we'll review it.
 
-Please use rustfmt before submitting, or else CI will yell at you.
+Feel free to coordinate with us further in our Discord server.
+
+Please use rustfmt before submitting, or else CI will yell at you. We also use clippy linting, and that might yell at you, too.
+
+- `cargo fmt`
+- `cargo clippy`
+- `cargo test`
 
 Don't worry about rebasing, we just use merge.
 

@@ -1,12 +1,25 @@
 [package]
 name = "fuzzr"
-version = "0.0.2"
+version = "0.0.3"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
 ]
 edition = "2018"
+description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
+documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
+homepage = "https://fuzzr.net"
+repository = "https://github.com/FuzzrNet/Fuzzr"
 license = "Unlicense"
+keywords = ["ipfs", "p2p", "gui", "self-hosted"]
+categories = [
+  "cryptography",
+  "filesystem",
+  "multimedia",
+  "text-editors",
+  "web-programming"
+]
+exclude = ["docs", ".github", ".vscode"]
 
 [build]
 incremental = true
@@ -15,9 +28,6 @@ incremental = true
 # strip = "symbols" # https://github.com/rust-lang/rust/issues/72110
 lto = true
 codegen-units = 1
-
-[dev-dependencies]
-tempfile = "3.1"
 
 [dependencies]
 # Debugging
@@ -32,22 +42,34 @@ async-std = "=1.8.0"
 rayon = "1.5"
 directories-next = "2.0"
 # UI
-iced = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06", features = [
+iced = { version = "0.2", features = [
   "wgpu",
   "default_system_font",
   "image",
   "async-std"
 ] }
-iced_native = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
-iced_futures = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06" }
-# IPFS
-ipfs-embed = { git = "https://github.com/ipfs-rust/ipfs-embed.git", rev = "a852c5f637dfb08a97d5a08a08cc86e81f5c9d96" }
-libipld = "0.8"
+iced_native = "0.3"
+iced_futures = "0.2"
 # Data
+# reqwest = "0.10"
 sled = "0.34"
 image = "0.23"
 infer = "0.3"
 walkdir = "2.3"
-# Todo
+# IPFS
+ipfs-embed = "0.10"
+libipld = "0.8"
+
 # ipld-collections = "0.3.0"
-# reqwest = "0.10"
+[dev-dependencies]
+tempfile = "3.1"
+criterion = "0.3"
+
+[[bin]]
+name = "fuzzr"
+test = true
+bench = false
+#
+# [[bench]]
+# name = "ipfs"
+# harness = false

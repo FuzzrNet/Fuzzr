@@ -9,6 +9,7 @@ use std::time::Duration;
 
 use crate::data::content::PathThumb;
 use crate::message::Message;
+use crate::ui::style::Theme;
 
 async fn lock_insert(
     publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
@@ -37,6 +38,12 @@ pub struct PublishPage {
     publish_thumbs: Vec<PathThumb>,
     thumb_capacity: usize,
     window_width: u16,
+}
+
+impl Default for PublishPage {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl PublishPage {
@@ -70,7 +77,7 @@ impl PublishPage {
         }
     }
 
-    pub fn view(&mut self) -> Element<Message> {
+    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
         if self.publish_thumbs.len() > 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(256);
@@ -127,6 +134,7 @@ impl PublishPage {
             .padding(10)
             .center_x()
             .center_y()
+            .style(*theme)
             .into()
         } else {
             Container::new(
