@@ -5,9 +5,8 @@ use async_std::task::sleep;
 use crossbeam_utils::atomic::AtomicCell;
 use iced::Subscription;
 use iced_futures::futures::{stream, StreamExt};
-use image::codecs::jpeg::JpegEncoder;
 use image::io::Reader as ImageReader;
-use image::{DynamicImage, GenericImageView};
+use image::GenericImageView;
 use log::{debug, error};
 use par_stream::{ParMapUnordered, ParStreamExt};
 use std::hash::Hash;
@@ -44,9 +43,7 @@ pub enum Progress {
         remaining: isize,
     },
     Error {
-        start: Instant,
         error: String,
-        path: PathBuf,
     },
     Finished,
     Dormant,
@@ -83,18 +80,40 @@ pub fn process_paths(paths: Arc<Mutex<Vec<PathBuf>>>) -> iced::Subscription<Prog
     // let state = Arc::new(AtomicCell::new(0));
 }
 
-fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
+fn resize_image(path: &PathBuf) -> Option<PathThumb> {
     let path = path.clone();
 
-    match ImageReader::open(&path).unwrap().decode() {
+    match ImageReader::open(&path)
+        .unwrap()
+        .with_guessed_format()
+        .unwrap()
+        .decode()
+    {
         Ok(img) => {
-            let (width, height) = img.dimensions();
-            let aspect_ratio = height as f32 / width as f32;
-            let width = THUMB_SIZE;
-            let height = THUMB_SIZE * aspect_ratio;
-            let width = width as u32;
-            let height = height.round() as u32;
-            Some((img.thumbnail_exact(width, height), width, height))
+            let (width_px, height_px) = img.dimensions();
+            let aspect_ratio = height_px as f32 / width_px as f32;
+            let width_px = THUMB_SIZE;
+            let height_px = THUMB_SIZE * aspect_ratio;
+            let width_px = width_px as u32;
+            let height_px = height_px.round() as u32;
+
+            let thumbnail = img.thumbnail_exact(width_px, height_px);
+
+            let mime_type = "image/jpeg".to_string();
+            let image = thumbnail.into_bgra8().into_vec().into_boxed_slice();
+
+            let metadata = ImageMetadata {
+                size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted
+                mime_type,
+                width_px,
+                height_px,
+            };
+
+            Some(PathThumb {
+                path,
+                image,
+                metadata,
+            })
         }
         Err(err) => {
             error!(
@@ -122,8 +141,7 @@ where
         _input: stream::BoxStream<'static, I>,
     ) -> stream::BoxStream<'static, Self::Output> {
         stream::unfold(
-            State::Ready {
-                start: Instant::now(),
+            State::Dormant {
                 paths: self.paths,
                 remaining: Arc::new(AtomicCell::new(0)),
             },
@@ -144,33 +162,11 @@ where
                                 let remaining = Arc::clone(&remaining_ref);
                                 debug!("Processing {:.2?}, Path: {:?}", &start.elapsed(), &path);
                                 move || {
-                                    if let Some((decoded_image, width_px, height_px)) =
-                                        resize_image(&path)
-                                    {
-                                        let mut output = Box::new(vec![]);
-                                        let mut encoder = JpegEncoder::new(&mut output);
-                                        encoder.encode_image(&decoded_image).unwrap();
-
-                                        let size_bytes = output.len() as u64;
-                                        let mime_type = "image/jpeg".to_string();
-
-                                        let metadata = ImageMetadata {
-                                            size_bytes,
-                                            mime_type,
-                                            width_px,
-                                            height_px,
-                                        };
-
-                                        let image = output.into_boxed_slice();
-
+                                    if let Some(thumb) = resize_image(&path) {
                                         remaining.fetch_sub(1);
 
                                         Progress::Updated {
-                                            thumb: PathThumb {
-                                                path,
-                                                image,
-                                                metadata,
-                                            },
+                                            thumb,
                                             remaining: remaining.load(),
                                             start,
                                         }
@@ -183,7 +179,7 @@ where
 
                                         remaining.fetch_sub(1);
 
-                                        Progress::Error { start, error, path }
+                                        Progress::Error { error }
                                     }
                                 }
                             });
@@ -247,24 +243,5 @@ where
             },
         )
         .boxed()
-
-        //     |(mut paths, start)| async move {
-        //         match paths.next().await {
-        //             Some(progress) => Some((progress, (paths, start))),
-        //             None => {
-        //                 let error = format!("Error decoding image after {:.2?}", &start.elapsed(),);
-        //                 Some((Progress::Error(error), (paths, start)))
-        //             }
-        //         }
-        //     }, // {
-        //        //     Some(p) => Some((paths, p)),
-        //        //     None => None,
-        //        // }
-        // ))
-        // .map(|output| {
-        //     let state = Arc::clone(&state);
-        //     output
-        // })
-        // .boxed()
     }
 }

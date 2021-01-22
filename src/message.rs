@@ -3,6 +3,7 @@ use ipfs_embed::core::{Cid, Error, Result};
 
 use crate::data::content::{ContentItem, PathThumb};
 use crate::data::ipfs_client::IpfsClient;
+use crate::data::thumbnails;
 use crate::page;
 use crate::ui::style::Theme;
 
@@ -22,6 +23,7 @@ pub enum Message {
     ContentThumbProcessing(usize),
     ContentReadyToPublish(()),
     PathThumbsProcessed(Vec<PathThumb>),
+    PathThumbProgress(thumbnails::Progress),
     ViewPageInputChanged(String),
     ViewPageLoadContent,
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),
