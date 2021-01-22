@@ -25,7 +25,7 @@ use std::path::PathBuf;
 // What is needed to create this task?
 pub struct ProcessThumbs {
     paths: Arc<Mutex<Vec<PathBuf>>>,
-    // state: Arc<AtomicCell<usize>>,
+    // state: Arc<AtomicCell<isize>>,
 }
 
 // Size in bytes (max value: 18.45 exabytes)
@@ -42,12 +42,12 @@ pub struct ProcessThumbs {
 pub enum Progress {
     Started {
         start: Instant,
-        remaining: usize,
+        remaining: isize,
     },
     Updated {
         start: Instant,
         thumb: PathThumb,
-        remaining: usize,
+        remaining: isize,
     },
     Error {
         start: Instant,
@@ -63,17 +63,17 @@ enum State {
     Ready {
         start: Instant,
         paths: Arc<Mutex<Vec<PathBuf>>>,
-        remaining: Arc<AtomicCell<usize>>,
+        remaining: Arc<AtomicCell<isize>>,
     },
     Updated {
         start: Instant,
         paths: Arc<Mutex<Vec<PathBuf>>>,
         paths_stream: ParMapUnordered<Progress>,
-        remaining: Arc<AtomicCell<usize>>,
+        remaining: Arc<AtomicCell<isize>>,
     },
     Dormant {
         paths: Arc<Mutex<Vec<PathBuf>>>,
-        remaining: Arc<AtomicCell<usize>>,
+        remaining: Arc<AtomicCell<isize>>,
     },
 }
 
@@ -141,6 +141,7 @@ where
                         remaining,
                     } => {
                         let paths_vec = paths.lock().await.to_vec();
+                        remaining.fetch_add(paths_vec.len() as isize);
                         let thumbs_remaining = remaining.load();
                         let remaining = Arc::clone(&remaining);
                         let remaining_ref = Arc::clone(&remaining);
@@ -193,7 +194,7 @@ where
                                 }
                             });
 
-                        paths.lock().await.to_vec().clear();
+                        paths.lock().await.clear();
 
                         Some((
                             Progress::Started {

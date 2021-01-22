@@ -19,6 +19,7 @@ async fn lock_insert(
     publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
     thumb: PathThumb,
     elapsed: Duration,
+    remaining: isize,
 ) {
     let mut publish_thumbs = publish_thumbs.lock().unwrap();
     debug!(
@@ -27,9 +28,10 @@ async fn lock_insert(
     );
     publish_thumbs.push(thumb);
     info!(
-        "thumbnailed {} items after {:.2?}",
+        "thumbnailed {} items after {:.2?}. {} items remaining.",
         publish_thumbs.len(),
-        elapsed
+        elapsed,
+        remaining
     );
 }
 
@@ -62,7 +64,12 @@ impl PublishPage {
                 } => {
                     self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
                     Command::perform(
-                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, start.elapsed()),
+                        lock_insert(
+                            Arc::clone(&self.publish_thumbs),
+                            thumb,
+                            start.elapsed(),
+                            remaining,
+                        ),
                         Message::ContentReadyToPublish,
                     )
                 }
