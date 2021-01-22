@@ -64,8 +64,6 @@ impl PublishPage {
                     / (col_count as f32 - 1.0),
             ) as u16;
 
-            println!("row spacing: {}", row_spacing);
-
             let mut image_grid: Vec<Vec<usize>> = vec![vec![]; col_count];
             let mut heights: Vec<u16> = vec![0; col_count];
 

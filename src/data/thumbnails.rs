@@ -147,7 +147,6 @@ where
                                     if let Some((decoded_image, width_px, height_px)) =
                                         resize_image(&path)
                                     {
-                                        println!("debug 1");
                                         let mut output = Box::new(vec![]);
                                         let mut encoder = JpegEncoder::new(&mut output);
                                         encoder.encode_image(&decoded_image).unwrap();
@@ -166,7 +165,6 @@ where
 
                                         remaining.fetch_sub(1);
 
-                                        println!("debug 2");
                                         Progress::Updated {
                                             thumb: PathThumb {
                                                 path,
