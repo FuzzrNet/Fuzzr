@@ -1,26 +1,20 @@
 // For processing image thumbnails in parallel
 
-// Boilerplate
-use iced::Subscription;
-use iced_futures::futures::{self, stream, Stream, StreamExt};
-use log::{debug, error};
-use std::time::{Duration, Instant};
-
-// Task dependencies
-use crate::data::content::{ImageMetadata, PathThumb};
-// use async_std::future;
-// use async_std::prelude::*;
-// use async_std::task;
 use async_std::sync::{Arc, Mutex};
 use async_std::task::sleep;
 use crossbeam_utils::atomic::AtomicCell;
+use iced::Subscription;
+use iced_futures::futures::{stream, StreamExt};
 use image::codecs::jpeg::JpegEncoder;
-use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
+use log::{debug, error};
 use par_stream::{ParMapUnordered, ParStreamExt};
 use std::hash::Hash;
 use std::path::PathBuf;
+use std::time::{Duration, Instant};
+
+use crate::data::content::{ImageMetadata, PathThumb};
 
 // What is needed to create this task?
 pub struct ProcessThumbs {
@@ -188,6 +182,8 @@ where
                                             &start.elapsed(),
                                             &path,
                                         );
+
+                                        remaining.fetch_sub(1);
 
                                         Progress::Error { start, error, path }
                                     }

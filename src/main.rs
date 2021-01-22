@@ -10,7 +10,6 @@ use iced_native::{
 use async_std::sync::{Arc, Mutex};
 use log::{error, info};
 use std::path::PathBuf;
-use std::sync::{Arc as SyncArc, Mutex as SyncMutex};
 
 mod data;
 mod message;

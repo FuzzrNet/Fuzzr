@@ -4,10 +4,6 @@ use iced::{
 };
 
 use log::{debug, error, info};
-use std::collections::btree_map::BTreeMap;
-use std::iter;
-use std::path::PathBuf;
-use std::pin::Pin;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
