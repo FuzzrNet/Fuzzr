@@ -15,22 +15,10 @@ use std::time::{Duration, Instant};
 
 use crate::data::content::{ImageMetadata, PathThumb};
 
-// What is needed to create this task?
 pub struct ProcessThumbs {
     paths: Arc<Mutex<Vec<PathBuf>>>,
-    // state: Arc<AtomicCell<isize>>,
 }
 
-// Size in bytes (max value: 18.45 exabytes)
-// type Size = u64;
-
-// #[derive(Debug, Clone)]
-// struct Perf {
-//     bytes: Size,
-//     elapsed: Duration,
-// }
-
-// For task output
 #[derive(Debug, Clone)]
 pub enum Progress {
     Started {
@@ -70,14 +58,8 @@ enum State {
 
 const THUMB_SIZE: f32 = 256.0;
 
-// Utility function
 pub fn process_paths(paths: Arc<Mutex<Vec<PathBuf>>>) -> iced::Subscription<Progress> {
-    Subscription::from_recipe(ProcessThumbs {
-        paths,
-        // state,
-    })
-    // debug!("Processing {} paths", paths.len());
-    // let state = Arc::new(AtomicCell::new(0));
+    Subscription::from_recipe(ProcessThumbs { paths })
 }
 
 fn resize_image(path: &PathBuf) -> Option<PathThumb> {
@@ -125,7 +107,6 @@ fn resize_image(path: &PathBuf) -> Option<PathThumb> {
     }
 }
 
-// Task implementation
 impl<H, I> iced_native::subscription::Recipe<H, I> for ProcessThumbs
 where
     H: std::hash::Hasher,

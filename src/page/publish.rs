@@ -19,7 +19,6 @@ pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
     publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
-    thumb_capacity: usize,
     window_width: u16,
 }
 
@@ -54,7 +53,6 @@ impl PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
             publish_thumbs: Arc::new(Mutex::new(BTreeMap::new())),
-            thumb_capacity: 0,
             window_width: 800,
         }
     }
@@ -66,18 +64,15 @@ impl PublishPage {
                     thumb,
                     start,
                     remaining,
-                } => {
-                    self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
-                    Command::perform(
-                        lock_insert(
-                            Arc::clone(&self.publish_thumbs),
-                            thumb,
-                            start.elapsed(),
-                            remaining,
-                        ),
-                        Message::ContentReadyToPublish,
-                    )
-                }
+                } => Command::perform(
+                    lock_insert(
+                        Arc::clone(&self.publish_thumbs),
+                        thumb,
+                        start.elapsed(),
+                        remaining,
+                    ),
+                    Message::ContentReadyToPublish,
+                ),
                 thumbnails::Progress::Error { error } => {
                     error!("{}", error);
                     Command::none()
