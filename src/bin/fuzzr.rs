@@ -12,9 +12,10 @@ use log::{error, info};
 use std::path::PathBuf;
 
 use fuzzr::{
-    data::fs_ops::{thumbnail_images, walk_dir},
+    data::fs_ops::walk_dir,
     data::ipfs_client::{IpfsClient, IpfsClientRef},
     data::ipfs_ops::load_file,
+    data::thumbnails,
     message::Message,
     page::dashboard::DashPage,
     page::feed::FeedPage,
@@ -26,6 +27,15 @@ use fuzzr::{
     ui::style::Theme,
     ui::toolbar::Toolbar,
 };
+
+async fn push_thumb_paths(
+    paths: Vec<PathBuf>,
+    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
+) -> usize {
+    let len = paths.len();
+    publish_thumbs_paths.lock().await.extend(paths);
+    len
+}
 
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
@@ -122,7 +132,10 @@ impl Application for Fuzzr {
                 }
                 Message::FileDroppedOnWindow(path) => {
                     let paths = walk_dir(&path);
-                    Command::perform(thumbnail_images(paths), Message::PathThumbsProcessed)
+                    Command::perform(
+                        push_thumb_paths(paths, Arc::clone(&self.publish_thumbs_paths)),
+                        Message::ContentThumbProcessing,
+                    )
                 }
                 // store_file(path, ipfs_client);
                 // Command::perform(, Message::ContentDroppedOnWindow)
@@ -169,16 +182,18 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        Subscription::batch(vec![iced_native::subscription::events_with(
-            |event, _status| match event {
+        Subscription::batch(vec![
+            iced_native::subscription::events_with(|event, _status| match event {
                 Event::Window(window_event) => match window_event {
                     Resized { width, height } => Some(Message::WindowResized { width, height }),
                     FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
                     _ => None,
                 },
                 _ => None,
-            },
-        )])
+            }),
+            thumbnails::process_paths(Arc::clone(&self.publish_thumbs_paths))
+                .map(Message::PathThumbProgress),
+        ])
     }
 
     fn view(&mut self) -> Element<Message> {
