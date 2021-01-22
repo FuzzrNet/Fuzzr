@@ -10,7 +10,7 @@ use image::GenericImageView;
 use log::{debug, error};
 use par_stream::{ParMapUnordered, ParStreamExt};
 use std::hash::Hash;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
 
 use crate::data::content::{ImageMetadata, PathThumb};
@@ -62,8 +62,8 @@ pub fn process_paths(paths: Arc<Mutex<Vec<PathBuf>>>) -> iced::Subscription<Prog
     Subscription::from_recipe(ProcessThumbs { paths })
 }
 
-fn resize_image(path: &PathBuf) -> Option<PathThumb> {
-    let path = path.clone();
+fn resize_image(path: &Path) -> Option<PathThumb> {
+    let path = path.to_path_buf();
 
     match ImageReader::open(&path)
         .unwrap()
