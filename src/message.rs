@@ -1,9 +1,8 @@
 use async_std::sync::Arc;
 use ipfs_embed::core::{Cid, Error, Result};
 
-use crate::data::content::ContentItem;
+use crate::data::content::{ContentItem, PathThumb};
 use crate::data::ipfs_client::IpfsClient;
-use crate::data::thumbnails;
 use crate::page;
 
 use std::path::PathBuf;
@@ -20,8 +19,8 @@ pub enum Message {
     ContentDroppedOnWindow(Vec<PathBuf>),
     // ContentThumbProcessed(Result<(), Arc<Error>>),
     ContentThumbProcessing(usize),
-    ContentThumbProgress(thumbnails::Progress),
     ContentReadyToPublish(()),
+    PathThumbsProcessed(Vec<PathThumb>),
     ViewPageInputChanged(String),
     ViewPageLoadContent,
     ViewPageContentLoaded(Result<ContentItem, Arc<Error>>),

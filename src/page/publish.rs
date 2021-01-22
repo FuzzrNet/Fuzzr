@@ -8,7 +8,6 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use crate::data::content::PathThumb;
-use crate::data::thumbnails;
 use crate::message::Message;
 
 async fn lock_insert(
@@ -35,7 +34,7 @@ async fn lock_insert(
 pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
-    publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
+    publish_thumbs: Vec<PathThumb>,
     thumb_capacity: usize,
     window_width: u16,
 }
@@ -44,7 +43,7 @@ impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
-            publish_thumbs: Arc::new(Mutex::new(Vec::new())),
+            publish_thumbs: vec![],
             thumb_capacity: 0,
             window_width: 800,
         }
@@ -52,29 +51,10 @@ impl PublishPage {
 
     pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            Message::ContentThumbProgress(progress) => match progress {
-                thumbnails::Progress::Updated {
-                    thumb,
-                    start,
-                    remaining,
-                } => {
-                    self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
-                    Command::perform(
-                        lock_insert(
-                            Arc::clone(&self.publish_thumbs),
-                            thumb,
-                            start.elapsed(),
-                            remaining,
-                        ),
-                        Message::ContentReadyToPublish,
-                    )
-                }
-                thumbnails::Progress::Error { start, error, path } => {
-                    error!("{}", error);
-                    Command::none()
-                }
-                _ => Command::none(),
-            },
+            Message::PathThumbsProcessed(thumbs) => {
+                self.publish_thumbs = thumbs;
+                Command::none()
+            }
             Message::WindowResized { width, height: _ } => {
                 self.window_width = width as u16;
                 Command::none()
@@ -91,9 +71,7 @@ impl PublishPage {
     }
 
     pub fn view(&mut self) -> Element<Message> {
-        let publish_thumbs = self.publish_thumbs.lock().unwrap();
-
-        if publish_thumbs.len() > 0 {
+        if self.publish_thumbs.len() > 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(256);
             let col_count = (self.window_width / (256 + 10 + 10)) as usize;
@@ -101,7 +79,7 @@ impl PublishPage {
             let mut image_grid: Vec<Vec<usize>> = vec![vec![]; col_count];
             let mut heights: Vec<u16> = vec![0; col_count];
 
-            for (i, thumb) in publish_thumbs.iter().enumerate() {
+            for (i, thumb) in self.publish_thumbs.iter().enumerate() {
                 let height_min = heights.iter().min().unwrap();
                 let height_index = &heights.iter().position(|h| h == height_min).unwrap();
                 image_grid[*height_index].push(i);
@@ -115,8 +93,10 @@ impl PublishPage {
                         image_column
                             .iter()
                             .map(|i| {
-                                Image::new(image::Handle::from_memory(
-                                    publish_thumbs[*i].image.to_vec(),
+                                Image::new(image::Handle::from_pixels(
+                                    self.publish_thumbs[*i].metadata.width_px,
+                                    self.publish_thumbs[*i].metadata.height_px,
+                                    self.publish_thumbs[*i].image.to_vec(),
                                 ))
                                 .into()
                             })

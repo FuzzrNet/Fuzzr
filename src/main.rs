@@ -28,10 +28,9 @@ use page::view::ViewPage;
 use message::Message;
 use ui::page_selector::PageSelector;
 
-use data::fs_ops::walk_dir;
+use data::fs_ops::{thumbnail_images, walk_dir};
 use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
-use data::thumbnails;
 
 async fn push_thumb_paths(
     paths: Vec<PathBuf>,
@@ -139,10 +138,7 @@ impl Application for Fuzzr {
                 }
                 Message::FileDroppedOnWindow(path) => {
                     let paths = walk_dir(&path);
-                    Command::perform(
-                        push_thumb_paths(paths, Arc::clone(&self.publish_thumbs_paths)),
-                        Message::ContentThumbProcessing,
-                    )
+                    Command::perform(thumbnail_images(paths), Message::PathThumbsProcessed)
                 }
                 // store_file(path, ipfs_client);
                 // Command::perform(, Message::ContentDroppedOnWindow)
@@ -185,18 +181,16 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        Subscription::batch(vec![
-            iced_native::subscription::events_with(|event, _status| match event {
+        Subscription::batch(vec![iced_native::subscription::events_with(
+            |event, _status| match event {
                 Event::Window(window_event) => match window_event {
                     Resized { width, height } => Some(Message::WindowResized { width, height }),
                     FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
                     _ => None,
                 },
                 _ => None,
-            }),
-            thumbnails::process_paths(Arc::clone(&self.publish_thumbs_paths))
-                .map(Message::ContentThumbProgress),
-        ])
+            },
+        )])
     }
 
     fn view(&mut self) -> Element<Message> {
