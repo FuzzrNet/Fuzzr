@@ -1,5 +1,5 @@
 use log::{error, info};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Instant;
 
 use walkdir::WalkDir;
@@ -10,7 +10,7 @@ use rayon::prelude::*;
 
 use crate::data::content::{ImageMetadata, PathThumb};
 
-pub fn walk_dir(path: &PathBuf) -> Vec<PathBuf> {
+pub fn walk_dir(path: &Path) -> Vec<PathBuf> {
     let start = Instant::now();
     let mut paths = vec![];
 
