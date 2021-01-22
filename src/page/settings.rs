@@ -1,4 +1,4 @@
-use iced::{text_input, Column, Container, Element, Length, Row, Text, TextInput};
+use iced::{text_input, Column, Command, Container, Element, Length, Row, Text, TextInput};
 
 use crate::message::Message;
 use crate::ui::style::Theme;
@@ -27,16 +27,18 @@ impl SettingsPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::ForegroundChanged(value) => {
                 self.foreground_color = value;
+                Command::none()
             }
             Message::BackgroundChanged(value) => {
                 self.background_color = value;
+                Command::none()
             }
-            _ => {}
-        };
+            _ => Command::none(),
+        }
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {

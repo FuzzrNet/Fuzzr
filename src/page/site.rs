@@ -1,6 +1,6 @@
 use iced::{
-    button, text_input, Button, Column, Container, Element, HorizontalAlignment, Length, Row, Text,
-    TextInput,
+    button, text_input, Button, Column, Command, Container, Element, HorizontalAlignment, Length,
+    Row, Text, TextInput,
 };
 
 use crate::message::Message;
@@ -28,9 +28,13 @@ impl SitePage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
-        if let Message::SitePageContentChanged(value) = msg {
-            self.input_value = value;
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
+        match msg {
+            Message::SitePageContentChanged(value) => {
+                self.input_value = value;
+                Command::none()
+            }
+            _ => Command::none(),
         }
     }
 

@@ -1,14 +1,20 @@
 use iced::{
-    Align, Application, Color, Column, Command, Container, Element, Length, Settings, Subscription,
+    window, Align, Application, Color, Column, Command, Container, Element, Length, Settings,
+    Subscription,
 };
-use iced_native::{window::Event::FileDropped, Event};
+use iced_native::{
+    window::Event::{FileDropped, Resized},
+    Event,
+};
 
 use async_std::sync::{Arc, Mutex};
 use log::{error, info};
+use std::path::PathBuf;
 
 use fuzzr::{
+    data::fs_ops::{thumbnail_images, walk_dir},
     data::ipfs_client::{IpfsClient, IpfsClientRef},
-    data::ipfs_ops::{load_file, store_file},
+    data::ipfs_ops::load_file,
     message::Message,
     page::dashboard::DashPage,
     page::feed::FeedPage,
@@ -28,7 +34,13 @@ pub fn main() -> iced::Result {
 
     pretty_env_logger::init();
 
-    Fuzzr::run(Settings::default())
+    Fuzzr::run(Settings {
+        window: window::Settings {
+            size: (800, 600),
+            ..window::Settings::default()
+        },
+        ..Settings::default()
+    })
 }
 
 #[derive(Clone, Debug)]
@@ -45,9 +57,9 @@ struct Pages {
 pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
-    current_page: PageType,
     toolbar: Toolbar,
     background_color: Color,
+    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
     theme: Theme,
 }
 
@@ -69,10 +81,10 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Publish, // Default page
                 toolbar: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
+                publish_thumbs_paths: Arc::new(Mutex::new(Vec::new())),
                 theme: Theme::default(),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
@@ -88,83 +100,96 @@ impl Application for Fuzzr {
     }
 
     fn update(&mut self, event: Message) -> Command<Message> {
-        // Update all pages with all messages.
-        self.pages.dash.update(event.clone());
-        self.pages.feed.update(event.clone());
-        self.pages.publish.update(event.clone());
-        self.pages.view.update(event.clone());
-        self.pages.site.update(event.clone());
-        self.pages.settings.update(event.clone());
-
-        match event {
-            Message::PageChanged(page_type) => {
-                self.current_page = page_type.clone();
-                self.toolbar.active_page = page_type;
-                Command::none()
-            }
-            Message::IpfsReady(ipfs_client) => {
-                if let Ok(client) = ipfs_client {
-                    self.ipfs_client = Some(Arc::new(Mutex::new(client)))
+        Command::batch(vec![
+            // Update all pages with all messages and batch any resulting commands.
+            self.pages.dash.update(event.clone()),
+            self.pages.feed.update(event.clone()),
+            self.pages.publish.update(event.clone()),
+            self.pages.view.update(event.clone()),
+            self.pages.site.update(event.clone()),
+            self.pages.settings.update(event.clone()),
+            // Global message update handling
+            match event {
+                Message::PageChanged(page_type) => {
+                    self.toolbar.active_page = page_type;
+                    Command::none()
                 }
-                Command::none()
-            }
-            Message::FileDroppedOnWindow(path) => match self.ipfs_client.clone() {
-                Some(ipfs_client) => {
-                    Command::perform(store_file(path, ipfs_client), Message::ContentAddedToIpfs)
+                Message::IpfsReady(ipfs_client) => {
+                    if let Ok(client) = ipfs_client {
+                        self.ipfs_client = Some(Arc::new(Mutex::new(client)))
+                    };
+                    Command::none()
                 }
-                None => Command::none(),
-            },
-            Message::ContentAddedToIpfs(cid) => {
-                match cid {
-                    Ok(maybe_cid) => match maybe_cid {
-                        Some(cid) => {
-                            info!("Content successfully added to IPFS! Cid: {}", cid);
+                Message::FileDroppedOnWindow(path) => {
+                    let paths = walk_dir(&path);
+                    Command::perform(thumbnail_images(paths), Message::PathThumbsProcessed)
+                }
+                // store_file(path, ipfs_client);
+                // Command::perform(, Message::ContentDroppedOnWindow)
+                // Command::perform(
+                //     process_paths(Arc::clone(&self.thumbs)),
+                //     Message::ContentThumbProcessed,
+                // )
+                // Command::none()
+                Message::ContentAddedToIpfs(cid) => {
+                    match cid {
+                        Ok(maybe_cid) => {
+                            match maybe_cid {
+                                Some(cid) => {
+                                    info!("Content successfully added to IPFS! Cid: {}", cid);
+                                }
+                                None => {
+                                    error!("No CID was returned when attempting to store content in IPFS.");
+                                }
+                            }
                         }
-                        None => {
-                            error!("No CID was returned when attempting to store content in IPFS.");
+                        Err(err) => {
+                            error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
                         }
-                    },
-                    Err(err) => {
-                        error!("Something went wrong when attempting to add content to IPFS. Error: {}", err);
+                    }
+                    Command::none()
+                }
+                Message::ViewPageLoadContent => {
+                    let cid_string = self.pages.view.input_value.clone();
+                    match self.ipfs_client.clone() {
+                        Some(ipfs_client) => Command::perform(
+                            load_file(cid_string, ipfs_client),
+                            Message::ViewPageContentLoaded,
+                        ),
+                        None => Command::none(),
                     }
                 }
-                Command::none()
-            }
-            Message::ViewPageLoadContent => {
-                let cid_string = self.pages.view.input_value.clone();
-                match self.ipfs_client.clone() {
-                    Some(ipfs_client) => Command::perform(
-                        load_file(cid_string, ipfs_client),
-                        Message::ViewPageContentLoaded,
-                    ),
-                    None => Command::none(),
+                Message::ThemeChanged(theme) => {
+                    self.theme = theme;
+                    Command::none()
                 }
-            }
-            Message::ThemeChanged(theme) => {
-                self.theme = theme;
-                Command::none()
-            }
-            _ => Command::none(),
-        }
+                _ => Command::none(),
+            },
+        ])
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        iced_native::subscription::events_with(|event, _status| match event {
-            Event::Window(FileDropped(path)) => Some(Message::FileDroppedOnWindow(path)),
-            _ => None,
-        })
+        Subscription::batch(vec![iced_native::subscription::events_with(
+            |event, _status| match event {
+                Event::Window(window_event) => match window_event {
+                    Resized { width, height } => Some(Message::WindowResized { width, height }),
+                    FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
+                    _ => None,
+                },
+                _ => None,
+            },
+        )])
     }
 
     fn view(&mut self) -> Element<Message> {
         let Fuzzr {
-            current_page,
             pages,
             theme,
             toolbar,
             ..
         } = self;
 
-        let page: Element<_> = match current_page {
+        let page: Element<_> = match toolbar.active_page {
             PageType::Dashboard => pages.dash.view(theme),
             PageType::Feed => pages.feed.view(theme),
             PageType::Publish => pages.publish.view(theme),
@@ -174,8 +199,6 @@ impl Application for Fuzzr {
         };
 
         let content: Element<_> = Column::new()
-            .spacing(20)
-            .padding(20)
             .push(toolbar.view(theme))
             .align_items(Align::Center)
             .push(page)
