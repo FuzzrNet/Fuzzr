@@ -26,10 +26,8 @@ impl DashPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) -> Command<Message> {
-        match msg {
-            _ => Command::none(),
-        }
+    pub fn update(&mut self, _msg: Message) -> Command<Message> {
+        Command::none()
     }
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {

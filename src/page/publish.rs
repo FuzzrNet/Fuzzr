@@ -3,34 +3,10 @@ use iced::{
     Text,
 };
 
-use log::{debug, error, info};
-use std::sync::{Arc, Mutex};
-use std::time::Duration;
-
 use crate::data::content::PathThumb;
 use crate::data::fs_ops::THUMB_SIZE;
 use crate::message::Message;
 use crate::ui::style::Theme;
-
-async fn lock_insert(
-    publish_thumbs: Arc<Mutex<Vec<PathThumb>>>,
-    thumb: PathThumb,
-    elapsed: Duration,
-    remaining: isize,
-) {
-    let mut publish_thumbs = publish_thumbs.lock().unwrap();
-    debug!(
-        "Path:{:?}\nImage metadata: {:?}",
-        &thumb.path, &thumb.metadata
-    );
-    publish_thumbs.push(thumb);
-    info!(
-        "thumbnailed {} items after {:.2?}. {} items remaining.",
-        publish_thumbs.len(),
-        elapsed,
-        remaining
-    );
-}
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
@@ -79,7 +55,7 @@ impl PublishPage {
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
-        if self.publish_thumbs.len() > 0 {
+        if !self.publish_thumbs.is_empty() {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(THUMB_SIZE as u16);
             let col_count = (self.window_width / (THUMB_SIZE as u16 + 2)) as usize;
@@ -97,7 +73,7 @@ impl PublishPage {
                 let height_min = heights.iter().min().unwrap();
                 let height_index = &heights.iter().position(|h| h == height_min).unwrap();
                 image_grid[*height_index].push(i);
-                heights[*height_index] = heights[*height_index] + thumb.metadata.height_px as u16;
+                heights[*height_index] += thumb.metadata.height_px as u16;
             }
 
             let container_cols: Vec<Element<Message>> = image_grid

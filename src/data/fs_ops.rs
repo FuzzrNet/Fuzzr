@@ -61,7 +61,7 @@ pub async fn thumbnail_images(paths: Vec<PathBuf>) -> Vec<PathThumb> {
                         };
 
                         Some(PathThumb {
-                            path: path.to_owned(),
+                            path,
                             image,
                             metadata,
                         })

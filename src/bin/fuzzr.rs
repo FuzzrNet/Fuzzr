@@ -14,7 +14,7 @@ use std::path::PathBuf;
 use fuzzr::{
     data::fs_ops::{thumbnail_images, walk_dir},
     data::ipfs_client::{IpfsClient, IpfsClientRef},
-    data::ipfs_ops::{load_file, store_file},
+    data::ipfs_ops::load_file,
     message::Message,
     page::dashboard::DashPage,
     page::feed::FeedPage,
@@ -26,15 +26,6 @@ use fuzzr::{
     ui::style::Theme,
     ui::toolbar::Toolbar,
 };
-
-async fn push_thumb_paths(
-    paths: Vec<PathBuf>,
-    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
-) -> usize {
-    let len = paths.len();
-    publish_thumbs_paths.lock().await.extend(paths);
-    len
-}
 
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
@@ -66,7 +57,6 @@ struct Pages {
 pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
-    current_page: PageType,
     toolbar: Toolbar,
     background_color: Color,
     publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
@@ -91,7 +81,6 @@ impl Application for Fuzzr {
         (
             Fuzzr {
                 pages,
-                current_page: PageType::Publish, // Default page
                 toolbar: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
@@ -122,15 +111,13 @@ impl Application for Fuzzr {
             // Global message update handling
             match event {
                 Message::PageChanged(page_type) => {
-                    self.current_page = page_type.clone();
-                    self.toolbar.active_page = page_type.clone();
+                    self.toolbar.active_page = page_type;
                     Command::none()
                 }
                 Message::IpfsReady(ipfs_client) => {
-                    match ipfs_client {
-                        Ok(client) => self.ipfs_client = Some(Arc::new(Mutex::new(client))),
-                        Err(_) => {}
-                    }
+                    if let Ok(client) = ipfs_client {
+                        self.ipfs_client = Some(Arc::new(Mutex::new(client)))
+                    };
                     Command::none()
                 }
                 Message::FileDroppedOnWindow(path) => {
@@ -196,14 +183,13 @@ impl Application for Fuzzr {
 
     fn view(&mut self) -> Element<Message> {
         let Fuzzr {
-            current_page,
             pages,
             theme,
             toolbar,
             ..
         } = self;
 
-        let page: Element<_> = match current_page {
+        let page: Element<_> = match toolbar.active_page {
             PageType::Dashboard => pages.dash.view(theme),
             PageType::Feed => pages.feed.view(theme),
             PageType::Publish => pages.publish.view(theme),
