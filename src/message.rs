@@ -19,6 +19,7 @@ pub enum Message {
     ContentAddedToIpfs(Result<Option<Cid>, Arc<Error>>),
     ContentDroppedOnWindow(Vec<PathBuf>),
     // ContentThumbProcessed(Result<(), Arc<Error>>),
+    ContentThumbProcessing(usize),
     ContentThumbProgress(thumbnails::Progress),
     ContentReadyToPublish(()),
     ViewPageInputChanged(String),

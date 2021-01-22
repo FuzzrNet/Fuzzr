@@ -2,7 +2,7 @@
 
 // Boilerplate
 use iced::Subscription;
-use iced_futures::futures;
+use iced_futures::futures::{self, stream, Stream, StreamExt};
 use log::{debug, error};
 use std::time::{Duration, Instant};
 
@@ -11,18 +11,21 @@ use crate::data::content::{ImageMetadata, PathThumb};
 // use async_std::future;
 // use async_std::prelude::*;
 // use async_std::task;
+use async_std::sync::{Arc, Mutex};
+use async_std::task::sleep;
+use crossbeam_utils::atomic::AtomicCell;
 use image::codecs::jpeg::JpegEncoder;
 use image::imageops::FilterType;
 use image::io::Reader as ImageReader;
 use image::{DynamicImage, GenericImageView};
-use par_stream::ParStreamExt;
+use par_stream::{ParMapUnordered, ParStreamExt};
 use std::hash::Hash;
 use std::path::PathBuf;
 
 // What is needed to create this task?
 pub struct ProcessThumbs {
-    start: Instant,
-    paths: Vec<PathBuf>,
+    paths: Arc<Mutex<Vec<PathBuf>>>,
+    // state: Arc<AtomicCell<usize>>,
 }
 
 // Size in bytes (max value: 18.45 exabytes)
@@ -35,25 +38,60 @@ pub struct ProcessThumbs {
 // }
 
 // For task output
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone)]
 pub enum Progress {
-    Ready(PathBuf),
-    Finished(PathThumb, Duration),
-    Error(String),
+    Started {
+        start: Instant,
+        remaining: usize,
+    },
+    Updated {
+        start: Instant,
+        thumb: PathThumb,
+        remaining: usize,
+    },
+    Error {
+        start: Instant,
+        error: String,
+        path: PathBuf,
+    },
+    Finished,
+    Dormant,
+    Restarted,
+}
+
+enum State {
+    Ready {
+        start: Instant,
+        paths: Arc<Mutex<Vec<PathBuf>>>,
+        remaining: Arc<AtomicCell<usize>>,
+    },
+    Updated {
+        start: Instant,
+        paths: Arc<Mutex<Vec<PathBuf>>>,
+        paths_stream: ParMapUnordered<Progress>,
+        remaining: Arc<AtomicCell<usize>>,
+    },
+    Dormant {
+        paths: Arc<Mutex<Vec<PathBuf>>>,
+        remaining: Arc<AtomicCell<usize>>,
+    },
 }
 
 const THUMB_SIZE: f32 = 256.0;
 
 // Utility function
-pub fn process_paths(paths: Vec<PathBuf>) -> iced::Subscription<Progress> {
-    let start = Instant::now();
-    debug!("Processing {} paths", paths.len());
-    Subscription::from_recipe(ProcessThumbs { paths, start })
+pub fn process_paths(paths: Arc<Mutex<Vec<PathBuf>>>) -> iced::Subscription<Progress> {
+    Subscription::from_recipe(ProcessThumbs {
+        paths,
+        // state,
+    })
+    // debug!("Processing {} paths", paths.len());
+    // let state = Arc::new(AtomicCell::new(0));
 }
 
 fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
     let path = path.clone();
-    // task::spawn_blocking(move ||
+
     match ImageReader::open(&path).unwrap().decode() {
         Ok(img) => {
             let (width, height) = img.dimensions();
@@ -72,8 +110,6 @@ fn resize_image(path: &PathBuf) -> Option<(DynamicImage, u32, u32)> {
             None
         }
     }
-    // })
-    // .await
 }
 
 // Task implementation
@@ -85,57 +121,155 @@ where
 
     fn hash(&self, state: &mut H) {
         std::any::TypeId::of::<Self>().hash(state);
-        self.paths.hash(state);
     }
 
     fn stream(
         self: Box<Self>,
-        _input: futures::stream::BoxStream<'static, I>,
-    ) -> futures::stream::BoxStream<'static, Self::Output> {
-        let start = self.start.clone();
+        _input: stream::BoxStream<'static, I>,
+    ) -> stream::BoxStream<'static, Self::Output> {
+        stream::unfold(
+            State::Ready {
+                start: Instant::now(),
+                paths: self.paths,
+                remaining: Arc::new(AtomicCell::new(0)),
+            },
+            |state| async move {
+                match state {
+                    State::Ready {
+                        start,
+                        paths,
+                        remaining,
+                    } => {
+                        let paths_vec = paths.lock().await.to_vec();
+                        let thumbs_remaining = remaining.load();
+                        let remaining = Arc::clone(&remaining);
+                        let remaining_ref = Arc::clone(&remaining);
+                        let paths_stream =
+                            stream::iter(paths_vec).par_map_unordered(None, move |path| {
+                                let remaining = Arc::clone(&remaining_ref);
+                                debug!("Processing {:.2?}, Path: {:?}", &start.elapsed(), &path);
+                                move || {
+                                    if let Some((decoded_image, width_px, height_px)) =
+                                        resize_image(&path)
+                                    {
+                                        println!("debug 1");
+                                        let mut output = Box::new(vec![]);
+                                        let mut encoder = JpegEncoder::new(&mut output);
+                                        encoder.encode_image(&decoded_image).unwrap();
 
-        Box::pin(
-            futures::stream::iter(self.paths).par_then_unordered(None, move |path| {
-                debug!("Processing {:.2?}", &start.elapsed());
+                                        let size_bytes = output.len() as u64;
+                                        let mime_type = "image/jpeg".to_string();
 
-                let image_result = resize_image(&path);
+                                        let metadata = ImageMetadata {
+                                            size_bytes,
+                                            mime_type,
+                                            width_px,
+                                            height_px,
+                                        };
 
-                let result = if let Some((decoded_image, width_px, height_px)) = image_result {
-                    let mut output = Box::new(vec![]);
-                    let mut encoder = JpegEncoder::new(&mut output);
-                    encoder.encode_image(&decoded_image).unwrap();
+                                        let image = output.into_boxed_slice();
 
-                    let size_bytes = output.len() as u64;
-                    let mime_type = "image/jpeg".to_string();
+                                        remaining.fetch_sub(1);
 
-                    let metadata = ImageMetadata {
-                        size_bytes,
-                        mime_type,
-                        width_px,
-                        height_px,
-                    };
+                                        println!("debug 2");
+                                        Progress::Updated {
+                                            thumb: PathThumb {
+                                                path,
+                                                image,
+                                                metadata,
+                                            },
+                                            remaining: remaining.load(),
+                                            start,
+                                        }
+                                    } else {
+                                        let error = format!(
+                                            "Error decoding image after {:.2?}, at: {:?}",
+                                            &start.elapsed(),
+                                            &path,
+                                        );
 
-                    let image = output.into_boxed_slice();
+                                        Progress::Error { start, error, path }
+                                    }
+                                }
+                            });
 
-                    Progress::Finished(
-                        PathThumb {
-                            path,
-                            image,
-                            metadata,
-                        },
-                        start.elapsed(),
-                    )
-                } else {
-                    let error = format!(
-                        "Error decoding image after {:.2?}, at: {:?}",
-                        &start.elapsed(),
-                        &path,
-                    );
-                    Progress::Error(error)
-                };
+                        paths.lock().await.to_vec().clear();
 
-                async move { result }
-            }),
+                        Some((
+                            Progress::Started {
+                                start,
+                                remaining: thumbs_remaining,
+                            },
+                            State::Updated {
+                                start,
+                                paths,
+                                paths_stream,
+                                remaining,
+                            },
+                        ))
+                    }
+                    State::Updated {
+                        start,
+                        paths,
+                        mut paths_stream,
+                        remaining,
+                    } => {
+                        if remaining.load() > 0 {
+                            if let Some(progress) = paths_stream.next().await {
+                                Some((
+                                    progress,
+                                    State::Updated {
+                                        start,
+                                        paths,
+                                        paths_stream,
+                                        remaining,
+                                    },
+                                ))
+                            } else {
+                                Some((Progress::Finished, State::Dormant { paths, remaining }))
+                            }
+                        } else {
+                            Some((Progress::Finished, State::Dormant { paths, remaining }))
+                        }
+                    }
+                    State::Dormant { paths, remaining } => {
+                        sleep(Duration::from_millis(100)).await;
+
+                        if paths.lock().await.len() > 0 {
+                            Some((
+                                Progress::Restarted,
+                                State::Ready {
+                                    paths,
+                                    start: Instant::now(),
+                                    remaining,
+                                },
+                            ))
+                        } else {
+                            Some((Progress::Dormant, State::Dormant { paths, remaining }))
+                        }
+                    }
+                }
+            },
         )
+        .boxed()
+
+        //     |(mut paths, start)| async move {
+        //         match paths.next().await {
+        //             Some(progress) => Some((progress, (paths, start))),
+        //             None => {
+        //                 let error = format!("Error decoding image after {:.2?}", &start.elapsed(),);
+        //                 Some((Progress::Error(error), (paths, start)))
+        //             }
+        //         }
+        //     }, // {
+        //        //     Some(p) => Some((paths, p)),
+        //        //     None => None,
+        //        // }
+        // ))
+        // .map(|output| {
+        //     let state = Arc::clone(&state);
+        //     output
+        // })
+        // .boxed()
     }
 }

@@ -55,21 +55,22 @@ impl PublishPage {
     pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::ContentThumbProgress(progress) => match progress {
-                thumbnails::Progress::Finished(thumb, elapsed) => {
+                thumbnails::Progress::Updated {
+                    thumb,
+                    start,
+                    remaining,
+                } => {
                     self.thumb_capacity = self.thumb_capacity + thumb.metadata.size_bytes as usize;
                     Command::perform(
-                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, elapsed),
+                        lock_insert(Arc::clone(&self.publish_thumbs), thumb, start.elapsed()),
                         Message::ContentReadyToPublish,
                     )
                 }
-                thumbnails::Progress::Error(error) => {
+                thumbnails::Progress::Error { start, error, path } => {
                     error!("{}", error);
                     Command::none()
                 }
-                thumbnails::Progress::Ready(unprocessed) => {
-                    error!("Unprocessed {:?}", unprocessed);
-                    Command::none()
-                }
+                _ => Command::none(),
             },
             Message::WindowResized { width, height: _ } => {
                 self.window_width = width as u16;
@@ -136,7 +137,7 @@ impl PublishPage {
                     .push(row)
                     .width(Length::Fill)
                     .align_items(Align::Center)
-                    .spacing(10),
+                    .spacing(2),
             )
             .width(Length::Fill)
             .height(Length::Fill)

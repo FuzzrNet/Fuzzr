@@ -28,8 +28,9 @@ anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 # System
-async-std = "1.8"
-par-stream = { version = "0.2.1" }
+async-std = "=1.8.0"
+par-stream = "0.2.1"
+crossbeam-utils = "0.8"
 directories-next = "2.0"
 # UI
 iced = { git = "https://github.com/hecrj/iced.git", rev = "f8aef03456ecc185098b6305a8cd0e22f5297d06", features = [

@@ -34,6 +34,15 @@ use data::ipfs_client::{IpfsClient, IpfsClientRef};
 use data::ipfs_ops::{load_file, store_file};
 use data::thumbnails;
 
+async fn push_thumb_paths(
+    paths: Vec<PathBuf>,
+    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
+) -> usize {
+    let len = paths.len();
+    publish_thumbs_paths.lock().await.extend(paths);
+    len
+}
+
 pub fn main() -> iced::Result {
     if std::env::var("RUST_LOG").is_err() {
         std::env::set_var("RUST_LOG", "fuzzr");
@@ -67,7 +76,7 @@ pub struct Fuzzr {
     current_page: PageType,
     page_buttons: PageSelector,
     background_color: Color,
-    publish_thumbs_paths: SyncArc<SyncMutex<Vec<PathBuf>>>,
+    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
 }
 
 impl Application for Fuzzr {
@@ -92,7 +101,7 @@ impl Application for Fuzzr {
                 page_buttons: PageSelector::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
-                publish_thumbs_paths: SyncArc::new(SyncMutex::new(Vec::new())),
+                publish_thumbs_paths: Arc::new(Mutex::new(Vec::new())),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -131,9 +140,10 @@ impl Application for Fuzzr {
                 }
                 Message::FileDroppedOnWindow(path) => {
                     let paths = walk_dir(&path);
-                    let mut publish_thumbs_paths = self.publish_thumbs_paths.lock().unwrap();
-                    publish_thumbs_paths.extend(paths);
-                    Command::none()
+                    Command::perform(
+                        push_thumb_paths(paths, Arc::clone(&self.publish_thumbs_paths)),
+                        Message::ContentThumbProcessing,
+                    )
                 }
                 // store_file(path, ipfs_client);
                 // Command::perform(, Message::ContentDroppedOnWindow)
@@ -176,29 +186,18 @@ impl Application for Fuzzr {
     }
 
     fn subscription(&self) -> Subscription<Message> {
-        let mut subscriptions =
-            vec![iced_native::subscription::events_with(
-                |event, _status| match event {
-                    Event::Window(window_event) => match window_event {
-                        Resized { width, height } => Some(Message::WindowResized { width, height }),
-                        FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
-                        _ => None,
-                    },
+        Subscription::batch(vec![
+            iced_native::subscription::events_with(|event, _status| match event {
+                Event::Window(window_event) => match window_event {
+                    Resized { width, height } => Some(Message::WindowResized { width, height }),
+                    FileDropped(path) => Some(Message::FileDroppedOnWindow(path)),
                     _ => None,
                 },
-            )];
-
-        let publish_thumbs_paths = &mut self.publish_thumbs_paths.lock().unwrap();
-        if !publish_thumbs_paths.is_empty() {
-            println!("HERE: {:?}", &publish_thumbs_paths);
-            subscriptions.push(
-                thumbnails::process_paths(publish_thumbs_paths.to_vec())
-                    .map(Message::ContentThumbProgress),
-            );
-            publish_thumbs_paths.clear();
-        }
-
-        Subscription::batch(subscriptions)
+                _ => None,
+            }),
+            thumbnails::process_paths(Arc::clone(&self.publish_thumbs_paths))
+                .map(Message::ContentThumbProgress),
+        ])
     }
 
     fn view(&mut self) -> Element<Message> {
