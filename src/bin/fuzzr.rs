@@ -42,15 +42,19 @@ pub fn main() -> iced::Result {
         std::env::set_var("RUST_LOG", "fuzzr");
     }
 
-    // let hex = "#A84D00";
-    // convert_to_rgb(hex);
+    let hex = "#A84D00";
+    convert_to_rgb(hex);
 
-    // fn convert_to_rgb(hex: &str) {
-    //     let hex_slice: &[&str] = &[hex];
-    //     let mut slice = hex_slice.chars();
-    //     let slice = slice.len();
-    //     println!("{:?}", slice);
-    // }
+    fn convert_to_rgb(hex: &str) {
+        let red = i16::from_str_radix(&hex[1..3].trim(), 16);
+        let green = i16::from_str_radix(&hex[3..5].trim(), 16);
+        let blue = i16::from_str_radix(&hex[5..7].trim(), 16);
+
+        println!("r {:?} , g {:?} , b {:?}", red, green, blue);
+        // .parse::<u8>()?
+        // .parse::<u8>()?
+        // .parse::<u8>()?
+    }
 
     pretty_env_logger::init();
 
@@ -105,6 +109,7 @@ impl Application for Fuzzr {
                 ipfs_client: None,
                 publish_thumbs_paths: Arc::new(Mutex::new(Vec::new())),
                 theme: Theme::default(),
+                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
@@ -181,14 +186,12 @@ impl Application for Fuzzr {
                     self.theme = theme;
                     Command::none()
                 }
-            }
-            Message::ThemeChanged(theme) => {
-                println!("New theme is {:?}", theme);
-                self.theme = theme;
-                Command::none()
-            }
-            _ => Command::none(),
-        }
+
+                Message::ThemeChanged(theme) => {
+                    println!("New theme is {:?}", theme);
+                    self.theme = theme;
+                    Command::none()
+                }
                 _ => Command::none(),
             },
         ])
