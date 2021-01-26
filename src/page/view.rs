@@ -1,4 +1,4 @@
-use iced::{text_input, Column, Container, Element, Length, /* Row, Text, */ TextInput};
+use iced::{text_input, Column, Command, Container, Element, Length, /* Row, Text, */ TextInput,};
 use log::error;
 
 use crate::data::content::ContentItem;
@@ -28,21 +28,24 @@ impl ViewPage {
         }
     }
 
-    pub fn update(&mut self, msg: Message) {
+    pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
             Message::ViewPageInputChanged(value) => {
                 self.input_value = value;
+                Command::none()
             }
             Message::ViewPageContentLoaded(content_item) => match content_item {
                 Ok(content_item) => {
                     self.content = Some(content_item);
+                    Command::none()
                 }
                 Err(err) => {
                     error!("Error loading content item from IPFS: {}", err);
+                    Command::none()
                 }
             },
-            _ => {}
-        };
+            _ => Command::none(),
+        }
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {

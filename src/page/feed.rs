@@ -1,4 +1,4 @@
-use iced::{scrollable, Column, Element, Length, Text};
+use iced::{scrollable, Column, Command, Element, Length, Text};
 use iced_native::Container;
 
 use crate::data::content::ContentItem;
@@ -25,7 +25,9 @@ impl FeedPage {
         }
     }
 
-    pub fn update(&mut self, _msg: Message) {}
+    pub fn update(&mut self, _msg: Message) -> Command<Message> {
+        Command::none()
+    }
 
     pub fn view(&self, theme: &Theme) -> Element<Message> {
         let feed_container = Column::new().push(Text::new("TODO: Feed page").size(18));
