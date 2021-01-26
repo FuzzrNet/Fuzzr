@@ -136,8 +136,6 @@ impl Toolbar {
             theme_button,
         } = self;
 
-        println!("Current theme in toolbar view method is {:?}", theme);
-
         Container::new(
             buttons
                 .iter_mut()

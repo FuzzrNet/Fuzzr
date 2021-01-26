@@ -26,6 +26,16 @@ pub fn main() -> iced::Result {
         std::env::set_var("RUST_LOG", "fuzzr");
     }
 
+    // let hex = "#A84D00";
+    // convert_to_rgb(hex);
+
+    // fn convert_to_rgb(hex: &str) {
+    //     let hex_slice: &[&str] = &[hex];
+    //     let mut slice = hex_slice.chars();
+    //     let slice = slice.len();
+    //     println!("{:?}", slice);
+    // }
+
     pretty_env_logger::init();
 
     Fuzzr::run(Settings::default())
@@ -167,7 +177,7 @@ impl Application for Fuzzr {
             PageType::Site => pages.site.view(theme),
             PageType::Settings => pages.settings.view(theme),
         };
-        println!("Current theme in fuzzr view method is {:?}", theme);
+
         let content: Element<_> = Column::new()
             .spacing(20)
             .padding(20)
