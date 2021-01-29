@@ -1,4 +1,4 @@
-use iced::{text_input, Column, Command, Container, Element, Length, Row, Text, TextInput};
+use iced::{text_input, Color, Column, Command, Container, Element, Length, Row, Text, TextInput};
 
 use crate::message::Message;
 use crate::ui::style::Theme;
@@ -22,19 +22,29 @@ impl SettingsPage {
         SettingsPage {
             background_input: text_input::State::new(),
             foreground_input: text_input::State::new(),
-            background_color: String::new(),
             foreground_color: String::new(),
+            background_color: String::new(),
         }
     }
 
     pub fn update(&mut self, msg: Message) -> Command<Message> {
         match msg {
-            Message::ForegroundChanged(value) => {
-                self.foreground_color = value;
+            // Message::BackgroundInputChanged(value) => {
+            //     self.background_input = value;
+            //     Command::none()
+            // }
+            // Message::ForegroundInputChanged(value) => {
+            //     self.foreground_input = value;
+            //     Command::none()
+            // }
+            Message::BackgroundChanged(value) => {
+                convert_to_rgb(self.background_color.clone().as_str());
+                self.background_color = value;
+                // println!("{:?}", value);
                 Command::none()
             }
-            Message::BackgroundChanged(value) => {
-                self.background_color = value;
+            Message::ForegroundChanged(value) => {
+                self.foreground_color = value;
                 Command::none()
             }
             _ => Command::none(),
@@ -52,7 +62,7 @@ impl SettingsPage {
                         Row::new().push(
                             TextInput::new(
                                 &mut self.background_input,
-                                "Enter Background Color (RGB Hex, i.e, #00000F)",
+                                "Enter Background Color (RGB Hex, i.e, #FF00FF)",
                                 &self.background_color,
                                 Message::BackgroundChanged,
                             )
@@ -67,7 +77,7 @@ impl SettingsPage {
                         Row::new().push(
                             TextInput::new(
                                 &mut self.foreground_input,
-                                "Enter Foreground Color (RGB Hex, i.e, #F100FF)",
+                                "Enter Foreground Color (RGB Hex, i.e, #FF00FF)",
                                 &self.foreground_color,
                                 Message::ForegroundChanged,
                             )
@@ -88,4 +98,27 @@ impl SettingsPage {
             .style(*theme)
             .into()
     }
+}
+
+// let hex = "#A84D00";
+// convert_to_rgb(hex);
+
+pub fn convert_to_rgb(hex: &str) -> Color {
+    let red = u16::from_str_radix(&hex[0..2], 16).unwrap() as f32;
+    let green = u16::from_str_radix(&hex[2..4], 16).unwrap() as f32;
+    let blue = u16::from_str_radix(&hex[4..6], 16).unwrap() as f32;
+
+    let new_color = Color::new(red, green, blue, 1.0);
+    new_color
+
+    // let red = red as f32;
+    // let green = green as f32;
+    // let blue = blue as f32;
+
+    // println!("r {:?} , g {:?} , b {:?}", red, green, blue);
+    // .parse::<u16>()?
+    // .parse::<u16>()?
+    // .parse::<u16>()?
+
+    // println!("{:?}", new_color);
 }

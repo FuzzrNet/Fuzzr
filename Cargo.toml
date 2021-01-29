@@ -1,62 +1,62 @@
 [package]
-name = "fuzzr"
-version = "0.0.3"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
 ]
-edition = "2018"
-description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
-documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
-homepage = "https://fuzzr.net"
-repository = "https://github.com/FuzzrNet/Fuzzr"
-license = "Unlicense"
-keywords = ["ipfs", "p2p", "gui", "self-hosted"]
 categories = [
   "cryptography",
   "filesystem",
   "multimedia",
   "text-editors",
-  "web-programming"
+  "web-programming",
 ]
+description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
+documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
+edition = "2018"
 exclude = ["docs", ".github", ".vscode"]
+homepage = "https://fuzzr.net"
+keywords = ["ipfs", "p2p", "gui", "self-hosted"]
+license = "Unlicense"
+name = "fuzzr"
+repository = "https://github.com/FuzzrNet/Fuzzr"
+version = "0.0.3"
 
 [build]
 incremental = true
 
 [profile.release]
 # strip = "symbols" # https://github.com/rust-lang/rust/issues/72110
-lto = true
 codegen-units = 1
+lto = true
 
 [dependencies]
 # Debugging
-pretty_env_logger = "0.4"
-log = "0.4"
 anyhow = "1.0"
+log = "0.4"
+pretty_env_logger = "0.4"
 # Serialization
-serde = { version = "1.0", features = ["derive"] }
+serde = {version = "1.0", features = ["derive"]}
 serde_json = "1.0"
 # System
 async-std = "=1.8.0"
-rayon = "1.5"
 crossbeam-utils = "0.8"
-par-stream = "0.2"
 directories-next = "2.0"
+par-stream = "0.2"
+rayon = "1.5"
 # UI
-iced = { version = "0.2", features = [
+iced = {version = "0.2", features = [
   "wgpu",
   "default_system_font",
   "image",
-  "async-std"
-] }
-iced_native = "0.3"
+  "async-std",
+]}
 iced_futures = "0.2"
+iced_native = "0.3"
 # Data
 # reqwest = "0.10"
-sled = "0.34"
 image = "0.23"
 infer = "0.3"
+sled = "0.34"
 walkdir = "2.3"
 # IPFS
 ipfs-embed = "0.10"
@@ -64,13 +64,13 @@ libipld = "0.8"
 
 # ipld-collections = "0.3.0"
 [dev-dependencies]
-tempfile = "3.1"
 criterion = "0.3"
+tempfile = "3.1"
 
 [[bin]]
+bench = false
 name = "fuzzr"
 test = true
-bench = false
 #
 # [[bench]]
 # name = "ipfs"

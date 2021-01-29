@@ -32,6 +32,8 @@ pub enum Message {
     // UI / Settings
     BackgroundChanged(String),
     ForegroundChanged(String),
+    // BackgroundInputChanged(String),
+    // ForegroundInputChanged(String),
     LoadCustomBackground,
     LoadCustomForeground,
     ThemeChanged(Theme),

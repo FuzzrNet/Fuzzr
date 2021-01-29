@@ -42,20 +42,6 @@ pub fn main() -> iced::Result {
         std::env::set_var("RUST_LOG", "fuzzr");
     }
 
-    let hex = "#A84D00";
-    convert_to_rgb(hex);
-
-    fn convert_to_rgb(hex: &str) {
-        let red = i16::from_str_radix(&hex[1..3].trim(), 16);
-        let green = i16::from_str_radix(&hex[3..5].trim(), 16);
-        let blue = i16::from_str_radix(&hex[5..7].trim(), 16);
-
-        println!("r {:?} , g {:?} , b {:?}", red, green, blue);
-        // .parse::<u8>()?
-        // .parse::<u8>()?
-        // .parse::<u8>()?
-    }
-
     pretty_env_logger::init();
 
     Fuzzr::run(Settings {
