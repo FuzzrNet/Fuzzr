@@ -38,13 +38,12 @@ impl SettingsPage {
             //     Command::none()
             // }
             Message::BackgroundChanged(value) => {
-                if value.len() < 2 {
-                    ()
-                } else {
-                    convert_to_rgb(value.clone().as_str());
-                    self.background_color = value;
-                }
-                // println!("{:?}", value);git
+                // if value.len() < 6 {
+                //     ()
+                // } else {
+                convert_to_rgb(value.clone().as_str());
+                self.background_color = value;
+                // println!("{:?}", value.clone());
                 // }
                 Command::none()
             }

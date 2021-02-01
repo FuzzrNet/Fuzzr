@@ -169,11 +169,6 @@ impl Application for Fuzzr {
                     }
                 }
                 Message::ThemeChanged(theme) => {
-                    self.theme = theme;
-                    Command::none()
-                }
-
-                Message::ThemeChanged(theme) => {
                     println!("New theme is {:?}", theme);
                     self.theme = theme;
                     Command::none()
