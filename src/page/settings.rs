@@ -38,12 +38,18 @@ impl SettingsPage {
             //     Command::none()
             // }
             Message::BackgroundChanged(value) => {
-                convert_to_rgb(self.background_color.clone().as_str());
-                self.background_color = value;
-                // println!("{:?}", value);
+                if value.len() < 2 {
+                    ()
+                } else {
+                    convert_to_rgb(value.clone().as_str());
+                    self.background_color = value;
+                }
+                // println!("{:?}", value);git
+                // }
                 Command::none()
             }
             Message::ForegroundChanged(value) => {
+                convert_to_rgb(value.clone().as_str());
                 self.foreground_color = value;
                 Command::none()
             }
@@ -104,12 +110,12 @@ impl SettingsPage {
 // convert_to_rgb(hex);
 
 pub fn convert_to_rgb(hex: &str) -> Color {
-    let red = u16::from_str_radix(&hex[0..2], 16).unwrap() as f32;
-    let green = u16::from_str_radix(&hex[2..4], 16).unwrap() as f32;
-    let blue = u16::from_str_radix(&hex[4..6], 16).unwrap() as f32;
-
-    let new_color = Color::new(red, green, blue, 1.0);
-    new_color
+    Color::new(
+        u16::from_str_radix(&hex[..2], 16).unwrap() as f32,
+        u16::from_str_radix(&hex[2..4], 16).unwrap() as f32,
+        u16::from_str_radix(&hex[4..6], 16).unwrap() as f32,
+        1.0,
+    )
 
     // let red = red as f32;
     // let green = green as f32;
