@@ -8,7 +8,7 @@ use fuzzr::data::{
 };
 
 use async_std::{
-    sync::{Arc, Mutex},
+    sync::{Arc, RwLock},
     task::block_on,
 };
 use criterion::{
@@ -36,7 +36,7 @@ where
 
 fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
     block_on(async {
-        Ok(Arc::new(Mutex::new(
+        Ok(Arc::new(RwLock::new(
             IpfsClient::new()
                 .await
                 .map_err(|e| Arc::try_unwrap(e).unwrap())?,

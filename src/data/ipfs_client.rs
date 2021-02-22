@@ -8,12 +8,12 @@ use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
 use libipld::{Cid, IpldCodec};
 
-use async_std::sync::{Arc, Mutex};
+use async_std::sync::{Arc, RwLock};
 use directories_next::ProjectDirs;
 
 use crate::data::content::ContentItemBlock;
 
-pub type IpfsClientRef = Arc<Mutex<IpfsClient>>;
+pub type IpfsClientRef = Arc<RwLock<IpfsClient>>;
 
 #[derive(Clone, Debug, Default)]
 struct MaxBlockSizeStoreParams;

@@ -1,6 +1,6 @@
 // For processing image thumbnails in parallel
 
-use async_std::sync::{Arc, Mutex};
+use async_std::sync::{Arc, RwLock};
 use async_std::task::sleep;
 use crossbeam_utils::atomic::AtomicCell;
 use iced::Subscription;
@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 use crate::data::content::{ImageMetadata, PathThumb};
 
 pub struct ProcessThumbs {
-    paths: Arc<Mutex<Vec<PathBuf>>>,
+    paths: Arc<RwLock<Vec<PathBuf>>>,
 }
 
 #[derive(Debug, Clone)]
@@ -41,24 +41,24 @@ pub enum Progress {
 enum State {
     Ready {
         start: Instant,
-        paths: Arc<Mutex<Vec<PathBuf>>>,
+        paths: Arc<RwLock<Vec<PathBuf>>>,
         remaining: Arc<AtomicCell<isize>>,
     },
     Updated {
         start: Instant,
-        paths: Arc<Mutex<Vec<PathBuf>>>,
+        paths: Arc<RwLock<Vec<PathBuf>>>,
         paths_stream: ParMapUnordered<Progress>,
         remaining: Arc<AtomicCell<isize>>,
     },
     Dormant {
-        paths: Arc<Mutex<Vec<PathBuf>>>,
+        paths: Arc<RwLock<Vec<PathBuf>>>,
         remaining: Arc<AtomicCell<isize>>,
     },
 }
 
 const THUMB_SIZE: f32 = 256.0;
 
-pub fn process_paths(paths: Arc<Mutex<Vec<PathBuf>>>) -> iced::Subscription<Progress> {
+pub fn process_paths(paths: Arc<RwLock<Vec<PathBuf>>>) -> iced::Subscription<Progress> {
     Subscription::from_recipe(ProcessThumbs { paths })
 }
 
@@ -133,7 +133,7 @@ where
                         paths,
                         remaining,
                     } => {
-                        let paths_vec = paths.lock().await.to_vec();
+                        let paths_vec = paths.read().await.to_vec();
                         remaining.fetch_add(paths_vec.len() as isize);
                         let thumbs_remaining = remaining.load();
                         let remaining = Arc::clone(&remaining);
@@ -165,7 +165,7 @@ where
                                 }
                             });
 
-                        paths.lock().await.clear();
+                        paths.write().await.clear();
 
                         Some((
                             Progress::Started {
@@ -207,7 +207,7 @@ where
                     State::Dormant { paths, remaining } => {
                         sleep(Duration::from_millis(100)).await;
 
-                        if paths.lock().await.len() > 0 {
+                        if paths.read().await.len() > 0 {
                             Some((
                                 Progress::Restarted,
                                 State::Ready {
