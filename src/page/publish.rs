@@ -5,7 +5,7 @@ use iced::{
 use log::{debug, error, info};
 use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc, RwLock};
 use std::time::Duration;
 
 use crate::data::content::PathThumb;
@@ -18,7 +18,7 @@ use crate::ui::style::Theme;
 pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
-    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
+    publish_thumbs: Arc<RwLock<BTreeMap<PathBuf, PathThumb>>>,
     window_width: u16,
 }
 
@@ -29,12 +29,12 @@ impl Default for PublishPage {
 }
 
 async fn lock_insert(
-    publish_thumbs: Arc<Mutex<BTreeMap<PathBuf, PathThumb>>>,
+    publish_thumbs: Arc<RwLock<BTreeMap<PathBuf, PathThumb>>>,
     thumb: PathThumb,
     elapsed: Duration,
     remaining: isize,
 ) {
-    let mut publish_thumbs = publish_thumbs.lock().unwrap();
+    let mut publish_thumbs = publish_thumbs.write().unwrap();
     debug!(
         "Path:{:?}\nImage metadata: {:?}",
         &thumb.path, &thumb.metadata
@@ -52,7 +52,7 @@ impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
-            publish_thumbs: Arc::new(Mutex::new(BTreeMap::new())),
+            publish_thumbs: Arc::new(RwLock::new(BTreeMap::new())),
             window_width: 800,
         }
     }
@@ -95,7 +95,7 @@ impl PublishPage {
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
-        let publish_thumbs = self.publish_thumbs.lock().unwrap();
+        let publish_thumbs = self.publish_thumbs.read().unwrap();
 
         if publish_thumbs.len() != 0 {
             // Thumbnail column distribution algorithm

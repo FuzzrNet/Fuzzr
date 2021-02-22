@@ -40,7 +40,7 @@ pub async fn store_file(
             size_bytes,
         };
 
-        let ipfs_client = &ipfs_client.lock().await;
+        let ipfs_client = &ipfs_client.write().await;
         let cid = ipfs_client.add(&block).await?;
 
         info!(
@@ -58,7 +58,7 @@ pub async fn store_file(
                     size_bytes,
                 };
 
-                let ipfs_client = &ipfs_client.lock().await;
+                let ipfs_client = &ipfs_client.write().await;
                 let cid = ipfs_client.add(&block).await?;
 
                 info!(
@@ -86,7 +86,7 @@ pub async fn load_file(
 ) -> Result<ContentItem, Arc<Error>> {
     let start = Instant::now();
 
-    let ipfs_client = &ipfs_client.lock().await;
+    let ipfs_client = &ipfs_client.read().await;
     let cid = Cid::from_str(&cid_string).unwrap();
     let data = ipfs_client.get(&cid).await?;
 
@@ -104,7 +104,7 @@ mod tests {
     use super::*;
     use crate::data::ipfs_client::IpfsClient;
 
-    use async_std::{sync::Mutex, task::block_on};
+    use async_std::{sync::RwLock, task::block_on};
     use tempfile::tempdir;
 
     use std::{error::Error, fs::File};
@@ -123,7 +123,7 @@ mod tests {
 
     fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
         block_on(async {
-            Ok(Arc::new(Mutex::new(
+            Ok(Arc::new(RwLock::new(
                 IpfsClient::new()
                     .await
                     .map_err(|e| Arc::try_unwrap(e).unwrap())?,

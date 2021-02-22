@@ -7,7 +7,7 @@ use iced_native::{
     Event,
 };
 
-use async_std::sync::{Arc, Mutex};
+use async_std::sync::{Arc, RwLock};
 use log::{error, info};
 use std::path::PathBuf;
 
@@ -30,10 +30,10 @@ use fuzzr::{
 
 async fn push_thumb_paths(
     paths: Vec<PathBuf>,
-    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
+    publish_thumbs_paths: Arc<RwLock<Vec<PathBuf>>>,
 ) -> usize {
     let len = paths.len();
-    publish_thumbs_paths.lock().await.extend(paths);
+    publish_thumbs_paths.write().await.extend(paths);
     len
 }
 
@@ -69,7 +69,7 @@ pub struct Fuzzr {
     pages: Pages, // All pages in the app
     toolbar: Toolbar,
     background_color: Color,
-    publish_thumbs_paths: Arc<Mutex<Vec<PathBuf>>>,
+    publish_thumbs_paths: Arc<RwLock<Vec<PathBuf>>>,
     theme: Theme,
 }
 
@@ -94,7 +94,7 @@ impl Application for Fuzzr {
                 toolbar: Toolbar::new(),
                 background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
-                publish_thumbs_paths: Arc::new(Mutex::new(Vec::new())),
+                publish_thumbs_paths: Arc::new(RwLock::new(Vec::new())),
                 theme: Theme::default(),
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
@@ -126,7 +126,7 @@ impl Application for Fuzzr {
                 }
                 Message::IpfsReady(ipfs_client) => {
                     if let Ok(client) = ipfs_client {
-                        self.ipfs_client = Some(Arc::new(Mutex::new(client)))
+                        self.ipfs_client = Some(Arc::new(RwLock::new(client)))
                     };
                     Command::none()
                 }
