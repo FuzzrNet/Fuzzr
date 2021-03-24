@@ -1,6 +1,7 @@
+use anyhow::Error;
 use async_std::fs;
 use async_std::sync::Arc;
-use ipfs_embed::core::{Cid, Error, Result};
+use libipld::{cid::Cid, Result};
 use log::{error, info};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -88,7 +89,7 @@ pub async fn load_file(
 
     let ipfs_client = &ipfs_client.read().await;
     let cid = Cid::from_str(&cid_string).unwrap();
-    let data = ipfs_client.get(&cid).await?;
+    let data = ipfs_client.get(&cid)?;
 
     info!(
         "Loaded {:.2?}MB in {:.2?}.",
@@ -122,13 +123,7 @@ mod tests {
     }
 
     fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
-        block_on(async {
-            Ok(Arc::new(RwLock::new(
-                IpfsClient::new()
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?,
-            )))
-        })
+        block_on(async { Ok(Arc::new(RwLock::new(IpfsClient::new().await))) })
     }
 
     #[test]
@@ -177,14 +172,8 @@ mod tests {
             let client_ref = client_ref.clone();
             block_on(async {
                 let path = write_file(dir.path(), test.data, test.file_name)?;
-                let cid = store_file(path, client_ref.clone())
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?
-                    .unwrap();
-
-                let actual = load_file(cid.to_string(), client_ref)
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?;
+                let cid = store_file(path, client_ref.clone()).await?;
+                let actual = load_file(cid.unwrap().to_string(), client_ref).await?;
 
                 assert_eq!(test.expected, actual, "{}", test.name);
                 Ok(())

@@ -1,6 +1,6 @@
 use iced::{
-    window, Align, Application, Color, Column, Command, Container, Element, Length, Settings,
-    Subscription,
+    window, Align, Application, Clipboard, Color, Column, Command, Container, Element, Length,
+    Settings, Subscription,
 };
 use iced_native::{
     window::Event::{FileDropped, Resized},
@@ -109,7 +109,7 @@ impl Application for Fuzzr {
         "Fuzzr".into()
     }
 
-    fn update(&mut self, event: Message) -> Command<Message> {
+    fn update(&mut self, event: Message, _clipboard: &mut Clipboard) -> Command<Message> {
         Command::batch(vec![
             // Update all pages with all messages and batch any resulting commands.
             self.pages.dash.update(event.clone()),

@@ -35,13 +35,7 @@ where
 }
 
 fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
-    block_on(async {
-        Ok(Arc::new(RwLock::new(
-            IpfsClient::new()
-                .await
-                .map_err(|e| Arc::try_unwrap(e).unwrap())?,
-        )))
-    })
+    block_on(async { Ok(Arc::new(RwLock::new(IpfsClient::new().await?))) })
 }
 
 fn criterion_benchmark_ipfs_text(c: &mut Criterion) {
