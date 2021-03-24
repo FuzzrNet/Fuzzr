@@ -33,9 +33,9 @@ pub async fn store_file(
                 ImageContent { buffer },
                 ImageMetadata {
                     size_bytes,
+                    mime_type,
                     width_px,
                     height_px,
-                    mime_type,
                 },
             ),
             size_bytes,

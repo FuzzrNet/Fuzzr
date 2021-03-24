@@ -126,18 +126,14 @@ impl PublishPage {
                         image_column
                             .iter()
                             .filter_map(|path| {
-                                if let Some(thumb) = &self.publish_thumbs.get(path) {
-                                    Some(
-                                        Image::new(image::Handle::from_pixels(
-                                            thumb.val().metadata.width_px,
-                                            thumb.val().metadata.height_px,
-                                            thumb.val().image.to_vec(),
-                                        ))
-                                        .into(),
-                                    )
-                                } else {
-                                    None
-                                }
+                                self.publish_thumbs.get(path).as_ref().map(|thumb| {
+                                    Image::new(image::Handle::from_pixels(
+                                        thumb.val().metadata.width_px,
+                                        thumb.val().metadata.height_px,
+                                        thumb.val().image.to_vec(),
+                                    ))
+                                    .into()
+                                })
                             })
                             .collect(),
                     )
