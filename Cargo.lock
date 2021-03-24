@@ -1639,7 +1639,7 @@ dependencies = [
 
 [[package]]
 name = "fuzzr"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "anyhow",
  "async-std",
