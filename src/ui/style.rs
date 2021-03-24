@@ -178,27 +178,27 @@ impl From<Theme> for Box<dyn button::StyleSheet> {
                 background,
                 foreground,
             }) => Box::new(Button {
+                selected,
                 background,
                 foreground,
-                selected,
             }),
             Theme::Light(ThemeConfig {
                 selected,
                 background,
                 foreground,
             }) => Box::new(Button {
+                selected,
                 background,
                 foreground,
-                selected,
             }),
             Theme::Custom(ThemeConfig {
                 selected,
                 background,
                 foreground,
             }) => Box::new(Button {
+                selected,
                 background,
                 foreground,
-                selected,
             }),
         }
     }

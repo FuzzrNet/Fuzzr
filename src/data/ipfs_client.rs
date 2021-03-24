@@ -1,13 +1,12 @@
 use std::fmt;
 
-use ipfs_embed::core::{BitswapStorage, Error, Result, Store, StoreParams};
-use ipfs_embed::db::StorageService;
-use ipfs_embed::net::{NetworkConfig, NetworkService};
-use ipfs_embed::Ipfs;
+use ipfs_embed::{Config, Ipfs};
 use libipld::cbor::DagCborCodec;
 use libipld::multihash::Code;
-use libipld::{Cid, IpldCodec};
+use libipld::store::StoreParams;
+use libipld::{Cid, IpldCodec, Result};
 
+use anyhow::Error;
 use async_std::sync::{Arc, RwLock};
 use directories_next::ProjectDirs;
 
@@ -26,57 +25,36 @@ impl StoreParams for MaxBlockSizeStoreParams {
 
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: Ipfs<
-        MaxBlockSizeStoreParams,
-        StorageService<MaxBlockSizeStoreParams>,
-        NetworkService<MaxBlockSizeStoreParams>,
-    >,
-    storage: Arc<StorageService<MaxBlockSizeStoreParams>>,
-    network: Arc<NetworkService<MaxBlockSizeStoreParams>>,
+    ipfs: Ipfs<MaxBlockSizeStoreParams>,
 }
 
 impl IpfsClient {
     pub async fn new() -> Result<IpfsClient, Arc<Error>> {
-        let sled_config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
-            Some(project_dirs) => {
-                sled::Config::new().path(project_dirs.data_local_dir().to_owned())
-            }
-            None => sled::Config::new().temporary(true),
-        };
-
-        let sweep_interval = std::time::Duration::from_millis(10000);
         let cache_size = 1000;
 
-        let storage = Arc::new(StorageService::open(
-            &sled_config,
-            cache_size,
-            Some(sweep_interval),
-        )?);
+        let config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
+            Some(project_dirs) => Config::new(
+                Some(project_dirs.data_local_dir().join("sqlite")),
+                cache_size,
+            ),
+            None => Config::new(None, cache_size),
+        };
 
-        let bitswap_storage = BitswapStorage::new(storage.clone());
+        let ipfs = Ipfs::new(config).await?;
 
-        let net_config = NetworkConfig::new();
-        let network = Arc::new(NetworkService::new(net_config, bitswap_storage).await?);
-
-        let ipfs = Ipfs::new(Arc::clone(&storage), Arc::clone(&network));
-
-        Ok(IpfsClient {
-            ipfs,
-            storage,
-            network,
-        })
+        Ok(IpfsClient { ipfs })
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
         let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, block)?;
-        self.ipfs.insert(&ipld_block).await?;
+        self.ipfs.insert(&ipld_block)?.await?;
         let cid = *ipld_block.cid();
 
         Ok(cid)
     }
 
-    pub async fn get(&self, cid: &Cid) -> Result<ContentItemBlock, Arc<Error>> {
-        let block = self.ipfs.get(cid).await?;
+    pub fn get(&self, cid: &Cid) -> Result<ContentItemBlock, Arc<Error>> {
+        let block = self.ipfs.get(cid)?;
         let content_item = block.decode::<DagCborCodec, ContentItemBlock>()?;
 
         Ok(content_item)

@@ -1,6 +1,7 @@
+use anyhow::Error;
 use async_std::fs;
 use async_std::sync::Arc;
-use ipfs_embed::core::{Cid, Error, Result};
+use libipld::{cid::Cid, Result};
 use log::{error, info};
 use std::path::PathBuf;
 use std::str::FromStr;
@@ -32,9 +33,9 @@ pub async fn store_file(
                 ImageContent { buffer },
                 ImageMetadata {
                     size_bytes,
+                    mime_type,
                     width_px,
                     height_px,
-                    mime_type,
                 },
             ),
             size_bytes,
@@ -88,7 +89,7 @@ pub async fn load_file(
 
     let ipfs_client = &ipfs_client.read().await;
     let cid = Cid::from_str(&cid_string).unwrap();
-    let data = ipfs_client.get(&cid).await?;
+    let data = ipfs_client.get(&cid)?;
 
     info!(
         "Loaded {:.2?}MB in {:.2?}.",
@@ -104,7 +105,7 @@ mod tests {
     use super::*;
     use crate::data::ipfs_client::IpfsClient;
 
-    use async_std::{sync::RwLock, task::block_on};
+    use async_std::sync::RwLock;
     use tempfile::tempdir;
 
     use std::{error::Error, fs::File};
@@ -121,20 +122,10 @@ mod tests {
         Ok(path)
     }
 
-    fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
-        block_on(async {
-            Ok(Arc::new(RwLock::new(
-                IpfsClient::new()
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?,
-            )))
-        })
-    }
-
-    #[test]
-    fn test_store_load() -> Result<(), Box<dyn Error>> {
+    #[async_std::test]
+    async fn test_store_load() -> Result<(), Box<dyn Error>> {
         let dir = tempdir()?;
-        let client_ref = new_client()?;
+        let client_ref = Arc::new(RwLock::new(IpfsClient::new().await.unwrap()));
 
         struct Test {
             name: &'static str,
@@ -175,21 +166,13 @@ mod tests {
 
         for test in tests.into_iter() {
             let client_ref = client_ref.clone();
-            block_on(async {
-                let path = write_file(dir.path(), test.data, test.file_name)?;
-                let cid = store_file(path, client_ref.clone())
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?
-                    .unwrap();
+            let path = write_file(dir.path(), test.data, test.file_name)?;
+            let cid = store_file(path, client_ref.clone()).await.unwrap();
+            let actual = load_file(cid.unwrap().to_string(), client_ref)
+                .await
+                .unwrap();
 
-                let actual = load_file(cid.to_string(), client_ref)
-                    .await
-                    .map_err(|e| Arc::try_unwrap(e).unwrap())?;
-
-                assert_eq!(test.expected, actual, "{}", test.name);
-                Ok(())
-            })
-            .map_err(|e: Box<dyn Error>| e)?;
+            assert_eq!(test.expected, actual, "{}", test.name);
         }
         Ok(())
     }

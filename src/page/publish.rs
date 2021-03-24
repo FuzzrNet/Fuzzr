@@ -1,11 +1,12 @@
+use crossbeam_utils::atomic::AtomicCell;
 use iced::{
     image, scrollable, Align, Column, Command, Container, Element, Image, Length, Row, Scrollable,
     Text,
 };
+use lockfree::map::Map as LockfreeMap;
 use log::{debug, error, info};
-use std::collections::BTreeMap;
 use std::path::PathBuf;
-use std::sync::{Arc, RwLock};
+use std::sync::Arc;
 use std::time::Duration;
 
 use crate::data::content::PathThumb;
@@ -18,7 +19,8 @@ use crate::ui::style::Theme;
 pub struct PublishPage {
     // cid: Option<String>,
     scroll: scrollable::State,
-    publish_thumbs: Arc<RwLock<BTreeMap<PathBuf, PathThumb>>>,
+    publish_thumbs: Arc<LockfreeMap<PathBuf, PathThumb>>,
+    count: Arc<AtomicCell<usize>>,
     window_width: u16,
 }
 
@@ -28,21 +30,22 @@ impl Default for PublishPage {
     }
 }
 
-async fn lock_insert(
-    publish_thumbs: Arc<RwLock<BTreeMap<PathBuf, PathThumb>>>,
+async fn insert_thumb(
+    publish_thumbs: Arc<LockfreeMap<PathBuf, PathThumb>>,
+    count: Arc<AtomicCell<usize>>,
     thumb: PathThumb,
     elapsed: Duration,
     remaining: isize,
 ) {
-    let mut publish_thumbs = publish_thumbs.write().unwrap();
     debug!(
         "Path:{:?}\nImage metadata: {:?}",
         &thumb.path, &thumb.metadata
     );
     publish_thumbs.insert(thumb.path.clone(), thumb);
+    count.fetch_add(1);
     info!(
         "thumbnailed {} items after {:.2?}. {} items remaining.",
-        publish_thumbs.len(),
+        count.load(),
         elapsed,
         remaining
     );
@@ -52,7 +55,8 @@ impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
             scroll: scrollable::State::new(),
-            publish_thumbs: Arc::new(RwLock::new(BTreeMap::new())),
+            publish_thumbs: Arc::new(LockfreeMap::new()),
+            count: Default::default(),
             window_width: 800,
         }
     }
@@ -65,8 +69,9 @@ impl PublishPage {
                     start,
                     remaining,
                 } => Command::perform(
-                    lock_insert(
-                        Arc::clone(&self.publish_thumbs),
+                    insert_thumb(
+                        self.publish_thumbs.clone(),
+                        self.count.clone(),
                         thumb,
                         start.elapsed(),
                         remaining,
@@ -95,9 +100,7 @@ impl PublishPage {
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
-        let publish_thumbs = self.publish_thumbs.read().unwrap();
-
-        if publish_thumbs.len() != 0 {
+        if self.count.load() != 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(THUMB_SIZE as u16);
             let col_count = (self.window_width / (THUMB_SIZE as u16 + 2)) as usize;
@@ -109,11 +112,11 @@ impl PublishPage {
             let mut image_grid: Vec<Vec<PathBuf>> = vec![vec![]; col_count];
             let mut heights: Vec<u16> = vec![0; col_count];
 
-            publish_thumbs.iter().for_each(|(path, thumb)| {
+            self.publish_thumbs.iter().for_each(|item| {
                 let height_min = heights.iter().min().unwrap();
                 let height_index = &heights.iter().position(|h| h == height_min).unwrap();
-                image_grid[*height_index].push(path.clone());
-                heights[*height_index] += thumb.metadata.height_px as u16;
+                image_grid[*height_index].push(item.key().clone());
+                heights[*height_index] += item.val().metadata.height_px as u16;
             });
 
             let container_cols: Vec<Element<Message>> = image_grid
@@ -123,18 +126,14 @@ impl PublishPage {
                         image_column
                             .iter()
                             .filter_map(|path| {
-                                if let Some(thumb) = &publish_thumbs.get(path) {
-                                    Some(
-                                        Image::new(image::Handle::from_pixels(
-                                            thumb.metadata.width_px,
-                                            thumb.metadata.height_px,
-                                            thumb.image.to_vec(),
-                                        ))
-                                        .into(),
-                                    )
-                                } else {
-                                    None
-                                }
+                                self.publish_thumbs.get(path).as_ref().map(|thumb| {
+                                    Image::new(image::Handle::from_pixels(
+                                        thumb.val().metadata.width_px,
+                                        thumb.val().metadata.height_px,
+                                        thumb.val().image.to_vec(),
+                                    ))
+                                    .into()
+                                })
                             })
                             .collect(),
                     )

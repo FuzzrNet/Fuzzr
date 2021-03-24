@@ -1,5 +1,6 @@
+use anyhow::Error;
 use async_std::sync::Arc;
-use ipfs_embed::core::{Cid, Error, Result};
+use libipld::{Cid, Result};
 
 use crate::data::content::{ContentItem, PathThumb};
 use crate::data::ipfs_client::IpfsClient;
