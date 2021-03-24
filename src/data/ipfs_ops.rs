@@ -123,7 +123,7 @@ mod tests {
     }
 
     fn new_client() -> Result<IpfsClientRef, Box<dyn Error>> {
-        block_on(async { Ok(Arc::new(RwLock::new(IpfsClient::new().await))) })
+        block_on(async { Ok(Arc::new(RwLock::new(IpfsClient::new().await.unwrap()))) })
     }
 
     #[test]
@@ -172,8 +172,10 @@ mod tests {
             let client_ref = client_ref.clone();
             block_on(async {
                 let path = write_file(dir.path(), test.data, test.file_name)?;
-                let cid = store_file(path, client_ref.clone()).await?;
-                let actual = load_file(cid.unwrap().to_string(), client_ref).await?;
+                let cid = store_file(path, client_ref.clone()).await.unwrap();
+                let actual = load_file(cid.unwrap().to_string(), client_ref)
+                    .await
+                    .unwrap();
 
                 assert_eq!(test.expected, actual, "{}", test.name);
                 Ok(())
