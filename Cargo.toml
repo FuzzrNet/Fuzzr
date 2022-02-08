@@ -5,7 +5,7 @@ authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
 ]
-edition = "2018"
+edition = "2021"
 description = "P2P platform for publishing content, self-hosting, decentralized curation, and more."
 documentation = "https://github.com/FuzzrNet/Fuzzr/tree/main/docs"
 homepage = "https://fuzzr.net"
