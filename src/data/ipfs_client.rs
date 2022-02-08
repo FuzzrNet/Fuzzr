@@ -41,7 +41,7 @@ impl IpfsClient {
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
-        let ipld_block = Block::encode(DagCborCodec, Code::Sha2_256, block)?;
+        let ipld_block = Block::encode(DagCborCodec, Code::Blake2b256, block)?;
         self.ipfs.insert(&ipld_block)?;
         let cid = *ipld_block.cid();
 
