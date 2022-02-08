@@ -1,10 +1,7 @@
 use std::fmt;
 
-use ipfs_embed::{Config, Ipfs};
-use libipld::cbor::DagCborCodec;
-use libipld::multihash::Code;
-use libipld::store::StoreParams;
-use libipld::{Cid, IpldCodec, Result};
+use ipfs_embed::{generate_keypair, Block, Config, DefaultParams, Ipfs};
+use libipld::{cbor::DagCborCodec, multihash::Code, store::StoreParams, Cid, IpldCodec, Result};
 
 use anyhow::Error;
 use async_std::sync::{Arc, RwLock};
@@ -25,19 +22,17 @@ impl StoreParams for MaxBlockSizeStoreParams {
 
 #[derive(Clone)]
 pub struct IpfsClient {
-    ipfs: Ipfs<MaxBlockSizeStoreParams>,
+    ipfs: Ipfs<DefaultParams>,
 }
 
 impl IpfsClient {
     pub async fn new() -> Result<IpfsClient, Arc<Error>> {
-        let cache_size = 1000;
-
         let config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => Config::new(
-                Some(project_dirs.data_local_dir().join("sqlite")),
-                cache_size,
+                project_dirs.data_local_dir().join("sqlite").as_path(),
+                generate_keypair(), // TODO: persist keypair
             ),
-            None => Config::new(None, cache_size),
+            None => Config::default(),
         };
 
         let ipfs = Ipfs::new(config).await?;
@@ -46,8 +41,8 @@ impl IpfsClient {
     }
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
-        let ipld_block = libipld::Block::encode(DagCborCodec, Code::Blake3_256, block)?;
-        self.ipfs.insert(&ipld_block)?.await?;
+        let ipld_block = Block::encode(DagCborCodec, Code::Blake2b256, block)?;
+        self.ipfs.insert(&ipld_block)?;
         let cid = *ipld_block.cid();
 
         Ok(cid)

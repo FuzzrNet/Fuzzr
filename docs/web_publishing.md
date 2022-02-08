@@ -53,7 +53,7 @@ Analogous to a CMS (not static site), but self-hosted on-prem, using:
 
 - [ ] Support multiple site profiles, and multiple Argo tunnel configurations per Fuzzr client
 
-## 0.3 - Crypto monetization v1
+## 0.3 - Crypto monetization v1 - scrapped
 
 - [ ] Miner config
     - [ ] Communicate with locally running xmrig HTTP API

@@ -51,7 +51,7 @@ pub async fn thumbnail_images(paths: Vec<PathBuf>) -> Vec<PathThumb> {
                         let thumbnail = img.thumbnail_exact(width_px, height_px);
 
                         let mime_type = "image/jpeg".to_string();
-                        let image = thumbnail.into_bgra8().into_vec().into_boxed_slice();
+                        let image = Box::from(thumbnail.as_bytes());
 
                         let metadata = ImageMetadata {
                             size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted

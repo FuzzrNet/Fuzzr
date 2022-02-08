@@ -8,7 +8,7 @@ use iced_futures::futures::{stream, StreamExt};
 use image::io::Reader as ImageReader;
 use image::GenericImageView;
 use log::{debug, error};
-use par_stream::{ParMapUnordered, ParStreamExt};
+use par_stream::{ParMap, ParStreamExt};
 use std::hash::Hash;
 use std::path::{Path, PathBuf};
 use std::time::{Duration, Instant};
@@ -47,7 +47,7 @@ enum State {
     Updated {
         start: Instant,
         paths: Arc<RwLock<Vec<PathBuf>>>,
-        paths_stream: ParMapUnordered<Progress>,
+        paths_stream: ParMap<Progress>,
         remaining: Arc<AtomicCell<isize>>,
     },
     Dormant {
@@ -82,7 +82,7 @@ fn resize_image(path: &Path) -> Option<PathThumb> {
             let thumbnail = img.thumbnail_exact(width_px, height_px);
 
             let mime_type = "image/jpeg".to_string();
-            let image = thumbnail.into_bgra8().into_vec().into_boxed_slice();
+            let image = Box::from(thumbnail.as_bytes());
 
             let metadata = ImageMetadata {
                 size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted
@@ -138,32 +138,31 @@ where
                         let thumbs_remaining = remaining.load();
                         let remaining = Arc::clone(&remaining);
                         let remaining_ref = Arc::clone(&remaining);
-                        let paths_stream =
-                            stream::iter(paths_vec).par_map_unordered(None, move |path| {
-                                let remaining = Arc::clone(&remaining_ref);
-                                debug!("Processing {:.2?}, Path: {:?}", &start.elapsed(), &path);
-                                move || {
-                                    if let Some(thumb) = resize_image(&path) {
-                                        remaining.fetch_sub(1);
+                        let paths_stream = stream::iter(paths_vec).par_map(None, move |path| {
+                            let remaining = Arc::clone(&remaining_ref);
+                            debug!("Processing {:.2?}, Path: {:?}", &start.elapsed(), &path);
+                            move || {
+                                if let Some(thumb) = resize_image(&path) {
+                                    remaining.fetch_sub(1);
 
-                                        Progress::Updated {
-                                            thumb,
-                                            remaining: remaining.load(),
-                                            start,
-                                        }
-                                    } else {
-                                        let error = format!(
-                                            "Error decoding image after {:.2?}, at: {:?}",
-                                            &start.elapsed(),
-                                            &path,
-                                        );
-
-                                        remaining.fetch_sub(1);
-
-                                        Progress::Error { error }
+                                    Progress::Updated {
+                                        thumb,
+                                        remaining: remaining.load(),
+                                        start,
                                     }
+                                } else {
+                                    let error = format!(
+                                        "Error decoding image after {:.2?}, at: {:?}",
+                                        &start.elapsed(),
+                                        &path,
+                                    );
+
+                                    remaining.fetch_sub(1);
+
+                                    Progress::Error { error }
                                 }
-                            });
+                            }
+                        });
 
                         paths.write().await.clear();
 
