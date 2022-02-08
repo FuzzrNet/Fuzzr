@@ -1,9 +1,7 @@
 // Application data formats
 
-use libipld::Cid;
-use libipld::DagCbor;
-use std::hash::Hash;
-use std::path::PathBuf;
+use libipld::{Cid, DagCbor};
+use std::{hash::Hash, path::PathBuf};
 
 type Bytes = u64;
 type Px = u32;

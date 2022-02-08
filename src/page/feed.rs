@@ -1,14 +1,14 @@
-use iced::{scrollable, Column, Command, Element, Length, Text};
+use iced::{Column, Command, Element, Length, Text};
 use iced_native::Container;
 
-use crate::data::content::ContentItem;
+// use crate::data::content::ContentItem;
 use crate::message::Message;
 use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct FeedPage {
-    items: Vec<ContentItem>,
-    scroll: scrollable::State,
+    // items: Vec<ContentItem>,
+    // scroll: scrollable::State,
 }
 
 impl Default for FeedPage {
@@ -20,8 +20,8 @@ impl Default for FeedPage {
 impl FeedPage {
     pub fn new() -> FeedPage {
         FeedPage {
-            items: vec![],
-            scroll: scrollable::State::new(),
+            // items: vec![],
+            // scroll: scrollable::State::new(),
         }
     }
 

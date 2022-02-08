@@ -9,14 +9,13 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
-      - name: Nightly toolchain
-        run: rustup toolchain install nightly --component clippy
-      - name: Lint
-        run: cargo fmt -- --check
-      - name: Clippy Warnings
-        run: cargo +nightly clippy --all-targets --all-features -- -D warnings
-      - name: Build
-        run: cargo +nightly build
-      - name: Run tests
-        run: echo "Temporarily disabled tests" # cargo +nightly test
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
 
+      - uses: Swatinem/rust-cache@v1
+      - name: Lint
+        run: cargo clippy --all-targets --all-features -- -D warnings
+      - name: Run tests
+        run: echo "Temporarily disabled tests" # cargo test

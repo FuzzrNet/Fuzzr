@@ -1,7 +1,12 @@
 {
+  "editor.defaultFormatter": "matklad.rust-analyzer",
   "editor.formatOnSave": true,
   "editor.insertSpaces": true,
   "editor.tabSize": 4,
+  "files.insertFinalNewline": true,
   "files.autoSave": "onFocusChange",
-  "files.insertFinalNewline": true
+  "rust-analyzer.checkOnSave.command": "clippy",
+  "[toml]": {
+      "editor.defaultFormatter": "tamasfe.even-better-toml"
+  },
 }

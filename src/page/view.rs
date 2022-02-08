@@ -61,7 +61,7 @@ impl ViewPage {
         .on_submit(Message::ViewPageLoadContent);
 
         let content_image = match &self.content {
-            Some(content) => Column::new().push(content_view::view(&content)),
+            Some(content) => Column::new().push(content_view::view(content)),
             None => Column::new(),
         };
 
