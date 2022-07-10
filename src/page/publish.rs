@@ -3,7 +3,10 @@ use std::{path::PathBuf, sync::Arc, time::Duration};
 use crossbeam_utils::atomic::AtomicCell;
 use iced::{
     image::Handle,
-    pure::{column, container, image, row, scrollable, text, Element},
+    pure::{
+        column, column_with_children, container, image, row_with_children, scrollable, text,
+        Element,
+    },
     Command, Length,
 };
 use lockfree::map::Map as LockfreeMap;
@@ -13,7 +16,6 @@ use crate::data::content::PathThumb;
 use crate::data::fs_ops::THUMB_SIZE;
 use crate::data::thumbnails;
 use crate::message::Message;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
@@ -97,7 +99,7 @@ impl PublishPage {
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         if self.count.load() != 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(THUMB_SIZE as u16);
@@ -117,27 +119,33 @@ impl PublishPage {
                 heights[*height_index] += item.val().metadata.height_px as u16;
             });
 
-            let row = row().width(Length::Fill).height(Length::Fill);
-            let row = image_grid.iter().fold(row, |r, images| {
-                let column = column().spacing(row_spacing).width(col_width);
-                let column = images.iter().fold(column, |c, path| {
-                    let el = self.publish_thumbs.get(path).as_ref().map(|thumb| {
-                        image(Handle::from_pixels(
-                            thumb.val().metadata.width_px,
-                            thumb.val().metadata.height_px,
-                            thumb.val().image.to_vec(),
-                        ))
-                    });
-
-                    if let Some(el) = el {
-                        c.push(el);
-                    }
-                    c
-                });
-
-                r.push(column);
-                r
-            });
+            let row = row_with_children(
+                image_grid
+                    .iter()
+                    .map(|images| {
+                        column_with_children(
+                            images
+                                .iter()
+                                .filter_map(|path| {
+                                    self.publish_thumbs.get(path).as_ref().map(|thumb| {
+                                        image(Handle::from_pixels(
+                                            thumb.val().metadata.width_px,
+                                            thumb.val().metadata.height_px,
+                                            thumb.val().image.to_vec(),
+                                        ))
+                                        .into()
+                                    })
+                                })
+                                .collect(),
+                        )
+                        .spacing(row_spacing)
+                        .width(col_width)
+                        .into()
+                    })
+                    .collect(),
+            )
+            .width(Length::Fill)
+            .height(Length::Fill);
 
             let scrollable = scrollable(row);
 
@@ -159,7 +167,6 @@ impl PublishPage {
                 .width(Length::Fill)
                 .height(Length::Fill)
                 .center_x()
-                .style(*theme)
                 .into()
         } else {
             container(column().push(text("Start adding content by dropping an image here")))

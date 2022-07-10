@@ -5,7 +5,6 @@ use iced::{
 };
 
 use crate::message::Message;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct SitePage {
@@ -35,7 +34,7 @@ impl SitePage {
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         let page_header = column()
             .width(Length::Fill)
             .height(Length::Fill)
@@ -76,7 +75,6 @@ impl SitePage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
-            .style(*theme)
             .into()
     }
 }

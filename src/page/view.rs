@@ -7,7 +7,6 @@ use log::error;
 use crate::data::content::ContentItem;
 use crate::message::Message;
 use crate::ui::content_view;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct ViewPage {
@@ -49,7 +48,7 @@ impl ViewPage {
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         let input = text_input(
             "Paste Content ID (CID) here",
             &self.input_value,
@@ -57,7 +56,6 @@ impl ViewPage {
         )
         .padding(15)
         .size(16)
-        .style(*theme)
         .on_submit(Message::ViewPageLoadContent);
 
         let content_image = match &self.content {
@@ -72,7 +70,6 @@ impl ViewPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
-            .style(*theme)
             .into()
     }
 }

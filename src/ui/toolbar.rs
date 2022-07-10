@@ -1,11 +1,10 @@
 use iced::{
     pure::{button, column, container, row, text, Element},
-    Color, Length,
+    Length, Theme,
 };
 
 use crate::message::Message;
 use crate::page::PageType;
-use crate::ui::style::{Theme, ThemeConfig};
 
 #[derive(Debug, Clone)]
 pub struct PageButton {
@@ -17,62 +16,18 @@ pub struct PageButton {
 #[derive(Debug, Clone)]
 pub struct Toolbar {
     buttons: Vec<PageButton>,
+    theme: Theme,
     pub active_page: PageType,
 }
 
-fn inverse(theme: &Theme) -> Theme {
-    match theme {
-        Theme::Dark(ThemeConfig { selected, .. }) => Theme::Light(ThemeConfig {
-            selected: selected.to_owned(),
-            background: Color::BLACK,
-            foreground: Color::WHITE,
-        }),
-        Theme::Light(ThemeConfig { selected, .. }) => Theme::Dark(ThemeConfig {
-            selected: selected.to_owned(),
-            background: Color::WHITE,
-            foreground: Color::BLACK,
-        }),
-        Theme::Custom(ThemeConfig {
-            selected,
-            background,
-            foreground,
-        }) => Theme::Custom(ThemeConfig {
-            selected: selected.to_owned(),
-            background: foreground.to_owned(),
-            foreground: background.to_owned(),
-        }),
-    }
-}
-
-fn selected(theme: &Theme, selected: bool) -> Theme {
-    match theme {
-        Theme::Dark(ThemeConfig {
-            selected: _,
-            background,
-            foreground,
-        }) => Theme::Dark(ThemeConfig {
-            selected: selected.to_owned(),
-            background: background.to_owned(),
-            foreground: foreground.to_owned(),
-        }),
-        Theme::Light(ThemeConfig {
-            selected: _,
-            background,
-            foreground,
-        }) => Theme::Light(ThemeConfig {
-            selected: selected.to_owned(),
-            background: background.to_owned(),
-            foreground: foreground.to_owned(),
-        }),
-        Theme::Custom(ThemeConfig {
-            selected,
-            background,
-            foreground,
-        }) => Theme::Custom(ThemeConfig {
-            selected: selected.to_owned(),
-            background: foreground.to_owned(),
-            foreground: background.to_owned(),
-        }),
+fn invert(theme: &Theme, active: bool) -> Theme {
+    if active {
+        match theme {
+            Theme::Dark => Theme::Light,
+            Theme::Light => Theme::Dark,
+        }
+    } else {
+        *theme
     }
 }
 
@@ -119,28 +74,31 @@ impl Toolbar {
 
         Toolbar {
             buttons,
+            theme: Theme::Dark,
             active_page: PageType::Publish,
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         let Toolbar {
             buttons,
-            active_page,
+            theme,
+            ..
+            // active_page,
         } = self;
 
         container(
             buttons
-                .iter_mut()
+                .iter()
                 .fold(row(), |row, page_button| {
                     row.push(if page_button.is_disabled {
-                        column().padding(2).push(
-                            button(text(page_button.label_text.to_owned()).size(16)).style(*theme),
-                        )
+                        column()
+                            .padding(2)
+                            .push(button(text(page_button.label_text.to_owned()).size(16)))
                     } else {
                         column().padding(2).push(
                             button(text(page_button.label_text.to_owned()).size(16))
-                                .style(selected(theme, *active_page == page_button.page_type))
+                                // .theme(invert(theme, *active_page == page_button.page_type))
                                 .on_press(Message::PageChanged(page_button.page_type.clone())),
                         )
                     })
@@ -148,12 +106,10 @@ impl Toolbar {
                 .push(column().width(Length::Fill)) // spacer column
                 .push(
                     button(text("Day/Night").size(16))
-                        .style(*theme)
-                        .on_press(Message::ThemeChanged(inverse(theme))),
+                        .on_press(Message::ThemeChanged(invert(theme, true))),
                 ),
         )
         .padding(10)
-        .style(*theme)
         .into()
     }
 }

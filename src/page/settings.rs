@@ -4,7 +4,6 @@ use iced::{
 };
 
 use crate::message::Message;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct SettingsPage {
@@ -40,7 +39,7 @@ impl SettingsPage {
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         let settings_container = row()
             .spacing(15)
             .push(text("Customize Theme:").size(16))
@@ -57,7 +56,6 @@ impl SettingsPage {
                             .size(16)
                             .width(Length::Units(450))
                             .padding(15)
-                            .style(*theme)
                             .on_submit(Message::LoadCustomBackground),
                         ),
                     )
@@ -71,7 +69,6 @@ impl SettingsPage {
                             .size(16)
                             .width(Length::Units(450))
                             .padding(15)
-                            .style(*theme)
                             .on_submit(Message::LoadCustomForeground),
                         ),
                     ),
@@ -82,7 +79,6 @@ impl SettingsPage {
             .height(Length::Fill)
             .padding(10)
             .center_x()
-            .style(*theme)
             .into()
     }
 }

@@ -1,4 +1,7 @@
-use iced::{button, container, text_input, Background, Color};
+use iced_native::{
+    widget::{button, container, text_input},
+    Background, Color,
+};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ThemeConfig {

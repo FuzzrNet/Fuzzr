@@ -1,9 +1,10 @@
-use iced::{Column, Command, Element, Length, Text};
-use iced_native::widget::container::Container;
+use iced::{
+    pure::{column, container, text, Element},
+    Command, Length,
+};
 
 // use crate::data::content::ContentItem;
 use crate::message::Message;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct FeedPage {
@@ -29,15 +30,14 @@ impl FeedPage {
         Command::none()
     }
 
-    pub fn view(&self, theme: &Theme) -> Element<Message> {
-        let feed_container = Column::new().push(Text::new("TODO: Feed page").size(18));
+    pub fn view(&self) -> Element<Message> {
+        let feed_container = column().push(text("TODO: Feed page").size(18));
 
-        Container::new(feed_container)
+        container(feed_container)
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)
             .center_x()
-            .style(*theme)
             .into()
     }
 }

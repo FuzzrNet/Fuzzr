@@ -1,12 +1,13 @@
 use anyhow::Error;
 use async_std::sync::Arc;
+use iced::Theme;
 use libipld::{Cid, Result};
 
 use crate::data::content::{ContentItem, PathThumb};
 use crate::data::ipfs_client::IpfsClient;
 use crate::data::thumbnails;
 use crate::page;
-use crate::ui::style::Theme;
+// use crate::ui::style::Theme;
 
 use std::path::PathBuf;
 
