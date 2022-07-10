@@ -1,6 +1,6 @@
 [package]
 name = "fuzzr"
-version = "0.0.6"
+version = "0.0.7"
 authors = [
   "Hunter Trujillo <cryptoquick@pm.me>",
   "David Croisant <kn0wmad@protonmail.com>",
@@ -44,21 +44,24 @@ par-stream = { version = "0.10", features = ["runtime-async-std"] }
 directories-next = "2.0.0"
 lockfree = "0.5.1"
 ## UI
-iced = { version = "0.3.0", features = [
+iced = { version = "0.4.2", features = [
   "wgpu",
   "default_system_font",
   "image",
   "async-std",
+  "pure",
 ] }
-iced_native = "0.4.0"
-iced_futures = "0.3.0"
+iced_native = "0.5.1"
+iced_futures = "0.4.1"
 ## Data
 # reqwest = "0.10"
-infer = "0.6.0"
+infer = "0.9.0"
 walkdir = "2.3.2"
 ## IPFS
-ipfs-embed = "0.22.4"
+ipfs-embed = "0.23.0"
 libipld = "=0.12.0"
+libp2p-dns = "=0.32.0" # https://github.com/ipfs-rust/ipfs-embed/issues/110#issuecomment-1179619345
+multihash = "=0.14.0"
 # ipld-collections = "0.3.0"
 ## Image
 image = "0.24"

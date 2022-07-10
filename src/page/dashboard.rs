@@ -1,5 +1,5 @@
 use iced::{
-    Align, Column, Command, Container, Element, HorizontalAlignment, Length,
+    alignment::Horizontal, Alignment, Column, Command, Container, Element, Length,
     /* ProgressBar, */ Row, Text,
 };
 // use iced_native::ProgressBar;
@@ -34,7 +34,7 @@ impl DashPage {
         // let DashPage { .. } = self;
 
         let user_stats = Column::new()
-            .align_items(Align::Start)
+            .align_items(Alignment::Start)
             .width(Length::Fill)
             .height(Length::Fill)
             .spacing(5)
@@ -47,7 +47,7 @@ impl DashPage {
         let spacer_row = Row::new().height(Length::Fill);
 
         let fuzzr_stats = Column::new()
-            .align_items(Align::End)
+            .align_items(Alignment::End)
             .width(Length::Fill)
             .height(Length::Fill)
             .spacing(5)
@@ -58,7 +58,7 @@ impl DashPage {
             .push(
                 Text::new("Initialization")
                     .size(12)
-                    .horizontal_alignment(HorizontalAlignment::Center),
+                    .horizontal_alignment(Horizontal::Center),
             )
             // .push(initialize)
             .padding(10);

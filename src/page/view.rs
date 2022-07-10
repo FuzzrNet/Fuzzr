@@ -1,4 +1,7 @@
-use iced::{text_input, Column, Command, Container, Element, Length, /* Row, Text, */ TextInput,};
+use iced::{
+    pure::{column, container, text_input, Element},
+    Command, Length,
+};
 use log::error;
 
 use crate::data::content::ContentItem;
@@ -8,7 +11,6 @@ use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct ViewPage {
-    input_state: text_input::State,
     pub input_value: String,
     content: Option<ContentItem>,
 }
@@ -22,7 +24,6 @@ impl Default for ViewPage {
 impl ViewPage {
     pub fn new() -> ViewPage {
         ViewPage {
-            input_state: text_input::State::new(),
             input_value: String::new(),
             content: None,
         }
@@ -49,8 +50,7 @@ impl ViewPage {
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
-        let input = TextInput::new(
-            &mut self.input_state,
+        let input = text_input(
             "Paste Content ID (CID) here",
             &self.input_value,
             Message::ViewPageInputChanged,
@@ -61,13 +61,13 @@ impl ViewPage {
         .on_submit(Message::ViewPageLoadContent);
 
         let content_image = match &self.content {
-            Some(content) => Column::new().push(content_view::view(content)),
-            None => Column::new(),
+            Some(content) => column().push(content_view::view(content)),
+            None => column(),
         };
 
-        let content_container = Column::new().push(input).push(content_image);
+        let content_container = column().push(input).push(content_image);
 
-        Container::new(content_container)
+        container(content_container)
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)

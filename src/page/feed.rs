@@ -1,5 +1,5 @@
 use iced::{Column, Command, Element, Length, Text};
-use iced_native::Container;
+use iced_native::widget::container::Container;
 
 // use crate::data::content::ContentItem;
 use crate::message::Message;

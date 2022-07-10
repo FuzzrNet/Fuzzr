@@ -1,10 +1,8 @@
-use iced::{
-    window, Align, Application, Clipboard, Color, Column, Command, Container, Element, Length,
-    Settings, Subscription,
-};
-use iced_native::{
+use iced::pure::{
+    window,
     window::Event::{FileDropped, Resized},
-    Event,
+    Align, Application, Clipboard, Color, Column, Command, Container, Element, Event, Length,
+    Settings, Subscription,
 };
 
 use async_std::sync::{Arc, RwLock};

@@ -1,12 +1,13 @@
-use iced::{text_input, Column, Command, Container, Element, Length, Row, Text, TextInput};
+use iced::{
+    pure::{column, container, row, text, text_input, Element},
+    Command, Length,
+};
 
 use crate::message::Message;
 use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct SettingsPage {
-    background_input: text_input::State,
-    foreground_input: text_input::State,
     background_color: String,
     foreground_color: String,
 }
@@ -20,8 +21,6 @@ impl Default for SettingsPage {
 impl SettingsPage {
     pub fn new() -> SettingsPage {
         SettingsPage {
-            background_input: text_input::State::new(),
-            foreground_input: text_input::State::new(),
             background_color: String::new(),
             foreground_color: String::new(),
         }
@@ -42,16 +41,15 @@ impl SettingsPage {
     }
 
     pub fn view(&mut self, theme: &Theme) -> Element<Message> {
-        let settings_container = Row::new()
+        let settings_container = row()
             .spacing(15)
-            .push(Text::new("Customize Theme:").size(16))
+            .push(text("Customize Theme:").size(16))
             .push(
-                Column::new()
+                column()
                     .spacing(15)
                     .push(
-                        Row::new().push(
-                            TextInput::new(
-                                &mut self.background_input,
+                        row().push(
+                            text_input(
                                 "Enter Background Color (RGB Hex, i.e, #00000F)",
                                 &self.background_color,
                                 Message::BackgroundChanged,
@@ -64,9 +62,8 @@ impl SettingsPage {
                         ),
                     )
                     .push(
-                        Row::new().push(
-                            TextInput::new(
-                                &mut self.foreground_input,
+                        row().push(
+                            text_input(
                                 "Enter Foreground Color (RGB Hex, i.e, #F100FF)",
                                 &self.foreground_color,
                                 Message::ForegroundChanged,
@@ -80,7 +77,7 @@ impl SettingsPage {
                     ),
             );
 
-        Container::new(settings_container)
+        container(settings_container)
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)
