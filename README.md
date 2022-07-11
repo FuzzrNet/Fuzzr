@@ -63,7 +63,7 @@ To run the project, all you need to do is [install Rust](https://rustup.rs), che
 You will need some dependancies installed _before you build_:
 
 ```bash
-sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev lld clang
+sudo apt install pkg-config libx11-dev libasound2-dev libudev-dev mold lld clang
 ```
 
 ### Optimizations

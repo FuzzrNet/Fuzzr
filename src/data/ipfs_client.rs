@@ -1,6 +1,6 @@
 use std::fmt;
 
-use ipfs_embed::{generate_keypair, Block, Config, DefaultParams, Ipfs};
+use ipfs_embed::{identity::ed25519::Keypair, Block, Config, DefaultParams, Ipfs};
 use libipld::{cbor::DagCborCodec, multihash::Code, store::StoreParams, Cid, IpldCodec, Result};
 
 use anyhow::Error;
@@ -14,6 +14,7 @@ pub type IpfsClientRef = Arc<RwLock<IpfsClient>>;
 #[derive(Clone, Debug, Default)]
 struct MaxBlockSizeStoreParams;
 
+// TODO: refer to https://github.com/ipfs-rust/ipfs-embed/blob/87ac5acc1e8c8a0dad9e74560fdfea22e02ba98d/examples/compat.rs#L8-L12 for future IPFS compat
 impl StoreParams for MaxBlockSizeStoreParams {
     const MAX_BLOCK_SIZE: usize = u32::MAX as usize - 1;
     type Codecs = IpldCodec;
@@ -30,7 +31,7 @@ impl IpfsClient {
         let config = match ProjectDirs::from("net", "FuzzrNet", "Fuzzr") {
             Some(project_dirs) => Config::new(
                 project_dirs.data_local_dir().join("sqlite").as_path(),
-                generate_keypair(), // TODO: persist keypair
+                Keypair::generate(), // TODO: persist keypair
             ),
             None => Config::default(),
         };
@@ -42,8 +43,8 @@ impl IpfsClient {
 
     pub async fn add(&self, block: &ContentItemBlock) -> Result<Cid, Arc<Error>> {
         let ipld_block = Block::encode(DagCborCodec, Code::Blake2b256, block)?;
-        self.ipfs.insert(&ipld_block)?;
         let cid = *ipld_block.cid();
+        self.ipfs.insert(ipld_block)?;
 
         Ok(cid)
     }

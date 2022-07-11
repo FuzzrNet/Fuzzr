@@ -1,24 +1,26 @@
+use std::{path::PathBuf, sync::Arc, time::Duration};
+
 use crossbeam_utils::atomic::AtomicCell;
 use iced::{
-    image, scrollable, Align, Column, Command, Container, Element, Image, Length, Row, Scrollable,
-    Text,
+    image::Handle,
+    pure::{
+        column, container, image, scrollable, text,
+        widget::{Column, Row},
+        Element,
+    },
+    Command, Length,
 };
 use lockfree::map::Map as LockfreeMap;
 use log::{debug, error, info};
-use std::path::PathBuf;
-use std::sync::Arc;
-use std::time::Duration;
 
 use crate::data::content::PathThumb;
 use crate::data::fs_ops::THUMB_SIZE;
 use crate::data::thumbnails;
 use crate::message::Message;
-use crate::ui::style::Theme;
 
 #[derive(Debug, Clone)]
 pub struct PublishPage {
     // cid: Option<String>,
-    scroll: scrollable::State,
     publish_thumbs: Arc<LockfreeMap<PathBuf, PathThumb>>,
     count: Arc<AtomicCell<usize>>,
     window_width: u16,
@@ -54,7 +56,6 @@ async fn insert_thumb(
 impl PublishPage {
     pub fn new() -> PublishPage {
         PublishPage {
-            scroll: scrollable::State::new(),
             publish_thumbs: Arc::new(LockfreeMap::new()),
             count: Default::default(),
             window_width: 800,
@@ -99,7 +100,7 @@ impl PublishPage {
         }
     }
 
-    pub fn view(&mut self, theme: &Theme) -> Element<Message> {
+    pub fn view(&self) -> Element<Message> {
         if self.count.load() != 0 {
             // Thumbnail column distribution algorithm
             let col_width = Length::Units(THUMB_SIZE as u16);
@@ -119,52 +120,55 @@ impl PublishPage {
                 heights[*height_index] += item.val().metadata.height_px as u16;
             });
 
-            let container_cols: Vec<Element<Message>> = image_grid
-                .into_iter()
-                .map(|image_column| {
-                    let col: Element<Message> = Column::with_children(
-                        image_column
-                            .iter()
-                            .filter_map(|path| {
-                                self.publish_thumbs.get(path).as_ref().map(|thumb| {
-                                    Image::new(image::Handle::from_pixels(
-                                        thumb.val().metadata.width_px,
-                                        thumb.val().metadata.height_px,
-                                        thumb.val().image.to_vec(),
-                                    ))
-                                    .into()
+            let row = Row::with_children(
+                image_grid
+                    .iter()
+                    .map(|images| {
+                        Column::with_children(
+                            images
+                                .iter()
+                                .filter_map(|path| {
+                                    self.publish_thumbs.get(path).as_ref().map(|thumb| {
+                                        image(Handle::from_memory(thumb.val().image.to_vec()))
+                                            .into()
+                                    })
                                 })
-                            })
-                            .collect(),
-                    )
-                    .spacing(row_spacing)
-                    .width(col_width)
-                    .into();
-                    let el: Element<Message> = Container::new::<Element<Message>>(col)
-                        .width(Length::Fill)
-                        .height(Length::Fill)
-                        .into();
-                    el
-                })
-                .collect();
-
-            let row = Row::with_children(container_cols);
-
-            Container::new(
-                Scrollable::new(&mut self.scroll)
-                    .push(row)
-                    .width(Length::Shrink)
-                    .align_items(Align::Center),
+                                .collect(),
+                        )
+                        .spacing(row_spacing)
+                        .width(col_width)
+                        .into()
+                    })
+                    .collect(),
             )
             .width(Length::Fill)
-            .height(Length::Fill)
-            .center_x()
-            .style(*theme)
-            .into()
+            .height(Length::Fill);
+
+            let scrollable = scrollable(row);
+
+            // container_cols
+            //     .spacing(row_spacing)
+            //     .width(col_width)
+            //     .into();
+
+            //     let el: Element<Message> = Container::new::<Element<Message>>(col)
+            //     .width(Length::Fill)
+            //     .height(Length::Fill)
+            //     .into();
+            // el
+
+            // .width(Length::Shrink)
+            // .align_items(Alignment::Center)
+
+            container(scrollable)
+                .width(Length::Fill)
+                .height(Length::Fill)
+                .center_x()
+                .into()
         } else {
-            Container::new(
-                Column::new().push(Text::new("Start adding content by dropping an image here")),
-            )
+            container(column().push(text(
+                "Start adding content by dropping a folder containing images here",
+            )))
             .width(Length::Fill)
             .height(Length::Fill)
             .padding(10)

@@ -15,7 +15,10 @@ jobs:
           toolchain: stable
 
       - uses: Swatinem/rust-cache@v1
+      # - uses: rui314/setup-mold@v1
+
       - name: Lint
         run: cargo clippy --all-targets --all-features -- -D warnings
+
       - name: Run tests
         run: echo "Temporarily disabled tests" # cargo test

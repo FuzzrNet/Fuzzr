@@ -1,13 +1,13 @@
 use iced::{
-    window, Align, Application, Clipboard, Color, Column, Command, Container, Element, Length,
-    Settings, Subscription,
+    pure::{column, container, Application, Element},
+    window, Alignment, Command, Length, Settings, Subscription, Theme,
 };
+
+use async_std::sync::{Arc, RwLock};
 use iced_native::{
     window::Event::{FileDropped, Resized},
     Event,
 };
-
-use async_std::sync::{Arc, RwLock};
 use log::{error, info};
 use std::path::PathBuf;
 
@@ -24,7 +24,6 @@ use fuzzr::{
     page::site::SitePage,
     page::view::ViewPage,
     page::PageType,
-    ui::style::Theme,
     ui::toolbar::Toolbar,
 };
 
@@ -38,8 +37,10 @@ async fn push_thumb_paths(
 }
 
 pub fn main() -> iced::Result {
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "fuzzr");
+    use std::env::{set_var, var};
+
+    if var("RUST_LOG").is_err() {
+        set_var("RUST_LOG", "fuzzr");
     }
 
     pretty_env_logger::init();
@@ -68,7 +69,6 @@ pub struct Fuzzr {
     ipfs_client: Option<IpfsClientRef>,
     pages: Pages, // All pages in the app
     toolbar: Toolbar,
-    background_color: Color,
     publish_thumbs_paths: Arc<RwLock<Vec<PathBuf>>>,
     theme: Theme,
 }
@@ -76,6 +76,7 @@ pub struct Fuzzr {
 impl Application for Fuzzr {
     type Executor = iced::executor::Default;
     type Message = fuzzr::message::Message;
+    type Theme = Theme;
     type Flags = ();
 
     fn new(_flags: ()) -> (Fuzzr, Command<Message>) {
@@ -92,24 +93,23 @@ impl Application for Fuzzr {
             Fuzzr {
                 pages,
                 toolbar: Toolbar::new(),
-                background_color: Color::new(1.0, 1.0, 1.0, 1.0),
                 ipfs_client: None,
                 publish_thumbs_paths: Arc::new(RwLock::new(Vec::new())),
-                theme: Theme::default(),
+                theme: Theme::Dark,
             },
             Command::perform(IpfsClient::new(), Message::IpfsReady),
         )
     }
 
-    fn background_color(&self) -> Color {
-        self.background_color
-    }
+    // fn background_color(&self) -> Color {
+    //     self.background_color
+    // }
 
     fn title(&self) -> String {
         "Fuzzr".into()
     }
 
-    fn update(&mut self, event: Message, _clipboard: &mut Clipboard) -> Command<Message> {
+    fn update(&mut self, event: Message) -> Command<Message> {
         Command::batch(vec![
             // Update all pages with all messages and batch any resulting commands.
             self.pages.dash.update(event.clone()),
@@ -196,34 +196,32 @@ impl Application for Fuzzr {
         ])
     }
 
-    fn view(&mut self) -> Element<Message> {
-        let Fuzzr {
-            pages,
-            theme,
-            toolbar,
-            ..
-        } = self;
+    fn view(&self) -> Element<Message> {
+        let Fuzzr { pages, toolbar, .. } = self;
 
         let page: Element<_> = match toolbar.active_page {
-            PageType::Dashboard => pages.dash.view(theme),
-            PageType::Feed => pages.feed.view(theme),
-            PageType::Publish => pages.publish.view(theme),
-            PageType::View => pages.view.view(theme),
-            PageType::Site => pages.site.view(theme),
-            PageType::Settings => pages.settings.view(theme),
+            PageType::Dashboard => pages.dash.view(),
+            PageType::Feed => pages.feed.view(),
+            PageType::Publish => pages.publish.view(),
+            PageType::View => pages.view.view(),
+            PageType::Site => pages.site.view(),
+            PageType::Settings => pages.settings.view(),
         };
 
-        let content: Element<_> = Column::new()
-            .push(toolbar.view(theme))
-            .align_items(Align::Center)
+        let content: Element<_> = column()
+            .push(toolbar.view())
+            .align_items(Alignment::Center)
             .push(page)
             .into();
 
-        Container::new(content)
+        container(content)
             .height(Length::Fill)
             .width(Length::Fill)
             .center_y()
-            .style(*theme)
             .into()
+    }
+
+    fn theme(&self) -> Theme {
+        self.theme
     }
 }
