@@ -80,12 +80,13 @@ fn resize_image(path: &Path) -> Option<PathThumb> {
             let height_px = height_px.round() as u32;
 
             let thumbnail = img.thumbnail_exact(width_px, height_px);
+            debug!("Color: {:?}", thumbnail.color());
 
             let mime_type = "image/jpeg".to_string();
-            let image = Box::from(thumbnail.as_bytes());
+            let image: Box<[u8]> = Box::from(thumbnail.as_bytes());
 
             let metadata = ImageMetadata {
-                size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted
+                size_bytes: image.len() as u64,
                 mime_type,
                 width_px,
                 height_px,

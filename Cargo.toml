@@ -49,10 +49,10 @@ iced = { version = "0.4.2", features = [
   "image",
   "async-std",
   "pure",
-], git = "https://github.com/cryptoquick/iced.git", branch = "row-and-column-with-children" }
+], git = "https://github.com/iced-rs/iced.git", rev = "d1505a98d967f36679f8b7d98347ba03a4c2af1c" }
 ## UI
-iced_native = { version = "0.5.1", git = "https://github.com/cryptoquick/iced.git", branch = "row-and-column-with-children" }
-iced_futures = { version = "0.4.1", git = "https://github.com/cryptoquick/iced.git", branch = "row-and-column-with-children" }
+iced_native = { version = "0.5.1", git = "https://github.com/iced-rs/iced.git", rev = "d1505a98d967f36679f8b7d98347ba03a4c2af1c" }
+iced_futures = { version = "0.4.1", git = "https://github.com/iced-rs/iced.git", rev = "d1505a98d967f36679f8b7d98347ba03a4c2af1c" }
 ## Data
 # reqwest = "0.10"
 infer = "0.9.0"

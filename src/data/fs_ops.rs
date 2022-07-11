@@ -5,7 +5,7 @@ use std::time::Instant;
 use walkdir::WalkDir;
 
 use image::io::Reader as ImageReader;
-use image::GenericImageView;
+use image::{EncodableLayout, GenericImageView};
 use rayon::prelude::*;
 
 use crate::data::content::{ImageMetadata, PathThumb};
@@ -51,20 +51,25 @@ pub async fn thumbnail_images(paths: Vec<PathBuf>) -> Vec<PathThumb> {
                         let thumbnail = img.thumbnail_exact(width_px, height_px);
 
                         let mime_type = "image/jpeg".to_string();
-                        let image = Box::from(thumbnail.as_bytes());
 
-                        let metadata = ImageMetadata {
-                            size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted
-                            mime_type,
-                            width_px,
-                            height_px,
-                        };
+                        if let Some(image) = thumbnail.as_bgra8() {
+                            let image = Box::from(image.as_bytes());
 
-                        Some(PathThumb {
-                            path,
-                            image,
-                            metadata,
-                        })
+                            let metadata = ImageMetadata {
+                                size_bytes: 0, // Thumbnail size doesn't matter because it's not persisted
+                                mime_type,
+                                width_px,
+                                height_px,
+                            };
+
+                            Some(PathThumb {
+                                path,
+                                image,
+                                metadata,
+                            })
+                        } else {
+                            None
+                        }
                     }
                     Err(err) => {
                         error!(

@@ -37,8 +37,10 @@ async fn push_thumb_paths(
 }
 
 pub fn main() -> iced::Result {
-    if std::env::var("RUST_LOG").is_err() {
-        std::env::set_var("RUST_LOG", "fuzzr");
+    use std::env::{set_var, var};
+
+    if var("RUST_LOG").is_err() {
+        set_var("RUST_LOG", "fuzzr");
     }
 
     pretty_env_logger::init();

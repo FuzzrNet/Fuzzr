@@ -4,7 +4,8 @@ use crossbeam_utils::atomic::AtomicCell;
 use iced::{
     image::Handle,
     pure::{
-        column, column_with_children, container, image, row_with_children, scrollable, text,
+        column, container, image, scrollable, text,
+        widget::{Column, Row},
         Element,
     },
     Command, Length,
@@ -119,21 +120,17 @@ impl PublishPage {
                 heights[*height_index] += item.val().metadata.height_px as u16;
             });
 
-            let row = row_with_children(
+            let row = Row::with_children(
                 image_grid
                     .iter()
                     .map(|images| {
-                        column_with_children(
+                        Column::with_children(
                             images
                                 .iter()
                                 .filter_map(|path| {
                                     self.publish_thumbs.get(path).as_ref().map(|thumb| {
-                                        image(Handle::from_pixels(
-                                            thumb.val().metadata.width_px,
-                                            thumb.val().metadata.height_px,
-                                            thumb.val().image.to_vec(),
-                                        ))
-                                        .into()
+                                        image(Handle::from_memory(thumb.val().image.to_vec()))
+                                            .into()
                                     })
                                 })
                                 .collect(),
@@ -169,12 +166,14 @@ impl PublishPage {
                 .center_x()
                 .into()
         } else {
-            container(column().push(text("Start adding content by dropping an image here")))
-                .width(Length::Fill)
-                .height(Length::Fill)
-                .padding(10)
-                .center_x()
-                .into()
+            container(column().push(text(
+                "Start adding content by dropping a folder containing images here",
+            )))
+            .width(Length::Fill)
+            .height(Length::Fill)
+            .padding(10)
+            .center_x()
+            .into()
         }
     }
 }

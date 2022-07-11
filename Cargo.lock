@@ -2040,7 +2040,7 @@ dependencies = [
 [[package]]
 name = "iced"
 version = "0.4.2"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -2055,7 +2055,7 @@ dependencies = [
 [[package]]
 name = "iced_core"
 version = "0.5.0"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "bitflags",
  "palette",
@@ -2065,7 +2065,7 @@ dependencies = [
 [[package]]
 name = "iced_futures"
 version = "0.4.1"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "async-std",
  "futures",
@@ -2077,7 +2077,7 @@ dependencies = [
 [[package]]
 name = "iced_graphics"
 version = "0.3.1"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "bytemuck",
  "font-kit",
@@ -2092,7 +2092,7 @@ dependencies = [
 [[package]]
 name = "iced_native"
 version = "0.5.1"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "iced_core",
  "iced_futures",
@@ -2105,7 +2105,7 @@ dependencies = [
 [[package]]
 name = "iced_pure"
 version = "0.2.2"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "iced_native",
  "iced_style",
@@ -2115,7 +2115,7 @@ dependencies = [
 [[package]]
 name = "iced_style"
 version = "0.4.0"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "iced_core",
  "lazy_static",
@@ -2125,7 +2125,7 @@ dependencies = [
 [[package]]
 name = "iced_wgpu"
 version = "0.5.1"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "bitflags",
  "bytemuck",
@@ -2145,7 +2145,7 @@ dependencies = [
 [[package]]
 name = "iced_winit"
 version = "0.4.0"
-source = "git+https://github.com/cryptoquick/iced.git?branch=row-and-column-with-children#cfe2fb01b95c7ce05ae05bd0d92662a4d07f9c45"
+source = "git+https://github.com/iced-rs/iced.git?rev=d1505a98d967f36679f8b7d98347ba03a4c2af1c#d1505a98d967f36679f8b7d98347ba03a4c2af1c"
 dependencies = [
  "iced_futures",
  "iced_graphics",
